@@ -1,40 +1,41 @@
 "use client"
 
-import { useState } from 'react'
-import { MessageCircle, Users, Sparkles, Ambulance, CreditCard, Phone } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { BottomNavItem } from './bottom-nav-item'
+import { Home, MessageSquare, Phone, Settings } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 
-const navItems = [
-  { id: 'chat', icon: MessageCircle, label: 'Chat', href: '/chat' },
-  { id: 'socialconnections', icon: Users, label: 'Social', href: '/social' },
-  { id: 'ai', icon: Sparkles, label: 'AI', href: '/ai' },
-  { id: 'emergency', icon: Ambulance, label: 'Emergency', href: '/emergency' },
-  { id: 'payments', icon: CreditCard, label: 'Payments', href: '/payments' },
-  { id: 'calls', icon: Phone, label: 'Calls', href: '/calls' },
+const navigationItems = [
+  { icon: Home, label: 'Home', href: '/' },
+  { icon: MessageSquare, label: 'Chat', href: '/chat' },
+  { icon: Phone, label: 'Calls', href: '/calls' },
+  { icon: Settings, label: 'Settings', href: '/settings' }
 ]
 
 export function BottomNav() {
-  const [activeTab, setActiveTab] = useState('chat')
+  const pathname = usePathname()
 
   return (
-    <motion.div 
-      className="md:hidden sticky bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-background/80 backdrop-blur-xl border-t border-border/50"
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      transition={{ type: "spring", stiffness: 260, damping: 20 }}
-    >
-      <div className="flex justify-between p-2 max-w-2xl mx-auto">
-        {navItems.map((item) => (
-          <BottomNavItem
-            key={item.id}
-            {...item}
-            isActive={activeTab === item.id}
-            onClick={() => setActiveTab(item.id)}
-          />
-        ))}
-      </div>
-    </motion.div>
+    <div className="fixed bottom-0 left-0 right-0 bg-background border-t md:hidden">
+      <nav className="flex items-center justify-around p-2 max-w-screen-xl mx-auto">
+        {navigationItems.map((item) => {
+          const isActive = pathname === item.href
+          return (
+            <Link key={item.href} href={item.href} className="w-full">
+              <Button
+                variant="ghost"
+                className={`w-full flex flex-col items-center gap-1 h-auto py-2 px-1
+                  ${isActive ? 'text-primary' : 'text-muted-foreground'}
+                  hover:text-primary hover:bg-transparent`}
+              >
+                <item.icon className="h-5 w-5" />
+                <span className="text-xs font-medium">{item.label}</span>
+              </Button>
+            </Link>
+          )
+        })}
+      </nav>
+    </div>
   )
 }
 

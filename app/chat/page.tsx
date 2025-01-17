@@ -67,7 +67,7 @@ export default function ChatPage() {
       <div className="flex-1 border-l flex flex-col">
         {selectedChat ? (
           <>
-            <div className="p-4 border-b flex items-center justify-between">
+            <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-purple-500 to-pink-500">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src="/placeholder.svg" alt="Placeholder" />
@@ -132,7 +132,7 @@ export default function ChatPage() {
               </div>
             </ScrollArea>
 
-            <div className="p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-inner">
               <form className="flex items-center gap-2" onSubmit={handleSendMessage}>
                 <Button variant="ghost" size="icon" className="hover:bg-muted">
                   <Paperclip className="h-5 w-5" />

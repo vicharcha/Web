@@ -3,13 +3,10 @@
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Phone, Video, VoicemailIcon as VoiceMail, Clock, Search } from 'lucide-react'
+import { Phone, Video, Search, MoreVertical } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 type Call = {
   id: string
@@ -29,16 +26,18 @@ const recentCalls: Call[] = [
 
 export default function CallsPage() {
   const [searchQuery, setSearchQuery] = useState('')
+  const [calls] = useState<Call[]>(recentCalls)
 
-  const filteredCalls = recentCalls.filter(call =>
+  const filteredCalls = calls.filter(call =>
     call.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-3xl font-bold">Calls</h1>
-
-      <div className="relative">
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b bg-gradient-to-r from-purple-500 to-pink-500">
+        <h1 className="text-xl font-semibold text-white">Recent Calls</h1>
+      </div>
+      <div className="relative p-4">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
@@ -48,91 +47,44 @@ export default function CallsPage() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
-
-      <Tabs defaultValue="recent">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="recent">Recent</TabsTrigger>
-          <TabsTrigger value="contacts">Contacts</TabsTrigger>
-          <TabsTrigger value="voicemail">Voicemail</TabsTrigger>
-        </TabsList>
-        <TabsContent value="recent">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Calls</CardTitle>
-              <CardDescription>Your call history</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[300px]">
-                <ul className="space-y-4">
-                  {filteredCalls.map(call => (
-                    <motion.li 
-                      key={call.id} 
-                      className="flex items-center justify-between"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                    >
-                      <div className="flex items-center gap-4">
-                        <Avatar>
-                          <AvatarImage src={call.avatar} alt={call.name} />
-                          <AvatarFallback>{call.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{call.name}</p>
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            {call.type === 'audio' && <Phone className="h-4 w-4 mr-1" />}
-                            {call.type === 'video' && <Video className="h-4 w-4 mr-1" />}
-                            {call.type === 'missed' && <Phone className="h-4 w-4 mr-1 text-red-500" />}
-                            <span>{call.date}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {call.duration && (
-                          <Badge variant="secondary">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {call.duration}
-                          </Badge>
-                        )}
-                        <Button size="icon" variant="ghost">
-                          <Phone className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost">
-                          <Video className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </motion.li>
-                  ))}
-                </ul>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="contacts">
-          {/* Add content for contacts tab */}
-        </TabsContent>
-        <TabsContent value="voicemail">
-          {/* Add content for voicemail tab */}
-        </TabsContent>
-      </Tabs>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Call</CardTitle>
-          <CardDescription>Start a new call</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Input placeholder="Enter name or number" />
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button className="w-[48%]">
-            <Phone className="mr-2 h-4 w-4" /> Audio Call
-          </Button>
-          <Button className="w-[48%]">
-            <Video className="mr-2 h-4 w-4" /> Video Call
-          </Button>
-        </CardFooter>
-      </Card>
+      <ScrollArea className="flex-1 p-4">
+        <div className="space-y-4">
+          <AnimatePresence>
+            {filteredCalls.map((call) => (
+              <motion.div
+                key={call.id}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 50 }}
+                transition={{ duration: 0.3 }}
+                className="flex items-center justify-between bg-muted p-3 rounded-lg shadow"
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar>
+                    <AvatarImage src={call.avatar} />
+                    <AvatarFallback>{call.name[0]}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h2 className="font-medium">{call.name}</h2>
+                    <p className="text-sm text-muted-foreground">{call.date}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="icon">
+                    <Phone className="h-5 w-5" />
+                  </Button>
+                  <Button variant="ghost" size="icon">
+                    <Video className="h-5 w-5" />
+                  </Button>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="h-5 w-5" />
+                  </Button>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </ScrollArea>
     </div>
   )
 }
