@@ -7,7 +7,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { CreditCard, Send, Repeat, PlusCircle, ArrowUpRight, ArrowDownLeft } from 'lucide-react'
+import { CreditCard, Send, Repeat, PlusCircle, ArrowUpRight, ArrowDownLeft, Search } from 'lucide-react'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { motion } from 'framer-motion'
 
 const recentTransactions = [
   { id: '1', type: 'sent', amount: 500, to: 'Rahul', date: '2023-05-15' },
@@ -18,6 +20,12 @@ const recentTransactions = [
 export default function PaymentsPage() {
   const [amount, setAmount] = useState('')
   const [recipient, setRecipient] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredTransactions = recentTransactions.filter(transaction =>
+    transaction.to?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    transaction.from?.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -103,31 +111,49 @@ export default function PaymentsPage() {
               <CardDescription>Your payment activity</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-4">
-                {recentTransactions.map(transaction => (
-                  <li key={transaction.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Avatar>
-                        <AvatarFallback>{transaction.to?.[0] || transaction.from?.[0]}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{transaction.to || transaction.from}</p>
-                        <p className="text-sm text-muted-foreground">{transaction.date}</p>
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search transactions..."
+                  className="pl-9 pr-4"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <ScrollArea className="h-[300px]">
+                <ul className="space-y-4">
+                  {filteredTransactions.map(transaction => (
+                    <motion.li 
+                      key={transaction.id} 
+                      className="flex items-center justify-between"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                    >
+                      <div className="flex items-center gap-4">
+                        <Avatar>
+                          <AvatarFallback>{transaction.to?.[0] || transaction.from?.[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{transaction.to || transaction.from}</p>
+                          <p className="text-sm text-muted-foreground">{transaction.date}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={transaction.type === 'sent' ? 'destructive' : 'default'}>
-                        {transaction.type === 'sent' ? (
-                          <ArrowUpRight className="h-4 w-4 mr-1" />
-                        ) : (
-                          <ArrowDownLeft className="h-4 w-4 mr-1" />
-                        )}
-                        ₹{transaction.amount}
-                      </Badge>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={transaction.type === 'sent' ? 'destructive' : 'default'}>
+                          {transaction.type === 'sent' ? (
+                            <ArrowUpRight className="h-4 w-4 mr-1" />
+                          ) : (
+                            <ArrowDownLeft className="h-4 w-4 mr-1" />
+                          )}
+                          ₹{transaction.amount}
+                        </Badge>
+                      </div>
+                    </motion.li>
+                  ))}
+                </ul>
+              </ScrollArea>
             </CardContent>
           </Card>
         </TabsContent>
@@ -135,4 +161,3 @@ export default function PaymentsPage() {
     </div>
   )
 }
-

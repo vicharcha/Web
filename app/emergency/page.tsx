@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Ambulance, Phone, Hospital, BadgeIcon as Police, FlameIcon as Fire } from 'lucide-react'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { motion } from 'framer-motion'
 
 const emergencyContacts = [
   { id: '1', name: 'Ambulance', number: '102', icon: Ambulance },
@@ -45,26 +47,35 @@ export default function EmergencyPage() {
           <TabsTrigger value="hospitals">Nearby Hospitals</TabsTrigger>
         </TabsList>
         <TabsContent value="contacts">
-          <div className="grid gap-4 md:grid-cols-3">
-            {emergencyContacts.map(contact => (
-              <Card key={contact.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <contact.icon className="h-5 w-5" />
-                    {contact.name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold">{contact.number}</p>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full">
-                    <Phone className="mr-2 h-4 w-4" /> Call
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+          <ScrollArea className="h-[300px]">
+            <div className="grid gap-4 md:grid-cols-3">
+              {emergencyContacts.map(contact => (
+                <motion.div 
+                  key={contact.id} 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                >
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <contact.icon className="h-5 w-5" />
+                        {contact.name}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-2xl font-bold">{contact.number}</p>
+                    </CardContent>
+                    <CardFooter>
+                      <Button className="w-full">
+                        <Phone className="mr-2 h-4 w-4" /> Call
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </ScrollArea>
         </TabsContent>
         <TabsContent value="hospitals">
           <div className="space-y-4">
@@ -76,33 +87,41 @@ export default function EmergencyPage() {
               />
               <Button>Find Hospitals</Button>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              {nearbyHospitals.map(hospital => (
-                <Card key={hospital.id}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Hospital className="h-5 w-5" />
-                      {hospital.name}
-                    </CardTitle>
-                    <CardDescription>
-                      <Badge variant="secondary">{hospital.distance}</Badge>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="font-medium">{hospital.phone}</p>
-                  </CardContent>
-                  <CardFooter>
-                    <Button className="w-full">
-                      <Phone className="mr-2 h-4 w-4" /> Call
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+            <ScrollArea className="h-[300px]">
+              <div className="grid gap-4 md:grid-cols-2">
+                {nearbyHospitals.map(hospital => (
+                  <motion.div 
+                    key={hospital.id} 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Hospital className="h-5 w-5" />
+                          {hospital.name}
+                        </CardTitle>
+                        <CardDescription>
+                          <Badge variant="secondary">{hospital.distance}</Badge>
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="font-medium">{hospital.phone}</p>
+                      </CardContent>
+                      <CardFooter>
+                        <Button className="w-full">
+                          <Phone className="mr-2 h-4 w-4" /> Call
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
         </TabsContent>
       </Tabs>
     </div>
   )
 }
-

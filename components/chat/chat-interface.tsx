@@ -3,6 +3,9 @@
 import React, { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Paperclip, Image, Smile, Mic, Send } from 'lucide-react'
 
 interface MessageReaction {
   emoji: string;
@@ -34,13 +37,35 @@ interface ChatMessages {
 }
 
 export function ChatInterface() {
-  const [messages /*, setMessages*/ ] = useState<ChatMessages>({ default: [] });
+  const [messages, setMessages] = useState<ChatMessages>({ default: [] });
   const [selectedChat] = useState<string>('default');
   const [isTyping] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      content: message,
+      timestamp: new Date().toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      }),
+      sender: 'user',
+      status: 'sent'
+    };
+
+    setMessages(prev => ({
+      ...prev,
+      [selectedChat]: [...(prev[selectedChat] || []), newMessage]
+    }));
+    setMessage('');
+  };
 
   return (
-    <div className="flex h-full">
-      {/* ...existing code... */}
+    <div className="flex h-full flex-col">
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {(messages[selectedChat] || []).map((message: Message, index: number) => {
@@ -114,7 +139,35 @@ export function ChatInterface() {
           )}
         </div>
       </ScrollArea>
-      {/* ...existing code... */}
+      <div className="p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <form className="flex items-center gap-2" onSubmit={handleSendMessage}>
+          <Button variant="ghost" size="icon" className="hover:bg-muted">
+            <Paperclip className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="hover:bg-muted">
+            <Image className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="hover:bg-muted">
+            <Smile className="h-5 w-5" />
+          </Button>
+          <Input
+            placeholder="Type a message..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className="flex-1"
+          />
+          <Button variant="ghost" size="icon" className="hover:bg-muted">
+            <Mic className="h-5 w-5" />
+          </Button>
+          <Button 
+            type="submit" 
+            variant={message.trim() ? "default" : "ghost"}
+            className={message.trim() ? "" : "hover:bg-muted"}
+          >
+            <Send className="h-5 w-5" />
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

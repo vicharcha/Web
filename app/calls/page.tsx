@@ -8,6 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Phone, Video, VoicemailIcon as VoiceMail, Clock, Search } from 'lucide-react'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { motion } from 'framer-motion'
 
 type Call = {
   id: string
@@ -60,41 +62,49 @@ export default function CallsPage() {
               <CardDescription>Your call history</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-4">
-                {filteredCalls.map(call => (
-                  <li key={call.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Avatar>
-                        <AvatarImage src={call.avatar} alt={call.name} />
-                        <AvatarFallback>{call.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{call.name}</p>
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          {call.type === 'audio' && <Phone className="h-4 w-4 mr-1" />}
-                          {call.type === 'video' && <Video className="h-4 w-4 mr-1" />}
-                          {call.type === 'missed' && <Phone className="h-4 w-4 mr-1 text-red-500" />}
-                          <span>{call.date}</span>
+              <ScrollArea className="h-[300px]">
+                <ul className="space-y-4">
+                  {filteredCalls.map(call => (
+                    <motion.li 
+                      key={call.id} 
+                      className="flex items-center justify-between"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                    >
+                      <div className="flex items-center gap-4">
+                        <Avatar>
+                          <AvatarImage src={call.avatar} alt={call.name} />
+                          <AvatarFallback>{call.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{call.name}</p>
+                          <div className="flex items-center text-sm text-muted-foreground">
+                            {call.type === 'audio' && <Phone className="h-4 w-4 mr-1" />}
+                            {call.type === 'video' && <Video className="h-4 w-4 mr-1" />}
+                            {call.type === 'missed' && <Phone className="h-4 w-4 mr-1 text-red-500" />}
+                            <span>{call.date}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {call.duration && (
-                        <Badge variant="secondary">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {call.duration}
-                        </Badge>
-                      )}
-                      <Button size="icon" variant="ghost">
-                        <Phone className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost">
-                        <Video className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                      <div className="flex items-center gap-2">
+                        {call.duration && (
+                          <Badge variant="secondary">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {call.duration}
+                          </Badge>
+                        )}
+                        <Button size="icon" variant="ghost">
+                          <Phone className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost">
+                          <Video className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </motion.li>
+                  ))}
+                </ul>
+              </ScrollArea>
             </CardContent>
           </Card>
         </TabsContent>
@@ -126,4 +136,3 @@ export default function CallsPage() {
     </div>
   )
 }
-
