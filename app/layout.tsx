@@ -29,7 +29,7 @@ export default function RootLayout({
                 <Sidebar />
                 <div className="flex-1 flex flex-col min-h-0">
                   <TopMenu />
-                  <main className="flex-1 overflow-auto">
+                  <main className="flex-1 overflow-auto p-4 mobile-content tablet-content computer-half-content computer-full-content desktop-content">
                     {children}
                   </main>
                   <BottomNav />
@@ -42,4 +42,3 @@ export default function RootLayout({
     </html>
   )
 }
-

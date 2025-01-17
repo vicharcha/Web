@@ -67,7 +67,8 @@ export default function ChatPage() {
       <div className="flex-1 border-l flex flex-col">
         {selectedChat ? (
           <>
-            <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-purple-500 to-pink-500">
+            <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-purple-500 to-pink-500
+                            mobile-header tablet-header computer-half-header computer-full-header desktop-header">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src="/placeholder.svg" alt="Placeholder" />

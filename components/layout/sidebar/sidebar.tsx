@@ -127,6 +127,7 @@ export function Sidebar() {
                       collapsed={collapsed}
                       isActive={pathname === item.href}
                       onClick={() => isMobile && setIsOpen(false)}
+                      className="mobile-sidebar tablet-sidebar computer-half-sidebar computer-full-sidebar desktop-sidebar"
                     />
                   ))}
                 </div>
@@ -162,4 +163,3 @@ export function Sidebar() {
     </div>
   )
 }
-
