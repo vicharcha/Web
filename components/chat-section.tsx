@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Search } from 'lucide-react'
+import { CheckCircle, Search, Filter } from 'lucide-react'
 import { motion, AnimatePresence } from "framer-motion"
 
 type ChatUser = {
@@ -41,7 +41,26 @@ const chats: ChatUser[] = [
     isPremium: true,
     avatar: '/placeholder.svg'
   },
-  // Add more chats...
+  { 
+    id: '2', 
+    name: 'Bob', 
+    lastMessage: 'Meeting at 3?', 
+    time: '9:45 AM', 
+    unread: 0,
+    isVerified: false,
+    isPremium: false,
+    avatar: '/placeholder.svg'
+  },
+  { 
+    id: '3', 
+    name: 'Carol', 
+    lastMessage: 'Thanks!', 
+    time: 'Yesterday', 
+    unread: 1,
+    isVerified: true,
+    isPremium: true,
+    avatar: '/placeholder.svg'
+  }
 ]
 
 const groups: Group[] = [
@@ -53,7 +72,22 @@ const groups: Group[] = [
     time: '11:45 AM',
     isVerified: true
   },
-  // Add more groups...
+  { 
+    id: '2', 
+    name: 'Work Team', 
+    members: 8, 
+    lastMessage: 'Meeting notes shared', 
+    time: '10:30 AM',
+    isVerified: true
+  },
+  { 
+    id: '3', 
+    name: 'Friends', 
+    members: 12, 
+    lastMessage: 'Movie this weekend?', 
+    time: 'Yesterday',
+    isVerified: false
+  }
 ]
 
 interface ChatSectionProps {
@@ -195,4 +229,3 @@ export function ChatSection({ onSelectChat }: ChatSectionProps) {
     </div>
   )
 }
-

@@ -3,6 +3,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Check, Bell, Users, Heart, MessageCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { motion } from 'framer-motion';
 
 interface Notification {
   id: string;
@@ -28,7 +30,24 @@ export function NotificationPanel() {
   ];
 
   const [activeCategory, setActiveCategory] = useState('all');
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: '1',
+      title: 'New Like',
+      message: 'Someone liked your post.',
+      timestamp: '2 hours ago',
+      read: false,
+      category: 'likes',
+    },
+    {
+      id: '2',
+      title: 'New Follower',
+      message: 'You have a new follower.',
+      timestamp: '1 day ago',
+      read: true,
+      category: 'follows',
+    },
+  ]);
 
   const markAsRead = (id: string) => {
     setNotifications(prev => 
@@ -63,11 +82,14 @@ export function NotificationPanel() {
           <ScrollArea className="h-[400px] w-full p-4">
             <div className="space-y-4">
               {filteredNotifications.map((notification) => (
-                <div 
+                <motion.div 
                   key={notification.id}
                   className={`p-4 rounded-lg border ${
                     notification.read ? 'bg-background' : 'bg-muted'
                   }`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <h4 className="font-semibold">{notification.title}</h4>
@@ -83,7 +105,7 @@ export function NotificationPanel() {
                   <span className="text-xs text-muted-foreground mt-2">
                     {notification.timestamp}
                   </span>
-                </div>
+                </motion.div>
               ))}
             </div>
           </ScrollArea>

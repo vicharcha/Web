@@ -291,4 +291,3 @@ export function ChatSidebar({ onSelectChat }: ChatSidebarProps) {
     </div>
   )
 }
-
