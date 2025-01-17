@@ -140,3 +140,53 @@
   }
 }
 
+/* Media queries for responsive design */
+@media (max-width: 640px) {
+  /* Mobile view adjustments */
+  .mobile-header {
+    @apply text-lg;
+  }
+  .mobile-content {
+    @apply p-2;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  /* Tablet view adjustments */
+  .tablet-header {
+    @apply text-xl;
+  }
+  .tablet-content {
+    @apply p-4;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Computer half view adjustments */
+  .computer-half-header {
+    @apply text-2xl;
+  }
+  .computer-half-content {
+    @apply p-6;
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1440px) {
+  /* Computer full view adjustments */
+  .computer-full-header {
+    @apply text-3xl;
+  }
+  .computer-full-content {
+    @apply p-8;
+  }
+}
+
+@media (min-width: 1441px) {
+  /* Desktop view adjustments */
+  .desktop-header {
+    @apply text-4xl;
+  }
+  .desktop-content {
+    @apply p-10;
+  }
+}

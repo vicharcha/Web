@@ -57,7 +57,8 @@ export default function CallsPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 50 }}
                 transition={{ duration: 0.3 }}
-                className="flex items-center justify-between bg-muted p-3 rounded-lg shadow"
+                className="flex items-center justify-between bg-muted p-3 rounded-lg shadow
+                           mobile-content tablet-content computer-half-content computer-full-content desktop-content"
               >
                 <div className="flex items-center gap-3">
                   <Avatar>
