@@ -3,9 +3,13 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+type VerificationStatus = 'unverified' | 'pending' | 'verified'
+
 type User = {
   phoneNumber: string
   name: string
+  verificationStatus: VerificationStatus
+  isPremium: boolean
 } | null
 
 type AuthContextType = {
@@ -14,16 +18,22 @@ type AuthContextType = {
   logout: () => void
   verifyOTP: (otp: string) => Promise<boolean>
   setUserName: (name: string) => void
+  startDigiLockerVerification: () => Promise<void>
+  checkVerificationStatus: () => Promise<VerificationStatus>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+const validateIndianPhoneNumber = (phone: string) => {
+  const phoneRegex = /^[6-9]\d{9}$/
+  return phoneRegex.test(phone)
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null)
   const router = useRouter()
 
   useEffect(() => {
-    // Check for existing session
     const storedUser = localStorage.getItem('user')
     if (storedUser) {
       setUser(JSON.parse(storedUser))
@@ -31,16 +41,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const login = async (phoneNumber: string) => {
+    if (!phoneNumber.startsWith('+91')) {
+      throw new Error('Only Indian phone numbers (+91) are allowed')
+    }
+
+    const cleanNumber = phoneNumber.replace('+91', '')
+    if (!validateIndianPhoneNumber(cleanNumber)) {
+      throw new Error('Invalid phone number format')
+    }
+
     // Simulate API call to send OTP
     console.log(`Sending OTP to ${phoneNumber}`)
-    // In a real app, you'd make an API call here
-    setUser({ phoneNumber, name: '' })
+    setUser({ 
+      phoneNumber, 
+      name: '', 
+      verificationStatus: 'unverified',
+      isPremium: false
+    })
+  }
+
+  const startDigiLockerVerification = async () => {
+    // Simulate DigiLocker API integration
+    console.log('Starting DigiLocker verification flow')
+    if (user) {
+      const updatedUser = { ...user, verificationStatus: 'pending' }
+      setUser(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+    }
+  }
+
+  const checkVerificationStatus = async (): Promise<VerificationStatus> => {
+    // Simulate checking DigiLocker verification status
+    if (user) {
+      const status = user.verificationStatus
+      return status
+    }
+    return 'unverified'
   }
 
   const verifyOTP = async (otp: string) => {
     // Simulate OTP verification
     console.log(`Verifying OTP: ${otp}`)
-    // In a real app, you'd verify the OTP with your backend here
     return true
   }
 
@@ -59,7 +100,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, verifyOTP, setUserName }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      logout, 
+      verifyOTP, 
+      setUserName,
+      startDigiLockerVerification,
+      checkVerificationStatus
+    }}>
       {children}
     </AuthContext.Provider>
   )
