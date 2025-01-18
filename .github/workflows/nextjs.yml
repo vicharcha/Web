@@ -44,12 +44,11 @@ jobs:
             echo "runner=yarn" >> $GITHUB_OUTPUT
           elif [ -f "${{ github.workspace }}/package.json" ]; then
             echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            echo "runner=npx --no-install" >> $GITHUB_OUTPUT
+            echo "command=install" >> $GITHUB_OUTPUT
+            echo "runner=npm" >> $GITHUB_OUTPUT
           else
             echo "Error: Unable to detect package manager"
             exit 1
-          fi
 
       # Set up Node.js with caching
       - name: Setup Node.js
@@ -64,6 +63,7 @@ jobs:
         with:
           # Automatically adjust basePath and image settings for static export
           static_site_generator: next
+          enablement: true   # Added this line
 
       # Restore build cache
       - name: Restore Build Cache
