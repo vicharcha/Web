@@ -1,40 +1,30 @@
-# Workflow for building and deploying a Next.js site to GitHub Pages
-#
-# Documentation: https://nextjs.org/docs/getting-started
-
 name: Deploy Next.js site to Pages
 
 on:
-  # Trigger workflow on pushes to the default branch
   push:
     branches: ["main"]
-
-  # Allow manual runs from the Actions tab
   workflow_dispatch:
 
-# Permissions for the GITHUB_TOKEN to manage deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Ensure only one deployment process runs at a time
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Build job
   build:
     name: Build Next.js Site
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository
+      # Step 1: Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Detect the package manager (Yarn or NPM)
+      # Step 2: Detect the package manager (Yarn or NPM)
       - name: Detect Package Manager
         id: detect-package-manager
         run: |
@@ -49,23 +39,23 @@ jobs:
           else
             echo "Error: Unable to detect package manager"
             exit 1
+          fi
 
-      # Set up Node.js with caching
+      # Step 3: Set up Node.js with caching
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: ${{ steps.detect-package-manager.outputs.manager }}
 
-      # Configure GitHub Pages for Next.js
+      # Step 4: Configure GitHub Pages for Next.js
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
-          # Automatically adjust basePath and image settings for static export
           static_site_generator: next
-          enablement: true   # Added this line
+          enablement: true
 
-      # Restore build cache
+      # Step 5: Restore build cache
       - name: Restore Build Cache
         uses: actions/cache@v4
         with:
@@ -74,25 +64,24 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
 
-      # Install project dependencies
+      # Step 6: Install project dependencies
       - name: Install Dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
 
-      # Build the Next.js site
+      # Step 7: Build the Next.js site
       - name: Build Next.js Site
         run: ${{ steps.detect-package-manager.outputs.runner }} next build
 
-      # Start the development server
+      # Step 8: Start the development server (optional for testing)
       - name: Start Development Server
         run: ${{ steps.detect-package-manager.outputs.runner }} run dev
 
-      # Upload the build artifacts for deployment
+      # Step 9: Upload the build artifacts for deployment
       - name: Upload Build Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
 
-  # Deployment job
   deploy:
     name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
@@ -103,7 +92,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      # Deploy the uploaded artifact to GitHub Pages
+      # Step 10: Deploy the uploaded artifact to GitHub Pages
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
