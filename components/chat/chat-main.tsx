@@ -36,4 +36,3 @@ export function ChatMain({ chatId, onOpenSidebar, className }: ChatMainProps) {
     </div>
   )
 }
-

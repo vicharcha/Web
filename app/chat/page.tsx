@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { ChatSidebar } from '@/components/chat-sidebar'
-import { ChatInterface } from '@/components/chat/chat-interface'
+import ChatInterface from "@/components/chat/chat-interface"
 import { Button } from '@/components/ui/button'
 import { Video, Phone, MoreVertical } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'

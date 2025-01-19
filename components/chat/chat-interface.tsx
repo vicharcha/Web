@@ -1,318 +1,222 @@
-"use client"
-
 import { useState, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Phone, Video, Paperclip, ImageIcon, Smile, Mic, Send, ChevronLeft, MoreVertical, Play, X } from 'lucide-react'
-import { motion, AnimatePresence, PanInfo } from 'framer-motion'
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetTrigger 
-} from "@/components/ui/sheet"
-import { useToast } from "@/components/ui/use-toast"
-import { useMediaQuery } from '@/hooks/use-media-query'
-import { cn } from '@/lib/utils'
-import Image from 'next/image'
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Send, Mic, Image as ImageIcon, Paperclip, Smile, Play, Check, AlertCircle } from 'lucide-react'
+import { cn } from "@/lib/utils"
 
 interface Message {
   id: string
   content: string
   timestamp: string
   sender: 'user' | 'other'
-  status: 'sent' | 'delivered' | 'read'
-  reactions?: string[]
-  replyTo?: {
-    id: string
-    content: string
+  status: 'sending' | 'sent' | 'delivered' | 'read' | 'failed'
+  type: 'text' | 'image' | 'audio'
+  metadata?: {
+    fileUrl?: string
+    fileName?: string
+    duration?: number
   }
-  type: 'text' | 'voice' | 'image'
-  voiceDuration?: number
-  imageUrl?: string
 }
 
-interface ChatInterfaceProps {
-  chatId: string | null
-  onBack?: () => void
-}
-
-export function ChatInterface({ chatId, onBack }: ChatInterfaceProps) {
-  const [message, setMessage] = useState('')
+export default function EnhancedChatInterface() {
   const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState('')
   const [isRecording, setIsRecording] = useState(false)
   const [recordingDuration, setRecordingDuration] = useState(0)
   const [isTyping, setIsTyping] = useState(false)
-  const [replyingTo, setReplyingTo] = useState<Message | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  
   const scrollRef = useRef<HTMLDivElement>(null)
-  const recordingTimeoutRef = useRef<NodeJS.Timeout>()
-  const { toast } = useToast()
-  const isMobile = useMediaQuery("(max-width: 768px)")
+  const recordingTimer = useRef<NodeJS.Timeout>()
 
   useEffect(() => {
-    // Simulate initial messages
-    setMessages([
-      {
-        id: '1',
-        content: 'Hello! How can I help you today?',
-        timestamp: '10:00 AM',
-        sender: 'other',
-        status: 'read',
-        type: 'text'
-      },
-      {
-        id: '2',
-        content: 'I have a question about the new feature.',
-        timestamp: '10:05 AM',
-        sender: 'user',
-        status: 'read',
-        type: 'text'
-      }
-    ])
-  }, [])
-
-  useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: 'smooth'
-    })
+    scrollToBottom()
   }, [messages])
 
-  const handleSendMessage = () => {
-    if (!message.trim() && !replyingTo) return
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content: message,
-      timestamp: new Date().toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }),
-      sender: 'user',
-      status: 'sent',
-      type: 'text',
-      ...(replyingTo && {
-        replyTo: {
-          id: replyingTo.id,
-          content: replyingTo.content
-        }
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth'
       })
     }
+  }
 
-    setMessages(prev => [...prev, newMessage])
-    setMessage('')
-    setReplyingTo(null)
+  const validateMessage = (content: string): boolean => {
+    if (!content.trim()) {
+      setError('Message cannot be empty')
+      return false
+    }
+    if (content.length > 500) {
+      setError('Message is too long (max 500 characters)')
+      return false
+    }
+    setError(null)
+    return true
+  }
 
-    // Simulate typing indicator
-    setIsTyping(true)
-    setTimeout(() => {
+  const handleSendMessage = async () => {
+    if (!validateMessage(newMessage)) return
+
+    const message: Message = {
+      id: Date.now().toString(),
+      content: newMessage,
+      timestamp: new Date().toLocaleTimeString(),
+      sender: 'user',
+      status: 'sending',
+      type: 'text'
+    }
+
+    setMessages(prev => [...prev, message])
+    setNewMessage('')
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === message.id ? { ...msg, status: 'sent' } : msg
+        )
+      )
+
+      // Simulate typing indicator
+      setIsTyping(true)
+      await new Promise(resolve => setTimeout(resolve, 2000))
       setIsTyping(false)
+
+      // Simulate response
       const response: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I'll help you with that feature question!",
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit'
-        }),
+        content: 'Thanks for your message! I\'ll get back to you soon.',
+        timestamp: new Date().toLocaleTimeString(),
         sender: 'other',
-        status: 'sent',
+        status: 'read',
         type: 'text'
       }
       setMessages(prev => [...prev, response])
-    }, 2000)
-  }
-
-  const handleSwipe = (message: Message) => (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (info.offset.x > 50) {
-      setReplyingTo(message)
+    } catch {
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === message.id ? { ...msg, status: 'failed' } : msg
+        )
+      )
+      setError('Failed to send message. Please try again.')
     }
   }
 
   const startRecording = () => {
     setIsRecording(true)
     setRecordingDuration(0)
-    recordingTimeoutRef.current = setInterval(() => {
+    recordingTimer.current = setInterval(() => {
       setRecordingDuration(prev => prev + 1)
     }, 1000)
   }
 
-  const stopRecording = () => {
-    if (recordingTimeoutRef.current) {
-      clearInterval(recordingTimeoutRef.current)
+  const stopRecording = async () => {
+    if (recordingTimer.current) {
+      clearInterval(recordingTimer.current)
     }
     setIsRecording(false)
-    
-    const newMessage: Message = {
+
+    // Simulate audio processing
+    const audioMessage: Message = {
       id: Date.now().toString(),
       content: 'Voice message',
-      timestamp: new Date().toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }),
+      timestamp: new Date().toLocaleTimeString(),
       sender: 'user',
-      status: 'sent',
-      type: 'voice',
-      voiceDuration: recordingDuration
+      status: 'sending',
+      type: 'audio',
+      metadata: {
+        duration: recordingDuration
+      }
     }
 
-    setMessages(prev => [...prev, newMessage])
+    setMessages(prev => [...prev, audioMessage])
     setRecordingDuration(0)
   }
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader()
-      reader.onload = () => {
-        const newMessage: Message = {
-          id: Date.now().toString(),
-          content: 'Image',
-          timestamp: new Date().toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          }),
-          sender: 'user',
-          status: 'sent',
-          type: 'image',
-          imageUrl: reader.result as string
-        }
-        setMessages(prev => [...prev, newMessage])
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  if (!chatId) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="text-center">
-          <h2 className="text-lg font-semibold">Select a chat to start messaging</h2>
-          <p className="text-muted-foreground">Choose from your conversations on the left</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex-1 flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-500 to-pink-500">
-        <div className="flex items-center gap-3">
-          {isMobile && (
-            <Button 
-              size="icon" 
-              variant="ghost" 
-              onClick={onBack}
-              className="text-white hover:bg-white/10"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-          )}
-          <Avatar>
-            <AvatarImage src="/placeholder.svg" />
-            <AvatarFallback>AI</AvatarFallback>
-          </Avatar>
-          <div>
-            <h2 className="font-semibold text-white">Chat with {chatId}</h2>
-            <p className="text-sm text-white/70">Online</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button size="icon" variant="ghost" className="text-white hover:bg-white/10">
-            <Phone className="h-5 w-5" />
-          </Button>
-          <Button size="icon" variant="ghost" className="text-white hover:bg-white/10">
-            <Video className="h-5 w-5" />
-          </Button>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button size="icon" variant="ghost" className="text-white hover:bg-white/10">
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Chat Settings</SheetTitle>
-              </SheetHeader>
-              <div className="py-4">
-                <Button variant="outline" className="w-full justify-start" onClick={() => {
-                  toast({
-                    title: "Chat cleared",
-                    description: "All messages have been cleared from this chat."
-                  })
-                  setMessages([])
-                }}>
-                  Clear Chat
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-
+    <div className="flex flex-col h-full bg-background">
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="space-y-4">
           <AnimatePresence>
-            {messages.map((msg) => (
+            {messages.map((message) => (
               <motion.div
-                key={msg.id}
+                key={message.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                drag="x"
-                dragConstraints={{ left: 0, right: 100 }}
-                onDragEnd={handleSwipe(msg)}
                 className={cn(
-                  "flex items-start gap-3",
-                  msg.sender === 'user' && "flex-row-reverse"
+                  "flex items-start gap-2",
+                  message.sender === 'user' ? "justify-end" : "justify-start"
                 )}
               >
-                <Avatar className="mt-1">
-                  <AvatarImage src="/placeholder.svg" />
-                  <AvatarFallback>{msg.sender === 'user' ? 'U' : 'AI'}</AvatarFallback>
-                </Avatar>
                 <div className={cn(
-                  "max-w-[80%]",
-                  msg.sender === 'user' 
-                    ? "bg-primary text-primary-foreground rounded-lg rounded-tr-none" 
-                    : "bg-muted rounded-lg rounded-tl-none"
+                  "flex items-start gap-2",
+                  message.sender === 'user' && "flex-row-reverse"
                 )}>
-                  {msg.replyTo && (
-                    <div className="px-3 pt-2 pb-1 -mb-1 text-sm border-l-2 border-purple-500 bg-background/10 rounded-t-lg">
-                      <p className="opacity-70 text-xs">Replying to</p>
-                      <p className="truncate">{msg.replyTo.content}</p>
-                    </div>
-                  )}
-                  <div className="p-3">
-                    {msg.type === 'text' && (
-                      <p>{msg.content}</p>
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="/placeholder.svg" />
+                    <AvatarFallback>
+                      {message.sender === 'user' ? 'U' : 'O'}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className={cn(
+                    "max-w-[80%] rounded-lg px-4 py-2",
+                    message.sender === 'user' 
+                      ? "bg-primary text-primary-foreground rounded-tr-none"
+                      : "bg-muted rounded-tl-none"
+                  )}>
+                    {message.type === 'text' && (
+                      <p className="text-sm">{message.content}</p>
                     )}
-                    {msg.type === 'voice' && (
+
+                    {message.type === 'audio' && (
                       <div className="flex items-center gap-2">
                         <Button size="icon" variant="ghost" className="h-8 w-8">
                           <Play className="h-4 w-4" />
                         </Button>
-                        <div className="h-1 flex-1 bg-background/20 rounded-full" />
-                        <span className="text-xs">{msg.voiceDuration}s</span>
+                        <div className="h-1 w-32 bg-primary/20 rounded-full" />
+                        <span className="text-xs">
+                          {message.metadata?.duration}s
+                        </span>
                       </div>
                     )}
-                    {msg.type === 'image' && msg.imageUrl && (
-                      <Image 
-                        src={msg.imageUrl || "/placeholder.svg"} 
-                        alt={`Shared content from ${msg.sender}`}
-                        width={300}
-                        height={200}
-                        className="rounded-lg max-w-full"
-                      />
-                    )}
+
                     <div className="flex items-center justify-end gap-1 mt-1">
-                      <span className="text-xs opacity-70">{msg.timestamp}</span>
-                      {msg.sender === 'user' && (
-                        <span className="text-xs opacity-70">
-                          {msg.status === 'read' ? '✓✓' : '✓'}
-                        </span>
+                      <span className="text-xs opacity-70">
+                        {message.timestamp}
+                      </span>
+                      {message.sender === 'user' && (
+                        <div className="flex items-center">
+                          {message.status === 'failed' ? (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <AlertCircle className="h-3 w-3 text-destructive" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Failed to send. Click to retry.
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <div className="flex">
+                              <Check className={cn(
+                                "h-3 w-3",
+                                message.status === 'read' && "text-blue-500"
+                              )} />
+                              {message.status === 'read' && (
+                                <Check className="h-3 w-3 -ml-1 text-blue-500" />
+                              )}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -320,103 +224,70 @@ export function ChatInterface({ chatId, onBack }: ChatInterfaceProps) {
               </motion.div>
             ))}
           </AnimatePresence>
-          
+
           {isTyping && (
-            <div className="flex items-start gap-3">
-              <Avatar className="mt-1">
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback>AI</AvatarFallback>
-              </Avatar>
-              <div className="bg-muted rounded-lg rounded-tl-none p-3">
-                <div className="flex gap-1">
-                  <motion.div
-                    className="w-2 h-2 bg-current rounded-full"
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 0.5, repeat: Infinity }}
-                  />
-                  <motion.div
-                    className="w-2 h-2 bg-current rounded-full"
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 0.5, repeat: Infinity, delay: 0.2 }}
-                  />
-                  <motion.div
-                    className="w-2 h-2 bg-current rounded-full"
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 0.5, repeat: Infinity, delay: 0.4 }}
-                  />
-                </div>
-              </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <motion.div
+                className="h-2 w-2 bg-current rounded-full"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity }}
+              />
+              <motion.div
+                className="h-2 w-2 bg-current rounded-full"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity, delay: 0.2 }}
+              />
+              <motion.div
+                className="h-2 w-2 bg-current rounded-full"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity, delay: 0.4 }}
+              />
             </div>
           )}
         </div>
       </ScrollArea>
 
-      {replyingTo && (
-        <div className="px-4 py-2 border-t flex items-center gap-2">
-          <div className="flex-1">
-            <p className="text-xs text-muted-foreground">Replying to</p>
-            <p className="text-sm truncate">{replyingTo.content}</p>
-          </div>
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            onClick={() => setReplyingTo(null)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+      {error && (
+        <Alert variant="destructive" className="mx-4 my-2">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       <div className="p-4 border-t">
         <div className="flex items-center gap-2">
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            id="image-upload"
-            aria-label="Upload image"
-            onChange={handleFileUpload}
-          />
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-muted-foreground hover:text-foreground"
-            asChild
-          >
-            <label htmlFor="image-upload">
-              <Paperclip className="h-5 w-5" />
-            </label>
+          <Button variant="ghost" size="icon">
+            <Paperclip className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="icon">
             <ImageIcon className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="icon">
             <Smile className="h-5 w-5" />
           </Button>
-          <Input 
-            placeholder="Type a message..." 
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="flex-1"
+          <Input
+            placeholder="Type a message..."
+            value={newMessage}
+            onChange={(e) => {
+              setNewMessage(e.target.value)
+              setError(null)
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault()
                 handleSendMessage()
               }
             }}
+            className="flex-1"
+            maxLength={500}
           />
-          {message.trim() ? (
-            <Button 
-              size="icon" 
-              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90"
-              onClick={handleSendMessage}
-            >
+          {newMessage.trim() ? (
+            <Button onClick={handleSendMessage}>
               <Send className="h-5 w-5" />
             </Button>
           ) : (
             <Button
-              size="icon"
               variant="ghost"
+              size="icon"
               className={cn(
                 "text-muted-foreground hover:text-foreground",
                 isRecording && "text-red-500 hover:text-red-600"
@@ -435,4 +306,3 @@ export function ChatInterface({ chatId, onBack }: ChatInterfaceProps) {
     </div>
   )
 }
-
