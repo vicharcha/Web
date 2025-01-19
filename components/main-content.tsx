@@ -1,200 +1,335 @@
-"use client"
+'use client'
 
-import { useState } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal } from 'lucide-react'
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Textarea } from "@/components/ui/textarea"
+import { useState, useCallback, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useToast } from "@/components/ui/use-toast"
+import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal, Smile } from 'lucide-react'
+import Image from 'next/image'
+
+// Sample stories data
+const stories = [
+  { id: 1, username: 'frontlines', avatar: '/placeholder.svg?1', hasStory: true },
+  { id: 2, username: 'lohithsai', avatar: '/placeholder.svg?2', hasStory: true },
+  { id: 3, username: 'lizz_nikzz', avatar: '/placeholder.svg?3', hasStory: true },
+  { id: 4, username: 'olgakay', avatar: '/placeholder.svg?4', hasStory: true },
+  { id: 5, username: 'krishna_ta', avatar: '/placeholder.svg?5', hasStory: true },
+  { id: 6, username: 'mizzlesupreme', avatar: '/placeholder.svg?6', hasStory: true },
+  { id: 7, username: 'speedymo', avatar: '/placeholder.svg?7', hasStory: true },
+  { id: 8, username: 'luvvie', avatar: '/placeholder.svg?8', hasStory: true },
+]
+
+interface Post {
+  id: number
+  username: string
+  avatar: string
+  verified: boolean
+  image: string
+  caption: string
+  timestamp: string
+  likes: number
+  comments: Array<{
+    id: number
+    username: string
+    content: string
+    timestamp: string
+    likes: number
+  }>
+}
+
+const postVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { type: "spring", stiffness: 100 }
+  },
+  exit: { 
+    opacity: 0, 
+    y: -20,
+    transition: { duration: 0.2 }
+  }
+}
 
 export function MainContent() {
-  const [likes, setLikes] = useState<Record<number, boolean>>({})
-  const [comments, setComments] = useState<Record<number, string[]>>({})
-  const [newComment, setNewComment] = useState<string>('')
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+  const [newComments, setNewComments] = useState<Record<number, string>>({})
+  const { toast } = useToast()
+
+  // Fetch posts
+  const fetchPosts = useCallback(async () => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      const newPosts: Post[] = [{
+        id: 1,
+        username: 'github',
+        avatar: '/placeholder.svg?github',
+        verified: true,
+        image: '/placeholder.svg?text=GitHub+Copilot',
+        caption: 'What will you build with GitHub Copilot? Link in bio.',
+        timestamp: '1d',
+        likes: 1178,
+        comments: [
+          {
+            id: 1,
+            username: 'mikemajdalani',
+            content: '🔥 🔥',
+            timestamp: '1d',
+            likes: 1
+          },
+          {
+            id: 2,
+            username: 'ankushsharma',
+            content: "It isn't that much smooth 😕",
+            timestamp: '20h',
+            likes: 1
+          }
+        ]
+      }]
+
+      setPosts(prev => [...prev, ...newPosts])
+    } catch (error) {
+      console.error('Error fetching posts:', error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not load posts. Please try again."
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [toast])
+
+  useEffect(() => {
+    fetchPosts()
+  }, [fetchPosts])
 
   const handleLike = (postId: number) => {
-    setLikes(prev => ({ ...prev, [postId]: !prev[postId] }))
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        const newLikes = post.likes + 1
+        toast({
+          description: "Post liked!"
+        })
+        return {
+          ...post,
+          likes: newLikes
+        }
+      }
+      return post
+    }))
   }
 
   const handleComment = (postId: number) => {
-    if (newComment.trim()) {
-      setComments(prev => ({
-        ...prev,
-        [postId]: [...(prev[postId] || []), newComment.trim()]
+    if (newComments[postId]?.trim()) {
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          toast({
+            description: "Comment posted!"
+          })
+          return {
+            ...post,
+            comments: [...post.comments, {
+              id: post.comments.length + 1,
+              username: 'you',
+              content: newComments[postId],
+              timestamp: 'Just now',
+              likes: 0
+            }]
+          }
+        }
+        return post
       }))
-      setNewComment('')
+      setNewComments({ ...newComments, [postId]: '' })
     }
   }
 
-  return (
-    <ScrollArea className="flex-grow">
-      <div className="px-4 py-6 space-y-6">
-        <Card className="p-4 animate-in fade-in-50">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <HoverCard>
-                <HoverCardTrigger asChild>
-                  <Button variant="ghost" className="p-0 h-auto">
-                    <Avatar>
-                      <AvatarImage src="/placeholder.svg" />
-                      <AvatarFallback>VI</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </HoverCardTrigger>
-                <HoverCardContent className="w-80">
-                  <div className="flex justify-between space-x-4">
-                    <Avatar>
-                      <AvatarImage src="/placeholder.svg" />
-                      <AvatarFallback>VI</AvatarFallback>
-                    </Avatar>
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-semibold">Vicharcha</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Welcome to Vicharcha - your platform for meaningful discussions and connections.
-                      </p>
-                    </div>
-                  </div>
-                </HoverCardContent>
-              </HoverCard>
-              <div>
-                <h3 className="font-semibold">Vicharcha</h3>
-                <p className="text-xs text-muted-foreground">Just now</p>
-              </div>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>Edit</DropdownMenuItem>
-                <DropdownMenuItem>Delete</DropdownMenuItem>
-                <DropdownMenuItem>Report</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <p className="text-sm mb-4">
-            Welcome to Vicharcha! Start engaging in meaningful discussions, share your thoughts, and connect with like-minded individuals.
-          </p>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => handleLike(0)}
-                className={likes[0] ? "text-red-500" : ""}
-              >
-                <Heart className={`w-5 h-5 ${likes[0] ? "fill-current" : ""}`} />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <MessageCircle className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Share2 className="w-5 h-5" />
-              </Button>
-            </div>
-            <Button variant="ghost" size="icon">
-              <Bookmark className="w-5 h-5" />
-            </Button>
-          </div>
-          {comments[0] && comments[0].length > 0 && (
-            <div className="mt-4 space-y-2">
-              {comments[0].map((comment, index) => (
-                <div key={index} className="bg-muted p-2 rounded-md text-sm">
-                  {comment}
-                </div>
-              ))}
-            </div>
-          )}
-          <div className="mt-4 flex gap-2">
-            <Textarea 
-              placeholder="Add a comment..." 
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="resize-none"
-            />
-            <Button onClick={() => handleComment(0)}>Post</Button>
-          </div>
-        </Card>
-
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Card key={i} className="p-4 overflow-hidden group animate-in fade-in-50">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={`/placeholder.svg?${i}`} />
-                  <AvatarFallback>U{i}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-semibold">User {i + 1}</h3>
-                  <p className="text-xs text-muted-foreground">{i + 1}h ago</p>
-                </div>
-              </div>
-              <Badge variant="secondary">New</Badge>
-            </div>
-            <div className="aspect-video mb-4 rounded-lg overflow-hidden bg-muted">
-              <img 
-                src={`/placeholder.svg?text=Vicharcha${i + 1}`}
-                alt={`Vicharcha Content ${i + 1}`}
-                className="w-full h-full object-cover transition-transform group-hover:scale-105"
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => handleLike(i + 1)}
-                  className={likes[i + 1] ? "text-red-500" : ""}
-                >
-                  <Heart className={`w-5 h-5 ${likes[i + 1] ? "fill-current" : ""}`} />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <MessageCircle className="w-5 h-5" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <Share2 className="w-5 h-5" />
-                </Button>
-              </div>
-              <Button variant="ghost" size="icon">
-                <Bookmark className="w-5 h-5" />
-              </Button>
-            </div>
-            {comments[i + 1] && comments[i + 1].length > 0 && (
-              <div className="mt-4 space-y-2">
-                {comments[i + 1].map((comment, index) => (
-                  <div key={index} className="bg-muted p-2 rounded-md text-sm">
-                    {comment}
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="mt-4 flex gap-2">
-              <Textarea 
-                placeholder="Add a comment..." 
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="resize-none"
-              />
-              <Button onClick={() => handleComment(i + 1)}>Post</Button>
-            </div>
-          </Card>
-        ))}
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-24 w-full rounded-lg" />
+        <Skeleton className="h-[600px] w-full rounded-lg" />
       </div>
-    </ScrollArea>
+    )
+  }
+
+  return (
+    <div className="max-w-xl mx-auto space-y-6">
+      {/* Stories */}
+      <ScrollArea className="w-full whitespace-nowrap rounded-lg border bg-card">
+        <div className="flex w-max space-x-4 p-4">
+          {stories.map((story) => (
+            <button 
+              key={story.id} 
+              className="flex flex-col items-center space-y-1"
+              aria-label={`View ${story.username}'s story`}
+            >
+              <div className={`rounded-full p-1 ${story.hasStory ? 'bg-gradient-to-tr from-yellow-400 to-fuchsia-600' : 'bg-muted'}`}>
+                <div className="rounded-full p-0.5 bg-background">
+                  <Avatar className="w-14 h-14">
+                    <AvatarImage src={story.avatar} alt={story.username} />
+                    <AvatarFallback>{story.username[0].toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </div>
+              </div>
+              <span className="text-xs">{story.username}</span>
+            </button>
+          ))}
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+
+      {/* Posts */}
+      <AnimatePresence>
+        {posts.map((post) => (
+          <motion.div
+            key={post.id}
+            variants={postVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            layout
+          >
+            <div className="border rounded-lg bg-card">
+              {/* Post Header */}
+              <div className="flex items-center justify-between p-4">
+                <div className="flex items-center space-x-3">
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={post.avatar} alt={post.username} />
+                    <AvatarFallback>{post.username[0].toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex items-center">
+                    <span className="font-semibold">{post.username}</span>
+                    {post.verified && (
+                      <Badge variant="secondary" className="ml-1">
+                        <span className="text-blue-500">✓</span>
+                      </Badge>
+                    )}
+                    <span className="text-muted-foreground ml-2">• {post.timestamp}</span>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-5 w-5" />
+                </Button>
+              </div>
+
+              {/* Post Image */}
+              <div className="relative aspect-square">
+                <Image 
+                  src={post.image || "/placeholder.svg"}
+                  alt={`Post by ${post.username}`}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+
+              {/* Post Actions */}
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-4">
+                    <motion.button
+                      whileTap={{ scale: 0.8 }}
+                      onClick={() => handleLike(post.id)}
+                      className="focus:outline-none"
+                      aria-label={`Like post by ${post.username}`}
+                      title="Like post"
+                    >
+                      <Heart className="h-6 w-6" />
+                    </motion.button>
+                    <button 
+                      className="focus:outline-none"
+                      aria-label="Comment on post"
+                      title="Add comment"
+                    >
+                      <MessageCircle className="h-6 w-6" />
+                    </button>
+                    <button 
+                      className="focus:outline-none"
+                      aria-label="Share post"
+                      title="Share post"
+                    >
+                      <Send className="h-6 w-6" />
+                    </button>
+                  </div>
+                  <motion.button
+                    whileTap={{ scale: 0.8 }}
+                    className="focus:outline-none"
+                    aria-label="Save post"
+                    title="Save post"
+                  >
+                    <Bookmark className="h-6 w-6" />
+                  </motion.button>
+                </div>
+
+                {/* Likes */}
+                <div className="font-semibold mb-2">{post.likes.toLocaleString()} likes</div>
+
+                {/* Caption and Comments */}
+                <div className="space-y-2">
+                  <p>
+                    <span className="font-semibold">{post.username}</span>{' '}
+                    {post.caption}
+                  </p>
+                  {post.comments.length > 2 && (
+                    <button className="text-muted-foreground text-sm">
+                      View all {post.comments.length} comments
+                    </button>
+                  )}
+                  {post.comments.slice(0, 2).map((comment) => (
+                    <div key={comment.id} className="text-sm">
+                      <span className="font-semibold">{comment.username}</span>{' '}
+                      {comment.content}
+                    </div>
+                  ))}
+                  <div className="text-xs text-muted-foreground uppercase">
+                    {post.timestamp}
+                  </div>
+                </div>
+
+                {/* Comment Input */}
+                <div className="flex items-center mt-4 border-t pt-4">
+                  <div className="flex-1 flex items-center">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-9 w-9"
+                      aria-label="Add emoji"
+                    >
+                      <Smile className="h-5 w-5" />
+                    </Button>
+                    <Input 
+                      type="text" 
+                      placeholder="Add a comment..." 
+                      value={newComments[post.id] || ''}
+                      onChange={(e) => setNewComments({
+                        ...newComments,
+                        [post.id]: e.target.value
+                      })}
+                      className="border-none bg-transparent focus-visible:ring-0"
+                    />
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    className="text-blue-500 font-semibold"
+                    disabled={!newComments[post.id]?.trim()}
+                    onClick={() => handleComment(post.id)}
+                  >
+                    Post
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
   )
 }
+

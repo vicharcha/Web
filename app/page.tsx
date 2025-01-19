@@ -2,8 +2,10 @@ import { MainContent } from '@/components/main-content'
 
 export default function Home() {
   return (
-    <div className="container mx-auto px-8 py-12 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 rounded-lg shadow-lg">
-      <MainContent />
+    <div className="w-full min-h-screen bg-background">
+      <div className="container mx-auto px-4 md:px-8 py-6 md:py-12">
+        <MainContent />
+      </div>
     </div>
   )
 }

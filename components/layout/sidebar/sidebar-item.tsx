@@ -15,10 +15,11 @@ interface SidebarItemProps {
   }
   collapsed: boolean
   isActive: boolean
-  onClick: () => void
+  onClick?: () => void
+  className?: string
 }
 
-export function SidebarItem({ item, collapsed, isActive, onClick }: SidebarItemProps) {
+export function SidebarItem({ item, collapsed, isActive, onClick, className }: SidebarItemProps) {
   return (
     <Link href={item.href} passHref>
       <Button
@@ -29,7 +30,8 @@ export function SidebarItem({ item, collapsed, isActive, onClick }: SidebarItemP
           isActive && "bg-gradient-to-r from-primary/20 to-primary/10 text-primary",
           !isActive && "hover:bg-gray-100/5",
           item.important && "border border-red-500/20",
-          "group relative"
+          "group relative",
+          className
         )}
         onClick={onClick}
       >
