@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { AnimatePresence, motion } from "framer-motion"
+import { Input } from "@/components/ui/input"
 
 type ChatUser = {
   id: string
@@ -83,11 +84,17 @@ export function ChatSidebar({ onSelectChat }: ChatSidebarProps) {
     })
 
   return (
-    <div className="w-full md:w-80 h-full border-r flex flex-col bg-gradient-to-b from-background/95 to-background/80 backdrop-blur-xl">
+    <div className="w-full h-full border-r flex flex-col bg-gradient-to-b from-background/95 to-background/80 backdrop-blur-xl">
       <div className="p-4 border-b bg-gradient-to-r from-purple-500 to-pink-500">
         <h2 className="text-lg font-semibold text-white">Chats</h2>
       </div>
       <div className="p-4 space-y-2">
+        <Input
+          placeholder="Search chats..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full"
+        />
         <div className="flex items-center gap-2">
           <Button
             variant={filterOptions.onlyUnread ? "default" : "outline"}
@@ -149,16 +156,16 @@ export function ChatSidebar({ onSelectChat }: ChatSidebarProps) {
                     <div className="flex-1 text-left">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-white">{chat.name}</span>
+                          <span className="font-medium text-foreground">{chat.name}</span>
                           {chat.isPremium && (
                             <Badge variant="secondary" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
                               Premium
                             </Badge>
                           )}
                         </div>
-                        <span className="text-xs text-white whitespace-nowrap">{chat.time}</span>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">{chat.time}</span>
                       </div>
-                      <p className="text-sm text-white truncate">{chat.lastMessage}</p>
+                      <p className="text-sm text-muted-foreground truncate">{chat.lastMessage}</p>
                     </div>
                     {chat.unread > 0 && (
                       <Badge className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-red-500 text-white">
@@ -175,3 +182,4 @@ export function ChatSidebar({ onSelectChat }: ChatSidebarProps) {
     </div>
   )
 }
+
