@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle, MapPin, Briefcase, Calendar, Search, Heart, MessageCircle, Share2, ImageIcon, Video, Smile } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 type Connection = {
   id: string
@@ -158,89 +159,107 @@ export default function SocialConnectionsPage() {
             </CardContent>
           </Card>
 
-          {tweets.map((tweet) => (
-            <Card key={tweet.id}>
-              <CardContent className="pt-4">
-                <div className="flex gap-4">
-                  <Avatar>
-                    <AvatarImage src={tweet.author.avatar} />
-                    <AvatarFallback>{tweet.author.name[0]}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">{tweet.author.name}</span>
-                      {tweet.author.isVerified && (
-                        <CheckCircle className="h-4 w-4 text-blue-500" />
-                      )}
-                      <span className="text-muted-foreground">{tweet.author.username}</span>
-                      <span className="text-muted-foreground">·</span>
-                      <span className="text-muted-foreground">{tweet.timestamp}</span>
-                    </div>
-                    <p className="mt-2">{tweet.content}</p>
-                    {tweet.image && (
-                      <div className="mt-2 rounded-lg overflow-hidden">
-                        <img src={tweet.image || "/placeholder.svg"} alt="Tweet content" className="w-full" />
+          <AnimatePresence>
+            {tweets.map((tweet) => (
+              <motion.div
+                key={tweet.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="flex gap-4">
+                      <Avatar>
+                        <AvatarImage src={tweet.author.avatar} />
+                        <AvatarFallback>{tweet.author.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{tweet.author.name}</span>
+                          {tweet.author.isVerified && (
+                            <CheckCircle className="h-4 w-4 text-blue-500" />
+                          )}
+                          <span className="text-muted-foreground">{tweet.author.username}</span>
+                          <span className="text-muted-foreground">·</span>
+                          <span className="text-muted-foreground">{tweet.timestamp}</span>
+                        </div>
+                        <p className="mt-2">{tweet.content}</p>
+                        {tweet.image && (
+                          <div className="mt-2 rounded-lg overflow-hidden">
+                            <img src={tweet.image || "/placeholder.svg"} alt="Tweet content" className="w-full" />
+                          </div>
+                        )}
+                        <div className="flex gap-6 mt-4">
+                          <Button variant="ghost" size="sm" className="flex gap-2">
+                            <Heart className="h-4 w-4" />
+                            {tweet.likes}
+                          </Button>
+                          <Button variant="ghost" size="sm" className="flex gap-2">
+                            <MessageCircle className="h-4 w-4" />
+                            {tweet.comments}
+                          </Button>
+                          <Button variant="ghost" size="sm" className="flex gap-2">
+                            <Share2 className="h-4 w-4" />
+                            {tweet.shares}
+                          </Button>
+                        </div>
                       </div>
-                    )}
-                    <div className="flex gap-6 mt-4">
-                      <Button variant="ghost" size="sm" className="flex gap-2">
-                        <Heart className="h-4 w-4" />
-                        {tweet.likes}
-                      </Button>
-                      <Button variant="ghost" size="sm" className="flex gap-2">
-                        <MessageCircle className="h-4 w-4" />
-                        {tweet.comments}
-                      </Button>
-                      <Button variant="ghost" size="sm" className="flex gap-2">
-                        <Share2 className="h-4 w-4" />
-                        {tweet.shares}
-                      </Button>
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </TabsContent>
 
         <TabsContent value="connections">
           <ScrollArea className="h-[calc(100vh-16rem)]">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredConnections.map(connection => (
-                <Card key={connection.id}>
-                  <CardHeader className="flex flex-row items-center gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={connection.avatar} alt={connection.name} />
-                      <AvatarFallback>{connection.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        {connection.name}
-                        {connection.isVerified && (
-                          <CheckCircle className="h-4 w-4 text-blue-500" />
-                        )}
-                      </CardTitle>
-                      <CardDescription>{connection.profession}</CardDescription>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4" />
-                      {connection.location}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                      <Briefcase className="h-4 w-4" />
-                      {connection.mutualConnections} mutual connections
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                      <Calendar className="h-4 w-4" />
-                      Last active {connection.lastActive}
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button className="w-full">Connect</Button>
-                  </CardFooter>
-                </Card>
+                <motion.div
+                  key={connection.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card>
+                    <CardHeader className="flex flex-row items-center gap-4">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={connection.avatar} alt={connection.name} />
+                        <AvatarFallback>{connection.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          {connection.name}
+                          {connection.isVerified && (
+                            <CheckCircle className="h-4 w-4 text-blue-500" />
+                          )}
+                        </CardTitle>
+                        <CardDescription>{connection.profession}</CardDescription>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="h-4 w-4" />
+                        {connection.location}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                        <Briefcase className="h-4 w-4" />
+                        {connection.mutualConnections} mutual connections
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                        <Calendar className="h-4 w-4" />
+                        Last active {connection.lastActive}
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button className="w-full">Connect</Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
               ))}
             </div>
           </ScrollArea>

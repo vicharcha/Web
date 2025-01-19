@@ -6,6 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Ambulance, Phone, BadgeIcon as Police, FlameIcon as Fire } from 'lucide-react'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface EmergencyContact {
   id: string
@@ -17,16 +19,31 @@ interface EmergencyContact {
 
 export default function EmergencyPage() {
   const [contacts, setContacts] = useState<EmergencyContact[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredContacts = contacts.filter(contact =>
+    contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    contact.role.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b bg-red-600">
         <h1 className="text-xl font-semibold text-white">Emergency Contacts</h1>
       </div>
+      <div className="relative p-4">
+        <Input
+          type="search"
+          placeholder="Search contacts..."
+          className="pl-9 pr-4"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           <AnimatePresence>
-            {contacts.map((contact) => (
+            {filteredContacts.map((contact) => (
               <motion.div
                 key={contact.id}
                 initial={{ opacity: 0, y: -20 }}

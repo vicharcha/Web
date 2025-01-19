@@ -8,6 +8,7 @@ import { BottomNav } from '@/components/bottom-nav'
 import { MainContent } from '@/components/main-content'
 import { Sidebar } from '@/components/sidebar'
 import { Loader2 } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth()
@@ -60,11 +61,16 @@ export default function Home() {
         </div>
 
         {/* Content area - scrollable */}
-        <div className="flex-1 overflow-auto">
+        <motion.div 
+          className="flex-1 overflow-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="max-w-2xl mx-auto px-4">
             <MainContent />
           </div>
-        </div>
+        </motion.div>
 
         {/* Bottom navigation - fixed at bottom on mobile */}
         <div className="md:hidden sticky bottom-0 z-10">
