@@ -38,7 +38,6 @@ jobs:
             echo "Error: Unable to detect package manager"
             exit 1
           fi
-          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -66,8 +65,8 @@ jobs:
       - name: Build Next.js Site
         run: ${{ steps.detect-package-manager.outputs.runner }} run build
 
-      - name: Start Development Server
-        run: ${{ steps.detect-package-manager.outputs.runner }} run dev
+      - name: Install Dependencies for Upload Pages Artifact
+        run: npm install
 
       - name: Upload Build Artifacts
         uses: actions/upload-pages-artifact@v3
@@ -78,6 +77,10 @@ jobs:
     name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
     needs: build
+
+    permissions:
+      pages: write
+      id-token: write
 
     environment:
       name: github-pages
