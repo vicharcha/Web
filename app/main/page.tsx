@@ -2,21 +2,21 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/components/auth-provider'
-import { TopMenu } from '@/components/top-menu'
-import { BottomNav } from '@/components/bottom-nav'
+import { useAuth } from '@/lib/auth-context'
+import { TopMenu } from '@/components/layout/top-menu/top-menu';
+import { BottomNav } from '@/components/layout/bottom-nav/bottom-nav';
+import { Sidebar } from '@/components/layout/sidebar/sidebar';
 import { MainContent } from '@/components/main-content'
-import { Sidebar } from '@/components/sidebar'
 import { Loader2 } from 'lucide-react'
 
 export default function Home() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const [isPageLoading, setIsPageLoading] = useState(true)
 
   useEffect(() => {
     // Handle authentication redirect
-    if (!authLoading && !user) {
+    if (!loading && !user) {
       router.push('/login')
       return
     }
@@ -29,10 +29,10 @@ export default function Home() {
 
       return () => clearTimeout(timer)
     }
-  }, [user, authLoading, router])
+  }, [user, loading, router])
 
   // Show loading state while checking auth or loading page
-  if (authLoading || isPageLoading) {
+  if (loading || isPageLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

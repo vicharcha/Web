@@ -1,36 +1,138 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vicharcha Backend
 
-## Getting Started
+Backend services and database infrastructure for the Vicharcha application.
 
-First, run the development server:
+## Setup
 
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Copy environment variables:
+```bash
+cp .env.example .env
+```
+Then edit `.env` with your configuration values.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Set up the database:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+First, create a PostgreSQL database:
+```bash
+createdb vicharcha_db
+```
 
-## Learn More
+Then run migrations:
+```bash
+npm run migrate
+```
 
-To learn more about Next.js, take a look at the following resources:
+To seed the database with test data:
+```bash
+npm run db:seed
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Database Management
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Migrations
 
-## Deploy on Vercel
+- Create a new migration:
+```bash
+npm run migrate:create <migration_name>
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Run all pending migrations:
+```bash
+npm run migrate
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Reset database (⚠️ Deletes all data):
+```bash
+npm run db:reset
+```
+
+### Environment Variables
+
+Key environment variables needed:
+
+- `POSTGRES_*`: Database connection settings
+- `JWT_SECRET`: Secret key for JWT tokens
+- `TWILIO_*`: SMS service credentials
+- Additional variables listed in `.env.example`
+
+## Project Structure
+
+```
+lib/
+  ├── config.ts        # Configuration management
+  ├── db.ts           # Database connection and utilities
+  ├── services/       # Database service layers
+  │   ├── user-service.ts
+  │   ├── chat-service.ts
+  │   ├── emergency-service.ts
+  │   └── notification-service.ts
+  └── types/         # TypeScript type definitions
+      ├── db.ts
+      └── env.d.ts
+
+db/
+  └── migrations/    # Database migrations
+      └── 001_initial_schema.sql
+
+scripts/
+  ├── migrate.ts     # Run database migrations
+  ├── create-migration.ts    # Create new migration
+  ├── reset-db.ts    # Reset database
+  └── seed-db.ts     # Seed test data
+```
+
+## Development
+
+### Adding New Features
+
+1. Create a new migration for database changes:
+```bash
+npm run migrate:create feature_name
+```
+
+2. Add schema changes to the new migration file in `db/migrations/`
+
+3. Create or update service files in `lib/services/`
+
+4. Add TypeScript types in `lib/types/`
+
+5. Update API routes to use new services
+
+### Testing
+
+1. Reset database to a clean state:
+```bash
+npm run db:reset
+```
+
+2. Seed with test data:
+```bash
+npm run db:seed
+```
+
+## Production Deployment
+
+1. Set up production database
+2. Configure environment variables
+3. Run migrations: `npm run migrate`
+
+⚠️ Never run `db:reset` or `db:seed` in production
+
+## Common Issues
+
+### Database Connection Fails
+
+1. Check PostgreSQL is running
+2. Verify database exists: `createdb vicharcha_db`
+3. Confirm connection settings in `.env`
+
+### Migration Errors
+
+1. Check migration files syntax
+2. Ensure migrations are in correct order
+3. Try `db:reset` in development (⚠️ deletes data)

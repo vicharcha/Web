@@ -23,7 +23,11 @@ interface Message {
   }
 }
 
-export default function EnhancedChatInterface() {
+interface ChatInterfaceProps {
+  chatId: string;
+}
+
+export default function ChatInterface({ chatId }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [isRecording, setIsRecording] = useState(false)

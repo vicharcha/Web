@@ -1,17 +1,16 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import { ThemeProvider } from '@/components/theme-provider'
-import { AuthProvider } from '@/components/auth-provider'
-import { Sidebar } from '@/components/layout/sidebar/sidebar'
-import { TopMenu } from '@/components/layout/top-menu/top-menu'
-import { BottomNav } from '@/components/layout/bottom-nav/bottom-nav'
-import './globals.css'
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { Sidebar } from "./components/sidebar"
+import { ThemeProvider } from "./components/theme-provider"
+import { AuthProvider } from "@/lib/auth-context"
+import type React from "react"
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'Vicharcha App',
-  description: 'Connect, Share, and Engage with Vicharcha',
+  title: "Vicharcha",
+  description: "A responsible social media application",
 }
 
 export default function RootLayout({
@@ -24,17 +23,11 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
-            <div className="flex flex-col h-screen">
-              <div className="flex flex-1 overflow-hidden">
-                <Sidebar />
-                <div className="flex-1 flex flex-col min-h-0">
-                  <TopMenu />
-                  <main className="flex-1 overflow-auto p-4 mobile-content tablet-content computer-half-content computer-full-content desktop-content">
-                    {children}
-                  </main>
-                  <BottomNav />
-                </div>
-              </div>
+            <div className="flex min-h-screen bg-background">
+              <Sidebar />
+              <main className="flex-1 pt-16 pb-20 md:pt-0 md:pb-0">
+                <div className="container mx-auto p-4">{children}</div>
+              </main>
             </div>
           </AuthProvider>
         </ThemeProvider>
@@ -42,3 +35,4 @@ export default function RootLayout({
     </html>
   )
 }
+

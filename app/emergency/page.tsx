@@ -1,65 +1,145 @@
 "use client"
 
-import { useState } from 'react'
+import { useState } from "react"
+import styles from "./emergency.module.css"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Ambulance, Phone, BadgeIcon as Police, FlameIcon as Fire } from 'lucide-react'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Phone, Plus, AlertTriangle, MapPin } from "lucide-react"
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
+import "leaflet/dist/leaflet.css"
+import L from "leaflet"
 
-interface EmergencyContact {
-  id: string
-  name: string
-  role: string
-  contact: string
-  avatar?: string
-}
+// Fix for default marker icon in Leaflet with Next.js
+// @ts-ignore
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "/leaflet/marker-icon-2x.png",
+  iconUrl: "/leaflet/marker-icon.png",
+  shadowUrl: "/leaflet/marker-shadow.png",
+})
 
 export default function EmergencyPage() {
-  const [contacts, setContacts] = useState<EmergencyContact[]>([])
+  const [showMap, setShowMap] = useState(false)
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+
+  const emergencyServices = [
+    { name: "City Hospital", lat: 17.385, lng: 78.4867, type: "Hospital" },
+    { name: "Central Police Station", lat: 17.3891, lng: 78.4818, type: "Police" },
+    { name: "Fire Station No. 1", lat: 17.3774, lng: 78.4908, type: "Fire" },
+  ]
+
+  const getUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([position.coords.latitude, position.coords.longitude])
+          setShowMap(true)
+        },
+        (error) => {
+          console.error("Error getting user location:", error)
+          setShowMap(true) // Show map even if we can't get user location
+        },
+      )
+    } else {
+      console.error("Geolocation is not supported by this browser.")
+      setShowMap(true) // Show map even if geolocation is not supported
+    }
+  }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b bg-red-600">
-        <h1 className="text-xl font-semibold text-white">Emergency Contacts</h1>
-      </div>
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          <AnimatePresence>
-            {contacts.map((contact) => (
-              <motion.div
-                key={contact.id}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.3 }}
-                className="flex items-center justify-between bg-muted p-3 rounded-lg shadow
-                           mobile-content tablet-content computer-half-content computer-full-content desktop-content"
-              >
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage src={contact.avatar} alt={`${contact.name}'s avatar`} />
-                    <AvatarFallback>{contact.name[0]}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h2 className="font-medium">{contact.name}</h2>
-                    <p className="text-sm text-muted-foreground">{contact.role}</p>
-                  </div>
-                </div>
-                <Button variant="default" size="icon">
-                  <Phone className="h-5 w-5 text-white" />
-                </Button>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-      </ScrollArea>
-      <div className="p-4">
-        <Button variant="destructive" size="lg" className="w-full flex items-center justify-center gap-2">
-          <Ambulance className="h-5 w-5" />
-          <span>Call Emergency Services</span>
-        </Button>
-      </div>
+    <div className="emergency-container">
+      <h1 className="emergency-header">
+        <AlertTriangle className="alert-icon" />
+        Emergency Services
+      </h1>
+
+      <Card className="emergency-card">
+        <CardHeader className="emergency-card-header">
+          <CardTitle>Emergency Contacts</CardTitle>
+        </CardHeader>
+        <CardContent className="emergency-card-content">
+          <div>
+            <div className="contact-item">
+              <span>Police</span>
+              <Button variant="outline" className="contact-item">
+                <Phone className="phone-icon" />
+                100
+              </Button>
+            </div>
+            <div className={styles["contact-item"]}>
+              <span>Ambulance</span>
+              <Button variant="outline" className={styles["contact-item"]}>
+                <Phone className={styles["phone-icon"]} />
+                102
+              </Button>
+            </div>
+            <div className={styles["contact-item"]}>
+              <span>Fire Department</span>
+              <Button variant="outline" className={styles["contact-item"]}>
+                <Phone className={styles["phone-icon"]} />
+                101
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className={styles["emergency-card"]}>
+        <CardHeader className={styles["emergency-card-header"]}>
+          <CardTitle>Add Personal Emergency Contact</CardTitle>
+        </CardHeader>
+        <CardContent className={styles["emergency-card-content"]}>
+          <form className="space-y-4">
+            <Input placeholder="Contact Name" />
+            <Input placeholder="Phone Number" type="tel" />
+            <Button className="emergency-button">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Contact
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Button className={styles["emergency-button"]}>Call Emergency Services</Button>
+
+      <Button className="emergency-map-button" onClick={getUserLocation}>
+        <MapPin className="mr-2 h-4 w-4" />
+        {showMap ? "Hide" : "Show"} Nearby Emergency Services
+      </Button>
+
+      {showMap && (
+        <Card className="emergency-card">
+          <CardContent className="emergency-card-content">
+            <div className="emergency-map-container">
+              <div className="emergency-map">
+                <MapContainer
+                  center={userLocation || [17.385, 78.4867]}
+                  zoom={13}
+                  style={{ height: "100%", width: "100%" }}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                  {userLocation && (
+                    <Marker position={userLocation}>
+                      <Popup>Your Location</Popup>
+                    </Marker>
+                  )}
+                  {emergencyServices.map((service, index) => (
+                    <Marker key={index} position={[service.lat, service.lng]}>
+                      <Popup>
+                        {service.name} ({service.type})
+                      </Popup>
+                    </Marker>
+                  ))}
+                </MapContainer>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
