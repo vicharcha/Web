@@ -11,6 +11,9 @@ const nextConfig = {
         fs: false,
         path: false,
         os: false,
+        dns: false,
+        net: false,
+        tls: false,
       };
     }
     
