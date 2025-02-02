@@ -1,60 +1,94 @@
-'use client';
+"use client"
 
-import React from 'react';
-import { Loader2, Bot, Sparkles } from 'lucide-react';
+import React from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Bot, Sparkles, Brain, MessageSquare, Lightbulb, Clock } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 
 export default function AIPage() {
+  const features = [
+    {
+      icon: Brain,
+      title: "Advanced Natural Language Processing",
+      description: "Understand and respond to complex queries with human-like comprehension"
+    },
+    {
+      icon: MessageSquare,
+      title: "Smart Document Analysis",
+      description: "Extract insights and analyze documents with advanced AI capabilities"
+    },
+    {
+      icon: Lightbulb,
+      title: "Personalized Learning",
+      description: "Adapt to your preferences and provide tailored recommendations"
+    }
+  ]
+
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300 ease-in-out">
-      <div className="p-8 max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 flex items-center justify-center gap-3 text-gray-900 dark:text-white">
-            AI Assistant <Bot className="inline-block" />
-          </h1>
-          <div className="relative inline-block">
-            <span className="text-xl text-gray-600 dark:text-gray-400">Coming Soon</span>
-            <Sparkles className="absolute -right-8 -top-4 text-yellow-500" />
-          </div>
+    <div className="max-w-6xl mx-auto p-4 space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Bot className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold">AI Assistant</h1>
         </div>
-
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 shadow-sm mb-8 transition-colors">
-          <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-            <Loader2 className="animate-spin" />
-            Features in Development
-          </h2>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="h-6 w-6 mt-1 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400">1</div>
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">Advanced Natural Language Processing</h3>
-                <p className="text-gray-600 dark:text-gray-400">Understand and respond to complex queries with human-like comprehension</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="h-6 w-6 mt-1 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400">2</div>
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">Smart Document Analysis</h3>
-                <p className="text-gray-600 dark:text-gray-400">Extract insights and analyze documents with advanced AI capabilities</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="h-6 w-6 mt-1 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400">3</div>
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">Personalized Learning</h3>
-                <p className="text-gray-600 dark:text-gray-400">Adapt to your preferences and provide tailored recommendations</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          <p>Stay tuned for updates as we build something amazing!</p>
-          <p className="text-sm mt-2">Want to be notified when we launch?</p>
-          <button className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">
-            Join Waitlist
-          </button>
-        </div>
+        <Badge variant="outline" className="px-4 py-2">
+          Coming Soon
+        </Badge>
       </div>
+
+      <Card className="border-2 border-dashed">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-center gap-2">
+            <Clock className="h-6 w-6 text-primary" />
+            AI Platform Under Development
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center space-y-8">
+            <div className="py-6">
+              <div className="relative mx-auto w-24 h-24">
+                <div className="animate-ping absolute w-full h-full rounded-full bg-primary/20"></div>
+                <div className="relative flex items-center justify-center w-full h-full rounded-full bg-primary/30">
+                  <Bot className="h-12 w-12 text-primary" />
+                  <Sparkles className="absolute -right-2 -top-2 h-6 w-6 text-yellow-500" />
+                </div>
+              </div>
+            </div>
+
+            <div className="max-w-lg mx-auto">
+              <p className="text-lg text-muted-foreground">
+                We're building an intelligent AI assistant to enhance your experience.
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-3">
+              {features.map((feature) => (
+                <div 
+                  key={feature.title}
+                  className="p-6 rounded-lg bg-muted/50 text-center space-y-2"
+                >
+                  <feature.icon className="h-8 w-8 mx-auto text-primary" />
+                  <h3 className="font-medium">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="max-w-lg mx-auto space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Our team is working hard to bring you a powerful AI assistant.
+                Stay tuned for updates!
+              </p>
+              
+              <Button className="w-full" disabled>
+                <Bot className="mr-2 h-4 w-4" />
+                AI Assistant Coming Soon
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  );
+  )
 }

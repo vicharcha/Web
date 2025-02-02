@@ -1,76 +1,30 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Phone,
-  AlertTriangle,
-  MapPin,
-  Ambulance,
-  BadgeIcon as Police,
-  Flame,
-  Clock,
-  AlertCircle,
-  CheckCircle2,
-} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { AlertTriangle, Clock, Ambulance, BadgeIcon as Police, Flame } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function EmergencyPage() {
-  const [showMap, setShowMap] = useState(true)
-
   const services = [
     {
       title: "Medical Services",
       icon: Ambulance,
       color: "text-blue-500",
       bgColor: "bg-blue-50",
-      distance: "2.3 miles",
-      units: 3,
-      action: "Request Ambulance",
-      emergency: "102",
     },
     {
       title: "Fire Services",
       icon: Flame,
       color: "text-red-500",
       bgColor: "bg-red-50",
-      distance: "1.8 miles",
-      units: 2,
-      action: "Request Fire Service",
-      emergency: "101",
     },
     {
       title: "Police Services",
       icon: Police,
       color: "text-yellow-500",
       bgColor: "bg-yellow-50",
-      distance: "1.5 miles",
-      units: 4,
-      action: "Request Police",
-      emergency: "100",
-    },
-  ]
-
-  const recentActivity = [
-    {
-      time: "10:45 AM",
-      event: "System Check Complete",
-      icon: CheckCircle2,
-      color: "text-green-500",
-    },
-    {
-      time: "10:30 AM",
-      event: "Location Updated",
-      icon: MapPin,
-      color: "text-blue-500",
-    },
-    {
-      time: "10:15 AM",
-      event: "Connection Verified",
-      icon: CheckCircle2,
-      color: "text-green-500",
     },
   ]
 
@@ -81,128 +35,57 @@ export default function EmergencyPage() {
           <AlertTriangle className="h-8 w-8 text-red-500" />
           <h1 className="text-3xl font-bold">Emergency Response Dashboard</h1>
         </div>
-        <Button variant="outline" className="bg-green-500 text-white hover:bg-green-600">
-          All Clear
-        </Button>
+        <Badge variant="outline" className="px-4 py-2">
+          Coming Soon
+        </Badge>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        {services.map((service) => (
-          <Card key={service.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg font-medium">
-                <div className="flex items-center gap-2">
-                  <service.icon className={`h-5 w-5 ${service.color}`} />
-                  {service.title}
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Nearest Location:</span>
-                    <span className="font-medium">{service.distance}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Available Units:</span>
-                    <Badge variant="secondary">{service.units}</Badge>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Button className="w-full" variant="default">
-                    {service.action}
-                  </Button>
-                  <Button className="w-full flex items-center justify-center gap-2" variant="outline">
-                    <Phone className="h-4 w-4" />
-                    {service.emergency}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              Emergency Response Map
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="aspect-video rounded-lg border bg-muted">
-              {/* Replace with actual map implementation */}
-              <div className="h-full w-full bg-zinc-100 dark:bg-zinc-800 rounded-lg" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5" />
-                System Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Model Status</span>
-                  <Badge variant="destructive">Error: Failed to initialize stations</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Response Time</span>
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                    {"< 5 min"}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Real-time monitoring</span>
-                  <Badge variant="outline">Active</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Recent Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[200px]">
-                <div className="space-y-4">
-                  {recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-center gap-4">
-                      <activity.icon className={`h-5 w-5 ${activity.color}`} />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{activity.event}</p>
-                        <p className="text-xs text-muted-foreground">{activity.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <Card>
+      <Card className="border-2 border-dashed">
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle className="flex items-center justify-center gap-2">
+            <Clock className="h-6 w-6 text-primary" />
+            Emergency Services Platform Under Development
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <Button className="w-full bg-red-500 hover:bg-red-600 text-white">Emergency Call</Button>
+          <div className="text-center space-y-6">
+            <div className="grid gap-4 md:grid-cols-3">
+              {services.map((service) => (
+                <div 
+                  key={service.title} 
+                  className={`${service.bgColor} rounded-lg p-4 flex items-center justify-center gap-2 opacity-50`}
+                >
+                  <service.icon className={`h-6 w-6 ${service.color}`} />
+                  <span className="font-medium">{service.title}</span>
+                </div>
+              ))}
+            </div>
+            
+            <div className="max-w-lg mx-auto space-y-4">
+              <p className="text-lg text-muted-foreground">
+                We're building a comprehensive emergency response system to serve you better.
+              </p>
+              <div className="py-6">
+                <div className="relative mx-auto w-24 h-24">
+                  <div className="animate-ping absolute w-full h-full rounded-full bg-red-500/20"></div>
+                  <div className="relative flex items-center justify-center w-full h-full rounded-full bg-red-500/30">
+                    <AlertTriangle className="h-12 w-12 text-red-500" />
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                For emergencies, please continue to use your local emergency services numbers:
+                <br />
+                Police: 100 | Fire: 101 | Ambulance: 102
+              </p>
+            </div>
+
+            <Button className="w-full max-w-md mx-auto" disabled>
+              Platform Coming Soon
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
   )
 }
-
