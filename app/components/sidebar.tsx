@@ -11,45 +11,44 @@ import {
   AlertTriangle,
   CreditCard,
   ShoppingBag,
+  Settings,
+  Code,
+  X,
+  Sun,
+  Moon,
   Menu,
   ChevronLeft,
   ChevronRight,
-  Sun,
-  Moon,
-  X,
-  Settings,
+  Bell,
 } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Logo } from "./logo"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { useTheme } from "next-themes"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-interface NavItemProps {
-  href: string;
-  icon: React.ElementType;
-  label: string;
-  isCollapsed: boolean;
-  className?: string;
-}
-
-interface MobileNavItemProps {
-  href: string;
-  icon: React.ElementType;
-  label: string;
-}
-
-interface ProfileSectionProps {
-  isCollapsed: boolean;
-}
-
-interface SidebarContentProps {
-  showLogo?: boolean;
-}
+const navItems = [
+  { icon: Home, label: "Home", href: "/" },
+  { icon: MessageSquare, label: "Messages", href: "/messages" },
+  { icon: Brain, label: "AI Assistant", href: "/ai-assistant" },
+  { icon: Settings, label: "Settings", href: "/settings" },
+  { icon: Phone, label: "Calls", href: "/calls" },
+  { icon: Users, label: "Social", href: "/social" },
+  { icon: ShoppingBag, label: "Shopping", href: "/shopping" },
+  { icon: AlertTriangle, label: "Emergency", href: "/emergency" },
+  { icon: CreditCard, label: "Payments", href: "/payments" },
+]
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -59,180 +58,230 @@ export function Sidebar() {
   const pathname = usePathname()
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed)
-  const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light")
 
-  useEffect(() => {
-    if (!isMobile && isMobileMenuOpen) {
-      setIsMobileMenuOpen(false)
-    }
-  }, [isMobile, isMobileMenuOpen])
-
-  const mainNavItems = [
-    { icon: Home, label: "Home", href: "/" },
-    { icon: MessageSquare, label: "Messages", href: "/messages" },
-    { icon: Phone, label: "Calls", href: "/calls" },
-    { icon: Users, label: "Social", href: "/social" },
-    { icon: ShoppingBag, label: "Shopping", href: "/shopping" },
-  ]
-
-  const secondaryNavItems = [
-    { icon: Brain, label: "AI Assistant", href: "/ai-assistant" },
-    { icon: AlertTriangle, label: "Emergency", href: "/emergency" },
-    { icon: CreditCard, label: "Payments", href: "/payments" },
-  ]
-
-  const NavItem = ({ href, icon: Icon, label, isCollapsed, className }: NavItemProps) => {
+  const NavItem = ({ href, icon: Icon, label }: { href: string; icon: React.ElementType; label: string }) => {
     const isActive = pathname === href
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link
-              href={href}
-              className={cn(
-                "flex items-center text-muted-foreground hover:text-foreground transition-colors w-full px-4 py-2",
-                isCollapsed ? "justify-center" : "justify-start",
-                isActive && "text-foreground bg-accent/50 font-medium",
-                "hover:bg-accent/50 rounded-lg",
-                className,
-              )}
-            >
-              <Icon size={24} className={cn("shrink-0", !isCollapsed && "mr-2")} />
-              {!isCollapsed && <span className="truncate">{label}</span>}
-            </Link>
-          </TooltipTrigger>
-          {isCollapsed && <TooltipContent side="right">{label}</TooltipContent>}
-        </Tooltip>
-      </TooltipProvider>
-    )
-  }
-
-  const MobileNavItem = ({ href, icon: Icon, label }: MobileNavItemProps) => {
-    const isActive = pathname === href
-    return (
-      <Link href={href} className="flex flex-col items-center justify-center relative w-16">
-        <div
-          className={cn(
-            "flex items-center justify-center w-12 h-12 rounded-xl transition-all",
-            isActive ? "bg-accent text-foreground" : "text-muted-foreground",
-            "hover:bg-accent/50 hover:text-foreground",
-          )}
-        >
-          <Icon size={24} />
-        </div>
-        <span className="text-xs mt-1 font-medium text-center">{label}</span>
-        {isActive && <div className="absolute -bottom-4 w-1.5 h-1.5 rounded-full bg-primary" />}
+      <Link
+        href={href}
+        className={cn(
+          "flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition-colors",
+          isActive ? "bg-accent text-accent-foreground" : "hover:bg-accent/50",
+          // Add minimum width when collapsed to prevent icon squishing
+          isCollapsed && "w-10 px-2 mx-auto justify-center",
+        )}
+      >
+        <Icon className="h-5 w-5 shrink-0" />
+        {!isCollapsed && <span className="text-sm font-medium">{label}</span>}
       </Link>
     )
   }
 
-  const SidebarContent = ({ showLogo = true }: SidebarContentProps) => (
-    <div className="flex flex-col h-full">
-      {showLogo && (
-        <div className="flex items-center justify-between w-full px-4 mb-6">
-          <Logo variant={isCollapsed ? "icon" : "small"} />
-          {!isMobile && (
-            <Button variant="ghost" size="icon" onClick={toggleSidebar} className="ml-2">
-              {isCollapsed ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
-            </Button>
-          )}
-        </div>
-      )}
-      <div className="flex-1 px-3">
-        <div className="space-y-1">
-          {mainNavItems.map((item) => (
-            <NavItem key={item.href} {...item} isCollapsed={isCollapsed} />
-          ))}
-        </div>
-        <div className="my-4 border-t border-border" />
-        <div className="space-y-1">
-          {secondaryNavItems.map((item) => (
-            <NavItem key={item.href} {...item} isCollapsed={isCollapsed} />
-          ))}
-        </div>
-      </div>
-      <div className="mt-auto p-4 border-t border-border">
-        <div className="flex flex-col gap-4">
-          <NavItem href="/settings" icon={Settings} label="Settings" isCollapsed={isCollapsed} className="py-2.5" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleTheme}
-            className={cn("w-full justify-start", isCollapsed && "justify-center")}
-          >
-            {theme === "light" ? (
-              <Moon size={20} className={cn("shrink-0", !isCollapsed && "mr-2")} />
-            ) : (
-              <Sun size={20} className={cn("shrink-0", !isCollapsed && "mr-2")} />
-            )}
-            {!isCollapsed && (theme === "light" ? "Dark Mode" : "Light Mode")}
-          </Button>
-          <ProfileSection isCollapsed={isCollapsed} />
-        </div>
-      </div>
-    </div>
-  )
-
-  return (
-    <TooltipProvider>
-      {/* Desktop Sidebar */}
-      <aside
-        className={cn(
-          "hidden md:flex border-r flex-col py-4 transition-all duration-300 ease-in-out h-screen sticky top-0",
-          isCollapsed ? "w-20" : "w-64",
-        )}
-      >
-        <SidebarContent />
-      </aside>
-
-      {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b bg-background/80 backdrop-blur-md z-40 flex items-center px-4">
+  const MobileNav = () => (
+    <>
+      {/* Mobile Top Bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b bg-background/80 backdrop-blur-md z-40 flex items-center justify-between px-4">
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="mr-4">
-              <Menu size={24} />
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-80 p-0 bg-background/80 backdrop-blur-md">
-            <div className="flex flex-col h-full">
-              <div className="p-4 border-b flex items-center justify-between">
+          <SheetContent side="left" className="w-[280px] p-0">
+            <div className="flex flex-col h-full bg-background">
+              <div className="flex items-center justify-between p-4 border-b">
                 <Logo variant="small" />
                 <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
-                  <X size={24} />
+                  <X className="h-5 w-5" />
                 </Button>
               </div>
-              <SidebarContent showLogo={false} />
+
+              <div className="flex-1 overflow-auto py-2">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition-colors",
+                      pathname === item.href ? "bg-accent text-accent-foreground" : "hover:bg-accent/50",
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+
+              <div className="border-t p-4 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
+                    <AvatarFallback>U</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">John Doe</p>
+                    <p className="text-xs text-muted-foreground">john@example.com</p>
+                  </div>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3"
+                  onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                >
+                  {theme === "light" ? (
+                    <>
+                      <Moon className="h-5 w-5" />
+                      <span>Dark Mode</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sun className="h-5 w-5" />
+                      <span>Light Mode</span>
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </SheetContent>
         </Sheet>
-        <Logo variant="small" />
+
+        <div className="flex items-center gap-4">
+          <Logo variant="small" />
+          <div className="text-sm font-medium">Vicharcha</div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon">
+            <Bell className="h-5 w-5" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
+                  <AvatarFallback>U</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+                {theme === "light" ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
+                <span>Change Theme</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>Log out</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-20 border-t bg-background/80 backdrop-blur-md z-40">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 border-t bg-background/80 backdrop-blur-md z-40">
         <div className="flex items-center justify-around h-full px-2">
-          {mainNavItems.map((item) => (
-            <MobileNavItem key={item.href} {...item} />
-          ))}
+          {navItems.slice(0, 4).map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <Link key={item.href} href={item.href} className="flex flex-col items-center justify-center">
+                <div
+                  className={cn(
+                    "flex items-center justify-center w-10 h-10 rounded-xl transition-colors",
+                    isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50",
+                  )}
+                >
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <span className="text-[10px] font-medium mt-1">{item.label}</span>
+              </Link>
+            )
+          })}
         </div>
       </nav>
-    </TooltipProvider>
+    </>
+  )
+
+  if (isMobile) {
+    return <MobileNav />
+  }
+
+  return (
+    <aside
+      className={cn(
+        "hidden md:flex border-r flex-col py-4 transition-all duration-300 ease-in-out h-screen sticky top-0",
+        isCollapsed ? "w-[70px]" : "w-[280px]",
+      )}
+    >
+      <div className={cn("flex items-center px-4 mb-6", isCollapsed ? "justify-center" : "justify-between")}>
+        <Logo variant={isCollapsed ? "icon" : "small"} />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleSidebar}
+          className={isCollapsed ? "absolute right-[-20px] top-6 bg-background border rounded-full" : ""}
+        >
+          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </Button>
+      </div>
+
+      <div className="flex-1 px-3">
+        <div className="space-y-1">
+          {navItems.map((item) => (
+            <NavItem key={item.href} {...item} />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-auto p-4 border-t space-y-4">
+        <Button
+          variant="ghost"
+          className={cn("w-full", isCollapsed ? "px-2 justify-center" : "justify-start gap-3")}
+          onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+        >
+          {theme === "light" ? (
+            <>
+              <Moon className="h-5 w-5 shrink-0" />
+              {!isCollapsed && <span>Dark Mode</span>}
+            </>
+          ) : (
+            <>
+              <Sun className="h-5 w-5 shrink-0" />
+              {!isCollapsed && <span>Light Mode</span>}
+            </>
+          )}
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className={cn("w-full", isCollapsed ? "justify-center" : "justify-start gap-3")}>
+              <Avatar className="h-8 w-8 shrink-0">
+                <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
+                <AvatarFallback>U</AvatarFallback>
+              </Avatar>
+              {!isCollapsed && (
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-medium truncate">John Doe</p>
+                  <p className="text-xs text-muted-foreground truncate">john@example.com</p>
+                </div>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[200px]">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Profile</DropdownMenuItem>
+            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem>Development</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </aside>
   )
 }
 
-function ProfileSection({ isCollapsed }: ProfileSectionProps) {
-  return (
-    <div className={cn("flex items-center gap-3", isCollapsed ? "justify-center" : "justify-start")}>
-      <Avatar className="h-8 w-8">
-        <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-        <AvatarFallback>U</AvatarFallback>
-      </Avatar>
-      {!isCollapsed && (
-        <div className="truncate">
-          <p className="text-sm font-medium leading-none">John Doe</p>
-          <p className="text-xs text-muted-foreground">john@example.com</p>
-        </div>
-      )}
-    </div>
-  )
-}

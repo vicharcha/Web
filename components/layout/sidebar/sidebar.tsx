@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { Home, MessageCircle, Users, Sparkles, Ambulance, CreditCard, Phone, Search, ChevronLeft, Star } from 'lucide-react'
+import { Home, MessageCircle, Users, Sparkles, Ambulance, CreditCard, Phone, Search, ChevronLeft, Star, ShoppingCart } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { SidebarItem } from './sidebar-item'
 
 const navItems = [
-  { 
+  {
     id: 'quick',
     label: 'Quick Access',
     items: [
@@ -26,8 +26,10 @@ const navItems = [
     items: [
       { id: 'socialconnections', icon: Users, label: 'Social', href: '/social' },
       { id: 'ai', icon: Sparkles, label: 'AI Assistant', href: '/ai', badge: 'New' },
-      { id: 'emergency', icon: Ambulance, label: 'Emergency', href: '/emergency', important: true },
-      { id: 'payments', icon: CreditCard, label: 'Payments', href: '/payments' }
+      { id: 'development', icon: Sparkles, label: 'Development', href: '/development', badge: 'Coming Soon' },
+      { id: 'emergency', icon: Ambulance, label: 'Emergency', href: '/emergency', important: true, badge: 'Coming Soon' },
+      { id: 'payments', icon: CreditCard, label: 'Payments', href: '/payments' },
+      { id: 'shopping', icon: ShoppingCart, label: 'Shopping', href: '/shopping' }
     ]
   }
 ]

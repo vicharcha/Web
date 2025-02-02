@@ -1,145 +1,208 @@
 "use client"
 
 import { useState } from "react"
-import styles from "./emergency.module.css"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Phone, Plus, AlertTriangle, MapPin } from "lucide-react"
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
-import "leaflet/dist/leaflet.css"
-import L from "leaflet"
-
-// Fix for default marker icon in Leaflet with Next.js
-// @ts-ignore
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "/leaflet/marker-icon-2x.png",
-  iconUrl: "/leaflet/marker-icon.png",
-  shadowUrl: "/leaflet/marker-shadow.png",
-})
+import {
+  Phone,
+  AlertTriangle,
+  MapPin,
+  Ambulance,
+  BadgeIcon as Police,
+  Flame,
+  Clock,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function EmergencyPage() {
-  const [showMap, setShowMap] = useState(false)
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+  const [showMap, setShowMap] = useState(true)
 
-  const emergencyServices = [
-    { name: "City Hospital", lat: 17.385, lng: 78.4867, type: "Hospital" },
-    { name: "Central Police Station", lat: 17.3891, lng: 78.4818, type: "Police" },
-    { name: "Fire Station No. 1", lat: 17.3774, lng: 78.4908, type: "Fire" },
+  const services = [
+    {
+      title: "Medical Services",
+      icon: Ambulance,
+      color: "text-blue-500",
+      bgColor: "bg-blue-50",
+      distance: "2.3 miles",
+      units: 3,
+      action: "Request Ambulance",
+      emergency: "102",
+    },
+    {
+      title: "Fire Services",
+      icon: Flame,
+      color: "text-red-500",
+      bgColor: "bg-red-50",
+      distance: "1.8 miles",
+      units: 2,
+      action: "Request Fire Service",
+      emergency: "101",
+    },
+    {
+      title: "Police Services",
+      icon: Police,
+      color: "text-yellow-500",
+      bgColor: "bg-yellow-50",
+      distance: "1.5 miles",
+      units: 4,
+      action: "Request Police",
+      emergency: "100",
+    },
   ]
 
-  const getUserLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation([position.coords.latitude, position.coords.longitude])
-          setShowMap(true)
-        },
-        (error) => {
-          console.error("Error getting user location:", error)
-          setShowMap(true) // Show map even if we can't get user location
-        },
-      )
-    } else {
-      console.error("Geolocation is not supported by this browser.")
-      setShowMap(true) // Show map even if geolocation is not supported
-    }
-  }
+  const recentActivity = [
+    {
+      time: "10:45 AM",
+      event: "System Check Complete",
+      icon: CheckCircle2,
+      color: "text-green-500",
+    },
+    {
+      time: "10:30 AM",
+      event: "Location Updated",
+      icon: MapPin,
+      color: "text-blue-500",
+    },
+    {
+      time: "10:15 AM",
+      event: "Connection Verified",
+      icon: CheckCircle2,
+      color: "text-green-500",
+    },
+  ]
 
   return (
-    <div className="emergency-container">
-      <h1 className="emergency-header">
-        <AlertTriangle className="alert-icon" />
-        Emergency Services
-      </h1>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-8 w-8 text-red-500" />
+          <h1 className="text-3xl font-bold">Emergency Response Dashboard</h1>
+        </div>
+        <Button variant="outline" className="bg-green-500 text-white hover:bg-green-600">
+          All Clear
+        </Button>
+      </div>
 
-      <Card className="emergency-card">
-        <CardHeader className="emergency-card-header">
-          <CardTitle>Emergency Contacts</CardTitle>
-        </CardHeader>
-        <CardContent className="emergency-card-content">
-          <div>
-            <div className="contact-item">
-              <span>Police</span>
-              <Button variant="outline" className="contact-item">
-                <Phone className="phone-icon" />
-                100
-              </Button>
-            </div>
-            <div className={styles["contact-item"]}>
-              <span>Ambulance</span>
-              <Button variant="outline" className={styles["contact-item"]}>
-                <Phone className={styles["phone-icon"]} />
-                102
-              </Button>
-            </div>
-            <div className={styles["contact-item"]}>
-              <span>Fire Department</span>
-              <Button variant="outline" className={styles["contact-item"]}>
-                <Phone className={styles["phone-icon"]} />
-                101
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className={styles["emergency-card"]}>
-        <CardHeader className={styles["emergency-card-header"]}>
-          <CardTitle>Add Personal Emergency Contact</CardTitle>
-        </CardHeader>
-        <CardContent className={styles["emergency-card-content"]}>
-          <form className="space-y-4">
-            <Input placeholder="Contact Name" />
-            <Input placeholder="Phone Number" type="tel" />
-            <Button className="emergency-button">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Contact
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Button className={styles["emergency-button"]}>Call Emergency Services</Button>
-
-      <Button className="emergency-map-button" onClick={getUserLocation}>
-        <MapPin className="mr-2 h-4 w-4" />
-        {showMap ? "Hide" : "Show"} Nearby Emergency Services
-      </Button>
-
-      {showMap && (
-        <Card className="emergency-card">
-          <CardContent className="emergency-card-content">
-            <div className="emergency-map-container">
-              <div className="emergency-map">
-                <MapContainer
-                  center={userLocation || [17.385, 78.4867]}
-                  zoom={13}
-                  style={{ height: "100%", width: "100%" }}
-                >
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  />
-                  {userLocation && (
-                    <Marker position={userLocation}>
-                      <Popup>Your Location</Popup>
-                    </Marker>
-                  )}
-                  {emergencyServices.map((service, index) => (
-                    <Marker key={index} position={[service.lat, service.lng]}>
-                      <Popup>
-                        {service.name} ({service.type})
-                      </Popup>
-                    </Marker>
-                  ))}
-                </MapContainer>
+      <div className="grid gap-6 md:grid-cols-3">
+        {services.map((service) => (
+          <Card key={service.title}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg font-medium">
+                <div className="flex items-center gap-2">
+                  <service.icon className={`h-5 w-5 ${service.color}`} />
+                  {service.title}
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Nearest Location:</span>
+                    <span className="font-medium">{service.distance}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Available Units:</span>
+                    <Badge variant="secondary">{service.units}</Badge>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Button className="w-full" variant="default">
+                    {service.action}
+                  </Button>
+                  <Button className="w-full flex items-center justify-center gap-2" variant="outline">
+                    <Phone className="h-4 w-4" />
+                    {service.emergency}
+                  </Button>
+                </div>
               </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Emergency Response Map
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="aspect-video rounded-lg border bg-muted">
+              {/* Replace with actual map implementation */}
+              <div className="h-full w-full bg-zinc-100 dark:bg-zinc-800 rounded-lg" />
             </div>
           </CardContent>
         </Card>
-      )}
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5" />
+                System Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Model Status</span>
+                  <Badge variant="destructive">Error: Failed to initialize stations</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Response Time</span>
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                    {"< 5 min"}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Real-time monitoring</span>
+                  <Badge variant="outline">Active</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Recent Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[200px]">
+                <div className="space-y-4">
+                  {recentActivity.map((activity, index) => (
+                    <div key={index} className="flex items-center gap-4">
+                      <activity.icon className={`h-5 w-5 ${activity.color}`} />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{activity.event}</p>
+                        <p className="text-xs text-muted-foreground">{activity.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button className="w-full bg-red-500 hover:bg-red-600 text-white">Emergency Call</Button>
+        </CardContent>
+      </Card>
     </div>
   )
 }
+

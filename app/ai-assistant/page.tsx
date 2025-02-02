@@ -1,42 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Loader2, Bot, Sparkles, Sun, Moon } from 'lucide-react';
+import React from 'react';
+import { Loader2, Bot, Sparkles } from 'lucide-react';
 
 export default function AIPage() {
-  const [darkMode, setDarkMode] = useState(false);
-
-  useEffect(() => {
-    // Check system preference on mount
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setDarkMode(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Update document class when dark mode changes
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
-
-  const toggleTheme = () => {
-    setDarkMode(!darkMode);
-  };
-
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-200">
+    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300 ease-in-out">
       <div className="p-8 max-w-4xl mx-auto">
-        {/* Theme Toggle Button */}
-        <button 
-          onClick={toggleTheme}
-          className="fixed top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-        >
-          {darkMode ? <Sun className="w-5 h-5 text-yellow-500" /> : <Moon className="w-5 h-5 text-gray-700" />}
-        </button>
-
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 flex items-center justify-center gap-3 text-gray-900 dark:text-white">
             AI Assistant <Bot className="inline-block" />
@@ -60,7 +30,6 @@ export default function AIPage() {
                 <p className="text-gray-600 dark:text-gray-400">Understand and respond to complex queries with human-like comprehension</p>
               </div>
             </div>
-            
             <div className="flex items-start gap-3">
               <div className="h-6 w-6 mt-1 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400">2</div>
               <div>
@@ -68,7 +37,6 @@ export default function AIPage() {
                 <p className="text-gray-600 dark:text-gray-400">Extract insights and analyze documents with advanced AI capabilities</p>
               </div>
             </div>
-            
             <div className="flex items-start gap-3">
               <div className="h-6 w-6 mt-1 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400">3</div>
               <div>
@@ -90,4 +58,3 @@ export default function AIPage() {
     </div>
   );
 }
-

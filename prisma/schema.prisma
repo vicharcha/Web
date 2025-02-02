@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  phone         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  status        String    @default("ACTIVE") // ACTIVE, BLOCKED, DELETED
+  role          Role      @default(USER)
+
+  // Relations
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  messages      Message[]    @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  calls         Call[]       @relation("Caller")
+  receivedCalls Call[]       @relation("Receiver")
+  emergencyContacts EmergencyContact[]
+  payments      Payment[]
+  shoppingOrders ShoppingOrder[]
+  aiChats       AIChat[]
+
+  // Social
+  followers     Follow[]     @relation("Following")
+  following     Follow[]     @relation("Follower")
+
+  @@map("users")
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  content   String
+  images    String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Relations
+  comments  Comment[]
+  likes     Like[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  postId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  postId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("likes")
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  content     String
+  type        MessageType @default(TEXT)
+  mediaUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  senderId    String
+  receiverId  String
+  isRead      Boolean  @default(false)
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiver    User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@map("messages")
+}
+
+model Call {
+  id          String   @id @default(cuid())
+  callerId    String
+  receiverId  String
+  startTime   DateTime @default(now())
+  endTime     DateTime?
+  duration    Int?     // in seconds
+  status      CallStatus @default(MISSED)
+  type        CallType @default(AUDIO)
+  caller      User     @relation("Caller", fields: [callerId], references: [id])
+  receiver    User     @relation("Receiver", fields: [receiverId], references: [id])
+
+  @@map("calls")
+}
+
+model EmergencyContact {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String
+  relationship String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("emergency_contacts")
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  amount      Float
+  currency    String   @default("INR")
+  status      PaymentStatus @default(PENDING)
+  type        PaymentType
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  orderId     String?
+  order       ShoppingOrder? @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  price       Float
+  images      String[]
+  category    String
+  stock       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      OrderItem[]
+
+  @@map("products")
+}
+
+model ShoppingOrder {
+  id          String   @id @default(cuid())
+  userId      String
+  status      OrderStatus @default(PENDING)
+  total       Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+  items       OrderItem[]
+  payment     Payment[]
+
+  @@map("shopping_orders")
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String
+  quantity    Int
+  price       Float
+  order       ShoppingOrder @relation(fields: [orderId], references: [id])
+  product     Product   @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model AIChat {
+  id          String   @id @default(cuid())
+  userId      String
+  message     String
+  response    String
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("ai_chats")
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("Follower", fields: [followerId], references: [id])
+  following   User     @relation("Following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  FILE
+  LOCATION
+}
+
+enum CallStatus {
+  MISSED
+  ANSWERED
+  REJECTED
+  ONGOING
+}
+
+enum CallType {
+  AUDIO
+  VIDEO
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentType {
+  UPI
+  CARD
+  NETBANKING
+  WALLET
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+

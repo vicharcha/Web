@@ -20,7 +20,6 @@ type AuthContextType = {
   setUserName: (name: string) => void
   startDigiLockerVerification: () => Promise<void>
   checkVerificationStatus: () => Promise<VerificationStatus>
-  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -32,7 +31,6 @@ const validateIndianPhoneNumber = (phone: string) => {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null)
-  const [loading, setLoading] = useState<boolean>(true)
   const router = useRouter()
 
   useEffect(() => {
@@ -40,7 +38,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (storedUser) {
       setUser(JSON.parse(storedUser))
     }
-    setLoading(false)
   }, [])
 
   const login = async (phoneNumber: string) => {
@@ -67,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Simulate DigiLocker API integration
     console.log("Starting DigiLocker verification flow")
     if (user) {
-      const updatedUser: User = { ...user, verificationStatus: "pending" }
+      const updatedUser = { ...user, verificationStatus: "pending" }
       setUser(updatedUser)
       localStorage.setItem("user", JSON.stringify(updatedUser))
     }
@@ -90,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const setUserName = (name: string) => {
     if (user) {
-      const updatedUser: User = { ...user, name }
+      const updatedUser = { ...user, name }
       setUser(updatedUser)
       localStorage.setItem("user", JSON.stringify(updatedUser))
     }
@@ -112,7 +109,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserName,
         startDigiLockerVerification,
         checkVerificationStatus,
-        loading,
       }}
     >
       {children}
@@ -127,3 +123,4 @@ export const useAuth = () => {
   }
   return context
 }
+
