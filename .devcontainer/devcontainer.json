@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "build": "npm install && npm run build",
+    "build": "npm install --legacy-peer-deps && npm run build",
     "launch": "npm install && npm run dev"
   }
 }

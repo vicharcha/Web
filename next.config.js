@@ -5,6 +5,9 @@ const nextConfig = {
   images: {
     domains: ['placeholder.com'], // Add your image domains here
   },
+  eslint: {
+    dirs: ['pages', 'components', 'lib', 'hooks', 'models', 'middleware'], // Run ESLint on these directories during build
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
