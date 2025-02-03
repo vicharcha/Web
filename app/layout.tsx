@@ -62,26 +62,26 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-<ThemeProvider
-  attribute="class"
-  defaultTheme="system"
-  enableSystem
-  disableTransitionOnChange
->
-  <AuthProvider>
-    <div className="relative flex min-h-screen flex-col bg-background">
-      <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto p-4 pt-16 pb-20 md:pt-4 md:pb-4">
-            {children}
-          </div>
-        </main>
-      </div>
-    </div>
-    <Toaster richColors closeButton position="top-right" />
-  </AuthProvider>
-</ThemeProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <div className="relative flex min-h-screen flex-col bg-background">
+              <div className="flex flex-1">
+                <Sidebar />
+                <main className="flex-1 overflow-y-auto">
+                  <div className="container mx-auto p-4 pt-16 pb-20 md:pt-4 md:pb-4">
+                    {children}
+                  </div>
+                </main>
+              </div>
+            </div>
+            <Toaster richColors closeButton position="top-right" />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
