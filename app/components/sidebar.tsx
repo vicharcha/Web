@@ -73,7 +73,7 @@ export function Sidebar() {
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed)
 
-  const NavItem = ({ href, icon: Icon, label }) => {
+  const NavItem = ({ href, icon: Icon, label }: { href: string; icon: React.ComponentType<{ className?: string }>; label: string }) => {
     const isActive = pathname === href
     return (
       <Link
@@ -291,4 +291,3 @@ export function Sidebar() {
     </aside>
   )
 }
-

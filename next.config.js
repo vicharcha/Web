@@ -20,6 +20,8 @@ const nextConfig = {
     config.resolve.alias['@/lib'] = path.join(__dirname, 'lib');
     config.resolve.alias['@/components'] = path.join(__dirname, 'components');
     config.resolve.alias['@/hooks'] = path.join(__dirname, 'hooks');
+config.resolve.alias['@/models'] = path.join(__dirname, 'models');
+config.resolve.alias['@/middleware'] = path.join(__dirname, 'middleware');
     return config;
   },
 }

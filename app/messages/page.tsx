@@ -39,10 +39,10 @@ import {
 import { MessageAttachments } from "./components/message-attachments"
 
 export default function Messages() {
-  const [selectedChat, setSelectedChat] = useState(null)
+  const [selectedChat, setSelectedChat] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState("all")
   const [messageText, setMessageText] = useState("")
-  const scrollRef = useRef(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const isMobile = useMediaQuery("(max-width: 768px)")
 
   const allChats = [
@@ -62,6 +62,11 @@ export default function Messages() {
     // ... other chats
   ]
 
+  interface MessageMedia {
+    url: string;
+    caption: string;
+  }
+
   const messages = [
     {
       id: 1,
@@ -69,6 +74,7 @@ export default function Messages() {
       content: "Complete front end and give",
       time: "12:29 am",
       status: "read",
+      media: null as MessageMedia | null,
     },
     // ... other messages
   ]
