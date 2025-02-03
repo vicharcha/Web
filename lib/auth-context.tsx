@@ -14,7 +14,6 @@ type User = {
 
 type AuthContextType = {
   user: User
-  loading: boolean
   login: (phoneNumber: string) => Promise<void>
   logout: () => void
   verifyOTP: (otp: string) => Promise<boolean>
@@ -32,7 +31,6 @@ const validateIndianPhoneNumber = (phone: string) => {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null)
-  const [loading, setLoading] = useState<boolean>(true)
   const router = useRouter()
 
   useEffect(() => {
@@ -40,38 +38,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (storedUser) {
       setUser(JSON.parse(storedUser))
     }
-    setLoading(false)
   }, [])
 
-const login = async (phoneNumber: string) => {
-  if (!phoneNumber.startsWith("+91")) {
-    throw new Error("Only Indian phone numbers (+91) are allowed")
+  const login = async (phoneNumber: string) => {
+    if (!phoneNumber.startsWith("+91")) {
+      throw new Error("Only Indian phone numbers (+91) are allowed")
+    }
+
+    const cleanNumber = phoneNumber.replace("+91", "")
+    if (!validateIndianPhoneNumber(cleanNumber)) {
+      throw new Error("Invalid phone number format")
+    }
+
+    // Simulate API call to send OTP
+    console.log(`Sending OTP to ${phoneNumber}`)
+    setUser({
+      phoneNumber,
+      name: "",
+      verificationStatus: "unverified",
+      isPremium: false,
+    })
   }
 
-  const cleanNumber = phoneNumber.replace("+91", "")
-  if (!validateIndianPhoneNumber(cleanNumber)) {
-    throw new Error("Invalid phone number format")
+  const startDigiLockerVerification = async () => {
+    // Simulate DigiLocker API integration
+    console.log("Starting DigiLocker verification flow")
+    if (user) {
+      const updatedUser = { ...user, verificationStatus: "pending" }
+      setUser(updatedUser)
+      localStorage.setItem("user", JSON.stringify(updatedUser))
+    }
   }
-
-  // Simulate API call to send OTP
-  console.log(`Sending OTP to ${phoneNumber}`)
-  setUser({
-    phoneNumber,
-    name: "",
-    verificationStatus: "unverified" as VerificationStatus,
-    isPremium: false,
-  })
-}
-
-const startDigiLockerVerification = async () => {
-  // Simulate DigiLocker API integration
-  console.log("Starting DigiLocker verification flow")
-  if (user) {
-    const updatedUser = { ...user, verificationStatus: "pending" as VerificationStatus }
-    setUser(updatedUser)
-    localStorage.setItem("user", JSON.stringify(updatedUser))
-  }
-}
 
   const checkVerificationStatus = async (): Promise<VerificationStatus> => {
     // Simulate checking DigiLocker verification status
@@ -106,7 +103,6 @@ const startDigiLockerVerification = async () => {
     <AuthContext.Provider
       value={{
         user,
-        loading,
         login,
         logout,
         verifyOTP,
@@ -127,3 +123,4 @@ export const useAuth = () => {
   }
   return context
 }
+

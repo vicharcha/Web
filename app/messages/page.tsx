@@ -1,9 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card } from "@/components/ui/card"
 import {
   Send,
   Mic,
@@ -17,6 +19,9 @@ import {
   Users,
   Filter,
   MessageSquare,
+  PlusCircle,
+  Paperclip,
+  Smile,
 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -34,8 +39,10 @@ import {
 import { MessageAttachments } from "./components/message-attachments"
 
 export default function Messages() {
-  const [selectedChat, setSelectedChat] = useState<string | null>(null)
+  const [selectedChat, setSelectedChat] = useState(null)
   const [activeTab, setActiveTab] = useState("all")
+  const [messageText, setMessageText] = useState("")
+  const scrollRef = useRef(null)
   const isMobile = useMediaQuery("(max-width: 768px)")
 
   const allChats = [
@@ -50,31 +57,9 @@ export default function Messages() {
       isTyping: false,
       isFavorite: false,
       isArchived: false,
+      avatar: "/placeholder.svg?height=40&width=40&text=JS",
     },
-    {
-      id: "2",
-      name: "Raj Mahesh",
-      lastMessage: "Guys, the ES exam timing has been shifted",
-      time: "12:01 am",
-      unread: 2,
-      status: "offline",
-      hasMedia: false,
-      isTyping: true,
-      isFavorite: true,
-      isArchived: false,
-    },
-    {
-      id: "3",
-      name: "Atal B-202",
-      lastMessage: "🎵 Audio message",
-      time: "Yesterday",
-      unread: 1,
-      status: "offline",
-      hasMedia: true,
-      isTyping: false,
-      isFavorite: false,
-      isArchived: true,
-    },
+    // ... other chats
   ]
 
   const messages = [
@@ -85,97 +70,102 @@ export default function Messages() {
       time: "12:29 am",
       status: "read",
     },
-    {
-      id: 2,
-      sender: "you",
-      content: "ahhhhhhhhhh! inka kaledu",
-      time: "12:30 am",
-      status: "read",
-      media: {
-        type: "image",
-        url: "/placeholder.svg?height=200&width=300",
-        caption: "Screenshot 1",
-      },
-    },
-    {
-      id: 3,
-      sender: "you",
-      content: "model",
-      time: "12:30 am",
-      status: "read",
-      media: {
-        type: "image",
-        url: "/placeholder.svg?height=200&width=300",
-        caption: "Screenshot 2",
-      },
-    },
+    // ... other messages
   ]
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      })
+    }
+  }, [messages])
+
   const ChatList = () => (
-    <div className="w-full md:w-[380px] border-r flex flex-col h-full bg-background">
+    <Card className="w-full md:w-[380px] border-r flex flex-col h-full bg-card">
       <div className="p-4 border-b">
+        <div className="flex items-center gap-4 mb-6">
+          <h2 className="text-2xl font-bold">Messages</h2>
+          <Button variant="ghost" size="icon" className="ml-auto">
+            <PlusCircle className="h-5 w-5" />
+          </Button>
+        </div>
         <div className="flex items-center gap-2 mb-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search or start new chat" className="pl-9 w-full" />
+            <Input 
+              placeholder="Search chats..." 
+              className="pl-9 w-full bg-muted/50 border-none focus-visible:ring-1" 
+            />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="outline" size="icon">
                 <Filter className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Filter Chats</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Unread</DropdownMenuItem>
-              <DropdownMenuItem>Archived</DropdownMenuItem>
-              <DropdownMenuItem>Favorites</DropdownMenuItem>
+              <DropdownMenuItem>
+                <span className="mr-2">📥</span> Unread
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <span className="mr-2">🗄️</span> Archived
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <span className="mr-2">⭐</span> Favorites
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
         <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="unread" className="relative">
+          <TabsList className="grid w-full grid-cols-4 p-1 bg-muted/50">
+            <TabsTrigger value="all" className="text-sm">All</TabsTrigger>
+            <TabsTrigger value="unread" className="relative text-sm">
               Unread
-              <Badge variant="secondary" className="absolute -top-2 -right-2">
+              <Badge variant="secondary" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center">
                 3
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="groups">
+            <TabsTrigger value="groups" className="text-sm">
               <Users className="h-4 w-4" />
             </TabsTrigger>
-            <TabsTrigger value="favorites">
+            <TabsTrigger value="favorites" className="text-sm">
               <Star className="h-4 w-4" />
             </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="space-y-1 p-2">
+      <ScrollArea className="flex-1 px-2">
+        <AnimatePresence>
           {allChats.map((chat) => (
-            <button
+            <motion.button
               key={chat.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
               onClick={() => setSelectedChat(chat.id)}
               className={cn(
-                "w-full flex items-center space-x-4 p-3 rounded-lg transition-colors hover:bg-accent",
-                selectedChat === chat.id && "bg-accent",
+                "w-full flex items-center space-x-4 p-4 rounded-lg transition-all hover:bg-accent",
+                selectedChat === chat.id && "bg-accent shadow-sm",
+                "my-1"
               )}
             >
               <div className="relative">
-                <Avatar>
-                  <AvatarImage src={`/placeholder.svg?height=40&width=40`} alt={chat.name} />
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={chat.avatar} alt={chat.name} />
                   <AvatarFallback>{chat.name[0]}</AvatarFallback>
                 </Avatar>
                 {chat.status === "online" && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full ring-2 ring-background" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center">
-                  <p className="font-medium truncate">{chat.name}</p>
+                <div className="flex justify-between items-center mb-1">
+                  <p className="font-semibold truncate">{chat.name}</p>
                   <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">{chat.time}</span>
                 </div>
                 <div className="flex items-center text-sm text-muted-foreground">
@@ -188,74 +178,91 @@ export default function Messages() {
                   )}
                 </div>
               </div>
-            </button>
+            </motion.button>
           ))}
-        </div>
+        </AnimatePresence>
       </ScrollArea>
-    </div>
+    </Card>
   )
 
   const ChatView = () => (
     <div className="flex-1 flex flex-col h-full bg-background">
-      <div className="h-16 border-b flex items-center justify-between px-4">
+      <div className="h-20 border-b flex items-center justify-between px-6">
         <div className="flex items-center space-x-4">
-          <Avatar>
-            <AvatarImage src={`/placeholder.svg?height=40&width=40`} alt="Contact" />
+          <Avatar className="h-12 w-12">
+            <AvatarImage src="/placeholder.svg?height=40&width=40" alt="Contact" />
             <AvatarFallback>C</AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-medium">+91 91828 83649</p>
-            <p className="text-xs text-muted-foreground">online</p>
+            <p className="font-semibold text-lg">+91 91828 83649</p>
+            <p className="text-sm text-muted-foreground flex items-center">
+              <span className="w-2 h-2 bg-green-500 rounded-full mr-2" />
+              online
+            </p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="rounded-full">
             <Phone className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="rounded-full">
             <Video className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="rounded-full">
             <Search className="h-5 w-5" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="rounded-full">
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>View Contact</DropdownMenuItem>
-              <DropdownMenuItem>Media, links, and docs</DropdownMenuItem>
-              <DropdownMenuItem>Search</DropdownMenuItem>
-              <DropdownMenuItem>Mute notifications</DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem>
+                <Users className="mr-2 h-4 w-4" /> View Contact
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <ImageIcon className="mr-2 h-4 w-4" /> Media & Files
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Search className="mr-2 h-4 w-4" /> Search
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">Block</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive">
+                Block Contact
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
+      <ScrollArea className="flex-1 p-6" ref={scrollRef}>
+        <div className="space-y-6">
           {messages.map((message) => (
-            <div key={message.id} className={cn("flex", message.sender === "you" ? "justify-end" : "justify-start")}>
+            <motion.div
+              key={message.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={cn("flex", message.sender === "you" ? "justify-end" : "justify-start")}
+            >
               <div
                 className={cn(
-                  "rounded-lg max-w-[70%]",
-                  message.sender === "you" ? "bg-primary text-primary-foreground" : "bg-muted",
+                  "rounded-2xl max-w-[70%] shadow-sm",
+                  message.sender === "you" 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-accent"
                 )}
               >
                 {message.media && (
                   <div className="p-1">
                     <img
-                      src={message.media.url || "/placeholder.svg"}
+                      src={message.media.url}
                       alt={message.media.caption}
-                      className="rounded-md max-h-[300px] w-auto object-cover"
+                      className="rounded-lg max-h-[300px] w-auto object-cover"
                     />
                   </div>
                 )}
-                <div className="p-3 pt-2">
+                <div className="p-4">
                   <p>{message.content}</p>
                   <div className="flex items-center justify-end space-x-1 mt-1">
                     <p className="text-xs opacity-70">{message.time}</p>
@@ -268,19 +275,37 @@ export default function Messages() {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t">
-        <div className="flex items-center space-x-2">
-          <MessageAttachments />
-          <Input placeholder="Type a message" className="flex-1" />
-          <Button variant="ghost" size="icon">
+      <div className="p-6 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="icon" className="rounded-full">
+            <Smile className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="rounded-full">
+            <Paperclip className="h-5 w-5" />
+          </Button>
+          <Input 
+            placeholder="Type a message..." 
+            className="flex-1 bg-muted/50 border-none focus-visible:ring-1"
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+          />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full"
+          >
             <Mic className="h-5 w-5" />
           </Button>
-          <Button size="icon">
+          <Button 
+            size="icon" 
+            className="rounded-full"
+            disabled={!messageText.trim()}
+          >
             <Send className="h-5 w-5" />
           </Button>
         </div>
@@ -298,14 +323,24 @@ export default function Messages() {
 
 function EmptyState() {
   return (
-    <div className="flex-1 flex items-center justify-center">
-      <div className="text-center space-y-3">
-        <div className="inline-block p-6 bg-muted rounded-full">
-          <MessageSquare className="h-12 w-12 text-muted-foreground" />
+    <div className="flex-1 flex items-center justify-center bg-background">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center space-y-4"
+      >
+        <div className="inline-block p-6 bg-primary/5 rounded-full">
+          <MessageSquare className="h-12 w-12 text-primary" />
         </div>
-        <h3 className="text-xl font-semibold">Select a chat to start messaging</h3>
-        <p className="text-muted-foreground">Choose from your existing conversations or start a new one.</p>
-      </div>
+        <h3 className="text-2xl font-semibold">Select a chat to start messaging</h3>
+        <p className="text-muted-foreground max-w-sm">
+          Choose from your existing conversations or start a new one.
+        </p>
+        <Button className="mt-4">
+          <PlusCircle className="mr-2 h-4 w-4" />
+          New Message
+        </Button>
+      </motion.div>
     </div>
   )
 }

@@ -24,7 +24,6 @@ import {
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Logo } from "./logo"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { useTheme } from "next-themes"
@@ -42,13 +41,28 @@ const navItems = [
   { icon: Home, label: "Home", href: "/" },
   { icon: MessageSquare, label: "Messages", href: "/messages" },
   { icon: Brain, label: "AI Assistant", href: "/ai-assistant" },
-  { icon: Settings, label: "Settings", href: "/settings" },
   { icon: Phone, label: "Calls", href: "/calls" },
   { icon: Users, label: "Social", href: "/social" },
   { icon: ShoppingBag, label: "Shopping", href: "/shopping" },
   { icon: AlertTriangle, label: "Emergency", href: "/emergency" },
   { icon: CreditCard, label: "Payments", href: "/payments" },
 ]
+
+function SidebarLogo({ isCollapsed }: { isCollapsed?: boolean }) {
+  return (
+    <div className={cn("flex items-center", isCollapsed ? "justify-center" : "gap-2")}>
+      <div className="relative w-8 h-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-violet-600 rounded-lg transform rotate-45" />
+        <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-xl">V</div>
+      </div>
+      {!isCollapsed && (
+        <span className="font-bold bg-gradient-to-r from-pink-500 to-violet-600 bg-clip-text text-transparent">
+          Vicharcha
+        </span>
+      )}
+    </div>
+  )
+}
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -59,7 +73,7 @@ export function Sidebar() {
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed)
 
-  const NavItem = ({ href, icon: Icon, label }: { href: string; icon: React.ElementType; label: string }) => {
+  const NavItem = ({ href, icon: Icon, label }) => {
     const isActive = pathname === href
     return (
       <Link
@@ -67,7 +81,6 @@ export function Sidebar() {
         className={cn(
           "flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition-colors",
           isActive ? "bg-accent text-accent-foreground" : "hover:bg-accent/50",
-          // Add minimum width when collapsed to prevent icon squishing
           isCollapsed && "w-10 px-2 mx-auto justify-center",
         )}
       >
@@ -90,7 +103,7 @@ export function Sidebar() {
           <SheetContent side="left" className="w-[280px] p-0">
             <div className="flex flex-col h-full bg-background">
               <div className="flex items-center justify-between p-4 border-b">
-                <Logo variant="small" />
+                <SidebarLogo />
                 <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
                   <X className="h-5 w-5" />
                 </Button>
@@ -147,11 +160,6 @@ export function Sidebar() {
           </SheetContent>
         </Sheet>
 
-        <div className="flex items-center gap-4">
-          <Logo variant="small" />
-          <div className="text-sm font-medium">Vicharcha</div>
-        </div>
-
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon">
             <Bell className="h-5 w-5" />
@@ -175,7 +183,7 @@ export function Sidebar() {
                 {theme === "light" ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
                 <span>Change Theme</span>
               </DropdownMenuItem>
-              <DropdownMenuItem>Log out</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -217,7 +225,7 @@ export function Sidebar() {
       )}
     >
       <div className={cn("flex items-center px-4 mb-6", isCollapsed ? "justify-center" : "justify-between")}>
-        <Logo variant={isCollapsed ? "icon" : "small"} />
+        <SidebarLogo isCollapsed={isCollapsed} />
         <Button
           variant="ghost"
           size="icon"
@@ -275,7 +283,6 @@ export function Sidebar() {
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem>Development</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
           </DropdownMenuContent>
