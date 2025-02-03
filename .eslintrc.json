@@ -8,10 +8,25 @@
   ],
   "plugins": ["@typescript-eslint", "react", "jsx-a11y"],
   "rules": {
-    // Add or adjust rules to fix existing ESLint errors
     "react/react-in-jsx-scope": "off",
-    "@typescript-eslint/explicit-function-return-type": "off"
-    // ...other rules as needed
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "react/prop-types": "off",
+    "jsx-a11y/anchor-is-valid": [
+      "error",
+      {
+        "components": ["Link"],
+        "specialLink": ["hrefLeft", "hrefRight"],
+        "aspects": ["invalidHref", "preferButton"]
+      }
+    ],
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "vars": "all",
+        "args": "after-used",
+        "ignoreRestSiblings": false
+      }
+    ]
   },
   "settings": {
     "react": {
