@@ -15,40 +15,40 @@ export function LoginForm() {
   const [isOtpSent, setIsOtpSent] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSendOTP = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+const handleSendOTP = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setIsLoading(true)
 
-    try {
-      const formattedPhone = phoneNumber.startsWith("+91") ? phoneNumber : `+91${phoneNumber}`
-      await login(formattedPhone)
-      setIsOtpSent(true)
-      toast.success("OTP sent successfully!")
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to send OTP")
-    } finally {
-      setIsLoading(false)
-    }
+  try {
+    const formattedPhone = phoneNumber.startsWith("+91") ? phoneNumber : `+91${phoneNumber}`
+    await login(formattedPhone)
+    setIsOtpSent(true)
+    toast.success("OTP sent successfully!")
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : "Failed to send OTP")
+  } finally {
+    setIsLoading(false)
   }
+}
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+const handleVerifyOTP = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setIsLoading(true)
 
-    try {
-      const isVerified = await verifyOTP(otp)
-      if (isVerified) {
-        toast.success("Successfully logged in!")
-        // Router will handle redirect in auth provider
-      } else {
-        toast.error("Invalid OTP")
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to verify OTP")
-    } finally {
-      setIsLoading(false)
+  try {
+    const isVerified = await verifyOTP(otp)
+    if (isVerified) {
+      toast.success("Successfully logged in!")
+      // Router will handle redirect in auth provider
+    } else {
+      toast.error("Invalid OTP")
     }
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : "Failed to verify OTP")
+  } finally {
+    setIsLoading(false)
   }
+}
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -120,4 +120,3 @@ export function LoginForm() {
     </Card>
   )
 }
-
