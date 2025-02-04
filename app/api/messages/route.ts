@@ -24,3 +24,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create message' }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const db = await dbConnect();
+    const messageModel = new MessageModel(db);
+    const { id } = await request.json();
+    await messageModel.deleteMessage(id);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to delete message' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const db = await dbConnect();
+    const messageModel = new MessageModel(db);
+    const { id, content } = await request.json();
+    await messageModel.updateMessage(id, content);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to update message' }, { status: 500 });
+  }
+}
