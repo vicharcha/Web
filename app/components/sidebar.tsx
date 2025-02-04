@@ -11,8 +11,6 @@ import {
   AlertTriangle,
   CreditCard,
   ShoppingBag,
-  Settings,
-  Code,
   X,
   Sun,
   Moon,
@@ -36,6 +34,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/app/components/auth-provider"
 
 const navItems = [
   { icon: Home, label: "Home", href: "/" },
@@ -70,6 +69,7 @@ export function Sidebar() {
   const isMobile = useMediaQuery("(max-width: 768px)")
   const { setTheme, theme } = useTheme()
   const pathname = usePathname()
+  const { user, logout } = useAuth()
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed)
 
@@ -89,6 +89,21 @@ export function Sidebar() {
       </Link>
     )
   }
+
+  const UserButton = () => (
+    <Button variant="ghost" className={cn("w-full", isCollapsed ? "justify-center" : "justify-start gap-3")}>
+      <Avatar className="h-8 w-8 shrink-0">
+        <AvatarImage src={`/placeholder.svg?text=${user?.name?.[0] || "U"}`} alt={user?.name || "User"} />
+        <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
+      </Avatar>
+      {!isCollapsed && (
+        <div className="flex-1 text-left">
+          <p className="text-sm font-medium truncate">{user?.name || "Guest"}</p>
+          <p className="text-xs text-muted-foreground truncate">{user?.phoneNumber || "Not logged in"}</p>
+        </div>
+      )}
+    </Button>
+  )
 
   const MobileNav = () => (
     <>
@@ -129,12 +144,12 @@ export function Sidebar() {
               <div className="border-t p-4 space-y-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
-                    <AvatarFallback>U</AvatarFallback>
+                    <AvatarImage src={`/placeholder.svg?text=${user?.name?.[0] || "U"}`} alt={user?.name || "User"} />
+                    <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">John Doe</p>
-                    <p className="text-xs text-muted-foreground">john@example.com</p>
+                    <p className="text-sm font-medium">{user?.name || "Guest"}</p>
+                    <p className="text-xs text-muted-foreground">{user?.phoneNumber || "Not logged in"}</p>
                   </div>
                 </div>
 
@@ -168,8 +183,8 @@ export function Sidebar() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-                  <AvatarFallback>U</AvatarFallback>
+                  <AvatarImage src={`/placeholder.svg?text=${user?.name?.[0] || "U"}`} alt={user?.name || "User"} />
+                  <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
@@ -183,7 +198,9 @@ export function Sidebar() {
                 {theme === "light" ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
                 <span>Change Theme</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
+              <DropdownMenuItem onClick={logout} className="text-destructive">
+                Log out
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -265,18 +282,7 @@ export function Sidebar() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className={cn("w-full", isCollapsed ? "justify-center" : "justify-start gap-3")}>
-              <Avatar className="h-8 w-8 shrink-0">
-                <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-                <AvatarFallback>U</AvatarFallback>
-              </Avatar>
-              {!isCollapsed && (
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-medium truncate">John Doe</p>
-                  <p className="text-xs text-muted-foreground truncate">john@example.com</p>
-                </div>
-              )}
-            </Button>
+            <UserButton />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
@@ -284,7 +290,9 @@ export function Sidebar() {
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
+            <DropdownMenuItem onClick={logout} className="text-destructive">
+              Log out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

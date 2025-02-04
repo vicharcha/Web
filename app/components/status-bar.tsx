@@ -15,7 +15,7 @@ const statusUsers = [
 
 export function StatusBar() {
   return (
-    <ScrollArea className="w-full whitespace-nowrap rounded-md">
+    <ScrollArea className="w-full whitespace-nowrap">
       <div className="flex w-max space-x-4 p-4">
         <div className="flex flex-col items-center space-y-1">
           <Avatar className="h-16 w-16 ring-2 ring-offset-2 ring-primary">
@@ -28,8 +28,8 @@ export function StatusBar() {
         </div>
         {statusUsers.map((user) => (
           <div key={user.name} className="flex flex-col items-center space-y-1">
-            <Avatar className="h-16 w-16 ring-2 ring-offset-2 ring-primary">
-              <AvatarImage src={user.image} alt={user.name} />
+            <Avatar className="h-16 w-16 ring-2 ring-offset-2 ring-primary p-0.5 bg-gradient-to-br from-pink-500 to-violet-500">
+              <AvatarImage src={user.image} alt={user.name} className="rounded-full" />
               <AvatarFallback>{user.name[0]}</AvatarFallback>
             </Avatar>
             <span className="text-xs font-medium">{user.name}</span>

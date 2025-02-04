@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Simulate DigiLocker API integration
     console.log("Starting DigiLocker verification flow")
     if (user) {
-      const updatedUser = { ...user, verificationStatus: "pending" as VerificationStatus }
+      const updatedUser = { ...user, verificationStatus: "pending" }
       setUser(updatedUser)
       localStorage.setItem("user", JSON.stringify(updatedUser))
     }

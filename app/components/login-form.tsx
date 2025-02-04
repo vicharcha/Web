@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useAuth } from "@/lib/auth-provider" // Updated import path
+import React, { useState } from "react"
+import { useAuth } from "../components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,40 +15,40 @@ export function LoginForm() {
   const [isOtpSent, setIsOtpSent] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-const handleSendOTP = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setIsLoading(true)
+  const handleSendOTP = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsLoading(true)
 
-  try {
-    const formattedPhone = phoneNumber.startsWith("+91") ? phoneNumber : `+91${phoneNumber}`
-    await login(formattedPhone)
-    setIsOtpSent(true)
-    toast.success("OTP sent successfully!")
-  } catch (error) {
-    toast.error(error instanceof Error ? error.message : "Failed to send OTP")
-  } finally {
-    setIsLoading(false)
-  }
-}
-
-const handleVerifyOTP = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setIsLoading(true)
-
-  try {
-    const isVerified = await verifyOTP(otp)
-    if (isVerified) {
-      toast.success("Successfully logged in!")
-      // Router will handle redirect in auth provider
-    } else {
-      toast.error("Invalid OTP")
+    try {
+      const formattedPhone = phoneNumber.startsWith("+91") ? phoneNumber : `+91${phoneNumber}`
+      await login(formattedPhone)
+      setIsOtpSent(true)
+      toast.success("OTP sent successfully!")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send OTP")
+    } finally {
+      setIsLoading(false)
     }
-  } catch (error) {
-    toast.error(error instanceof Error ? error.message : "Failed to verify OTP")
-  } finally {
-    setIsLoading(false)
   }
-}
+
+  const handleVerifyOTP = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    try {
+      const isVerified = await verifyOTP(otp)
+      if (isVerified) {
+        toast.success("Successfully logged in!")
+        // Router will handle redirect in auth provider
+      } else {
+        toast.error("Invalid OTP")
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to verify OTP")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -71,7 +71,7 @@ const handleVerifyOTP = async (e: React.FormEvent) => {
                   type="tel"
                   placeholder="+91 your phone number"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhoneNumber(e.target.value)}
                   required
                   pattern="^(\+91)?[6-9]\d{9}$"
                   className="text-base"
@@ -90,7 +90,7 @@ const handleVerifyOTP = async (e: React.FormEvent) => {
                   type="text"
                   placeholder="Enter 6-digit OTP"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOtp(e.target.value)}
                   required
                   pattern="\d{6}"
                   maxLength={6}

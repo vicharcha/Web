@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -18,7 +18,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-function Tweet({ username, content, likes, comments, shares, isSponsored, categories }) {
+interface Message {
+  id: number;
+  content: string;
+  sender: string;
+  timestamp: string;
+}
+
+function Tweet({ username, content, likes, comments, shares, isSponsored, categories }: {
+  username: string;
+  content: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  isSponsored: boolean;
+  categories: string[];
+}) {
   return (
     <Card className="mb-4">
       <CardHeader className="flex flex-row items-center space-x-4 p-4">
@@ -62,7 +77,13 @@ function Tweet({ username, content, likes, comments, shares, isSponsored, catego
   )
 }
 
-function Reel({ username, thumbnail, views, isSponsored, categories }) {
+function Reel({ username, thumbnail, views, isSponsored, categories }: {
+  username: string;
+  thumbnail: string;
+  views: string;
+  isSponsored: boolean;
+  categories: string[];
+}) {
   return (
     <Card className="mb-4 overflow-hidden">
       <CardContent className="p-0 relative">
@@ -104,6 +125,45 @@ function Reel({ username, thumbnail, views, isSponsored, categories }) {
 export default function SocialPage() {
   const [activeMode, setActiveMode] = useState("normal")
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState("")
+
+  useEffect(() => {
+    fetchMessages()
+  }, [])
+
+  const fetchMessages = async () => {
+    try {
+      const response = await fetch('/api/messages')
+      const data = await response.json()
+      setMessages(data)
+    } catch (error) {
+      console.error('Failed to fetch messages:', error)
+    }
+  }
+
+  const handlePost = async () => {
+    try {
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: newMessage,
+          sender: 'Current User', // Replace with actual user authentication
+          timestamp: new Date().toISOString(),
+          categories: selectedCategories,
+        }),
+      })
+      if (response.ok) {
+        setNewMessage('')
+        fetchMessages()
+      }
+    } catch (error) {
+      console.error('Failed to post message:', error)
+    }
+  }
 
   const allCategories = [
     "Technology",
@@ -188,9 +248,9 @@ export default function SocialPage() {
     },
   ]
 
-  const filterContent = (content) => {
+  const filterContent = (content: any[]) => {
     if (selectedCategories.length === 0) return content
-    return content.filter((item) => item.categories.some((category) => selectedCategories.includes(category)))
+    return content.filter((item) => item.categories.some((category: string) => selectedCategories.includes(category)))
   }
 
   const filteredTweets = filterContent(tweets)
@@ -252,8 +312,13 @@ export default function SocialPage() {
         </div>
       </div>
       <div className="mb-6">
-        <Input placeholder="What's on your mind?" className="mb-2" />
-        <Button className="w-full sm:w-auto">Post</Button>
+        <Input
+          placeholder="What's on your mind?"
+          className="mb-2"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+        />
+        <Button className="w-full sm:w-auto" onClick={handlePost}>Post</Button>
       </div>
       <Tabs defaultValue="tweets" className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-4">
@@ -323,4 +388,3 @@ export default function SocialPage() {
     </div>
   )
 }
-

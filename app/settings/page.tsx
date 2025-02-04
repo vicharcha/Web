@@ -242,7 +242,7 @@ export default function SettingsPage() {
               </Button>
               <div className="text-sm text-muted-foreground">
                 <p>App Version: 1.0.0</p>
-                <p>Last Updated: {new Intl.DateTimeFormat('en-IN', { dateStyle: 'long' }).format(new Date())}</p>
+                <p>Last Updated: {new Date().toLocaleDateString()}</p>
               </div>
             </CardContent>
           </Card>
@@ -251,3 +251,4 @@ export default function SettingsPage() {
     </div>
   )
 }
+
