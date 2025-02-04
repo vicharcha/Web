@@ -38,7 +38,6 @@ jobs:
             echo "Error: Unable to detect package manager"
             exit 1
           fi
-          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
