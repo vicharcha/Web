@@ -25,6 +25,7 @@ const nextConfig = {
     config.resolve.alias['@/hooks'] = path.join(__dirname, 'hooks');
 config.resolve.alias['@/models'] = path.join(__dirname, 'models');
 config.resolve.alias['@/middleware'] = path.join(__dirname, 'middleware');
+config.resolve.alias['@/app'] = path.join(__dirname, 'app');
     return config;
   },
 }

@@ -1,10 +1,10 @@
 "use client"
 
 import React from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card"
+import { Button } from "components/ui/button"
 import { AlertTriangle, Clock, Ambulance, BadgeIcon as Police, Flame } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "components/ui/badge"
 
 export default function EmergencyPage() {
   const services = [

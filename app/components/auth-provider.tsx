@@ -104,20 +104,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const verifyOTP = async (otp: string): Promise<boolean> => {
-    if (!otp || otp.length !== 6) {
-      throw new Error("Invalid OTP format")
-    }
-
-    try {
-      // Simulate OTP verification
-      console.log(`Verifying OTP: ${otp}`)
-      return true
-    } catch (error) {
-      console.error("Error during OTP verification:", error)
-      throw new Error("OTP verification failed")
-    }
+const verifyOTP = async (otp: string): Promise<boolean> => {
+  if (!otp || otp.length !== 6) {
+    throw new Error("Invalid OTP format")
   }
+
+  try {
+    // Simulate OTP verification
+    console.log(`Verifying OTP: ${otp}`)
+    router.push("/")
+    return true
+  } catch (error) {
+    console.error("Error during OTP verification:", error)
+    throw new Error("OTP verification failed")
+  }
+}
 
   const setUserName = (name: string) => {
     if (!user) {
@@ -175,4 +176,3 @@ export const useAuth = () => {
   }
   return context
 }
-

@@ -1,6 +1,6 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
+import { Button } from "components/ui/button"
+import { Card, CardContent, CardFooter, CardHeader } from "components/ui/card"
 import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from "lucide-react"
 
 interface PostProps {
@@ -73,4 +73,3 @@ export function Post({
     </Card>
   )
 }
-

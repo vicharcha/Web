@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Input } from "components/ui/input"
+import { Button } from "components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs"
 import {
   Phone,
   Video,
@@ -17,9 +17,9 @@ import {
   Clock,
   Users,
 } from "lucide-react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "components/ui/dialog"
+import { ScrollArea } from "components/ui/scroll-area"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "components/ui/dropdown-menu"
 
 interface Call {
   id: string
@@ -194,4 +194,3 @@ export default function Calls() {
     </div>
   )
 }
-

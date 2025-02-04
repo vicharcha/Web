@@ -2,10 +2,10 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card } from "@/components/ui/card"
+import { Input } from "components/ui/input"
+import { Button } from "components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
+import { Card } from "components/ui/card"
 import {
   Send,
   Mic,
@@ -22,11 +22,11 @@ import {
   PlusCircle,
   Smile,
 } from "lucide-react"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import { useMediaQuery } from "@/hooks/use-media-query"
+import { ScrollArea } from "components/ui/scroll-area"
+import { Tabs, TabsList, TabsTrigger } from "components/ui/tabs"
+import { Badge } from "components/ui/badge"
+import { cn } from "lib/utils"
+import { useMediaQuery } from "hooks/use-media-query"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,7 +34,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "components/ui/dropdown-menu"
 import { MessageAttachments } from "./components/message-attachments"
 import { CallDialog } from "./components/call-dialog"
 import { ProfileInfo } from "./components/profile-info"

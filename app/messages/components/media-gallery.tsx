@@ -1,8 +1,8 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs"
+import { ScrollArea } from "components/ui/scroll-area"
 import { Image, FileText, Music, Video } from "lucide-react"
 
 interface MediaGalleryProps {

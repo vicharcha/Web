@@ -2,16 +2,16 @@
 
 import { useState } from "react"
 import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "components/ui/button"
+import { Input } from "components/ui/input"
+import { Label } from "components/ui/label"
+import { Switch } from "components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "components/ui/select"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
 import { Lock, Shield, HelpCircle } from "lucide-react"
-import { useAuth } from "@/app/components/auth-provider"
+import { useAuth } from "app/components/auth-provider"
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()

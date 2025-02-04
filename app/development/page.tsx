@@ -1,7 +1,7 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs"
 import { Code, GitBranch, GitCommit, GitPullRequest, Terminal } from "lucide-react"
 
 export default function DevelopmentPage() {
@@ -138,7 +138,7 @@ export default function DevelopmentPage() {
                         <span className="text-xs text-muted-foreground">{item.completion}</span>
                       </div>
                       <div className="h-2 rounded-full bg-secondary">
-                        <div className="h-full rounded-full bg-primary" style={{ width: item.completion }} />
+                        <div className={`h-full rounded-full bg-primary w-[${item.completion}]`} />
                       </div>
                     </div>
                   ))}

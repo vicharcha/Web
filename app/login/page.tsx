@@ -1,8 +1,8 @@
-import { LoginForm } from "@/app/components/login-form"
-import { AuthProvider } from "@/app/components/auth-provider"
-import { Viewport } from 'next'
+import { LoginForm } from "@/components/login-form"
+import { AuthProvider } from "@/components/auth-provider"
+import { Metadata } from 'next'
 
-export const viewport: Viewport = {
+export const metadata: Metadata = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "white" },
     { media: "(prefers-color-scheme: dark)", color: "#09090B" }

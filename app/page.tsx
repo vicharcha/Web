@@ -1,7 +1,9 @@
+'use client';
+
 import { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { MainContent } from "@/components/main-content";
+import { Input } from "components/ui/input";
+import { Button } from "components/ui/button";
+import { MainContent } from "components/main-content";
 
 interface Message {
   id: number;
@@ -61,14 +63,14 @@ export default function Home() {
               placeholder="What's on your mind?"
               className="mb-2"
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
             />
             <Button className="w-full sm:w-auto" onClick={handlePost}>
               Post
             </Button>
           </div>
           <div>
-            {messages.map((message) => (
+            {messages.map((message: Message) => (
               <div key={message.id} className="mb-4 p-4 border rounded">
                 <p className="font-semibold">{message.sender}</p>
                 <p>{message.content}</p>

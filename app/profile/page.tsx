@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/app/components/auth-provider";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "app/components/auth-provider";
+import { Input } from "components/ui/input";
+import { Button } from "components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar";
 
 export default function ProfilePage() {
   const { user, setUserName } = useAuth();

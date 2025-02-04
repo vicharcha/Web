@@ -1,14 +1,14 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "components/ui/dialog"
+import { Button } from "components/ui/button"
+import { Input } from "components/ui/input"
+import { ScrollArea } from "components/ui/scroll-area"
+import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
 import { Heart, MoreHorizontal, Send, Smile } from "lucide-react"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "components/ui/badge"
 import { format } from "date-fns"
 
 interface CommentDialogProps {

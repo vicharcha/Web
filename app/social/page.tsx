@@ -1,14 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
+import { useState, useEffect, ChangeEvent } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs"
+import { Input } from "components/ui/input"
+import { Button } from "components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
+import { Card, CardContent, CardHeader, CardFooter } from "components/ui/card"
 import { Heart, MessageCircle, Share2, Play, Sparkles, Zap, TrendingUp, Users, Filter } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Badge } from "components/ui/badge"
+import { ScrollArea } from "components/ui/scroll-area"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "components/ui/dropdown-menu"
 
 interface Message {
   id: number;
@@ -165,6 +165,18 @@ export default function SocialPage() {
     }
   }
 
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value)
+  }
+
+  const handleDropdownCheck = (checked: boolean, category: string) => {
+    setSelectedCategories(
+      checked 
+        ? [...selectedCategories, category] 
+        : selectedCategories.filter((c) => c !== category)
+    )
+  }
+
   const allCategories = [
     "Technology",
     "Lifestyle",
@@ -298,11 +310,7 @@ export default function SocialPage() {
                 <DropdownMenuCheckboxItem
                   key={category}
                   checked={selectedCategories.includes(category)}
-                  onCheckedChange={(checked) => {
-                    setSelectedCategories(
-                      checked ? [...selectedCategories, category] : selectedCategories.filter((c) => c !== category),
-                    )
-                  }}
+                  onCheckedChange={(checked: boolean) => handleDropdownCheck(checked, category)}
                 >
                   {category}
                 </DropdownMenuCheckboxItem>
@@ -316,7 +324,7 @@ export default function SocialPage() {
           placeholder="What's on your mind?"
           className="mb-2"
           value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
+          onChange={handleInputChange}
         />
         <Button className="w-full sm:w-auto" onClick={handlePost}>Post</Button>
       </div>

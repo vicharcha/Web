@@ -1,10 +1,10 @@
 "use client"
 
 import React from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card"
+import { Button } from "components/ui/button"
 import { Bot, Sparkles, Brain, MessageSquare, Lightbulb, Clock } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "components/ui/badge"
 
 export default function AIPage() {
   const features = [
@@ -64,7 +64,7 @@ export default function AIPage() {
 
             <div className="grid gap-6 md:grid-cols-3">
               {features.map((feature) => (
-                <div 
+                <div
                   key={feature.title}
                   className="p-6 rounded-lg bg-muted/50 text-center space-y-2"
                 >
@@ -80,7 +80,7 @@ export default function AIPage() {
                 Our team is working hard to bring you a powerful AI assistant.
                 Stay tuned for updates!
               </p>
-              
+
               <Button className="w-full" disabled>
                 <Bot className="mr-2 h-4 w-4" />
                 AI Assistant Coming Soon
@@ -92,4 +92,3 @@ export default function AIPage() {
     </div>
   )
 }
-

@@ -1,5 +1,5 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
+import { ScrollArea, ScrollBar } from "components/ui/scroll-area"
 import { PlusCircle } from "lucide-react"
 
 const statusUsers = [
@@ -40,4 +40,3 @@ export function StatusBar() {
     </ScrollArea>
   )
 }
-

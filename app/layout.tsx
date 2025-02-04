@@ -3,8 +3,8 @@ import { Inter } from "next/font/google"
 import { Toaster } from "sonner"
 
 import "./globals.css"
-import { Sidebar } from "@/app/components/sidebar"
-import { ThemeProvider } from "@/app/components/theme-provider"
+import Sidebar from "./components/sidebar"
+import ThemeProvider from "./components/theme-provider"
 import { AuthProvider } from "./components/auth-provider"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   ],
   authors: [
     {
-      name: "Vicharcha Team",
+      name: "kasinadhsarma",
     },
   ],
   creator: "Vicharcha",
@@ -41,16 +41,18 @@ export const metadata: Metadata = {
     description: "A responsible social media application",
     creator: "@vicharcha",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-  },
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "white" },
-    { media: "(prefers-color-scheme: dark)", color: "black" },
-  ],
 }
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+}
+
+export const themeColor = [
+  { media: "(prefers-color-scheme: light)", color: "white" },
+  { media: "(prefers-color-scheme: dark)", color: "black" },
+]
 
 interface RootLayoutProps {
   children: React.ReactNode

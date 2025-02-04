@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "components/ui/dialog"
+import { Button } from "components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
 import { Phone, Video, Mic, MicOff, VideoOff } from "lucide-react"
 
 interface CallDialogProps {

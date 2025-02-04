@@ -1,10 +1,10 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button } from "components/ui/button"
 import { Camera, File, Image, Paperclip, Sticker, GiftIcon as Gif } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Popover, PopoverContent, PopoverTrigger } from "components/ui/popover"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs"
+import { ScrollArea } from "components/ui/scroll-area"
 import { useState } from "react"
 
 export function MessageAttachments() {
@@ -56,6 +56,8 @@ export function MessageAttachments() {
                     accept={option.accept}
                     className="hidden"
                     onChange={handleFileChange}
+                    aria-label={`Upload ${option.label}`}
+                    title={`Upload ${option.label}`}
                   />
                 </Button>
               ))}
