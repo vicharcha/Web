@@ -63,18 +63,15 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
 
       - name: Run ESLint
-        run: ${{ steps.detect-package-manager.outputs.runner }} run lint
+        run: ${{ steps.detect-package-manager.outputs.runner }} run lint || exit 1
 
       - name: Build Next.js Site
         run: ${{ steps.detect-package-manager.outputs.runner }} run build
 
-      - name: Start Development Server
-        run: ${{ steps.detect-package-manager.outputs.runner }} run dev
-
       - name: Upload Build Artifacts
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .next
+          path: out
 
   deploy:
     name: Deploy to GitHub Pages
