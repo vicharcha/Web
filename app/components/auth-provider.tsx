@@ -112,12 +112,16 @@ const verifyOTP = async (otp: string): Promise<boolean> => {
   try {
     // Simulate OTP verification
     console.log(`Verifying OTP: ${otp}`)
-    router.push("/")
-    return true
+    const isValid = true; // Simulate OTP validation
+    if (isValid) {
+      // router.push("/") // P8d07
+    }
+    return isValid
   } catch (error) {
     console.error("Error during OTP verification:", error)
     throw new Error("OTP verification failed")
   }
+  // currently we don't need otp means i am saying this is sample page only all web pages are working or not we are checking currently after we integrate database and devlopments this is now sample // Pdc04
 }
 
   const setUserName = (name: string) => {

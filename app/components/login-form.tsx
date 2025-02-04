@@ -7,6 +7,7 @@ import { Input } from "components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "components/ui/card"
 import { Label } from "components/ui/label"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 export function LoginForm() {
   const { login, verifyOTP } = useAuth()
@@ -14,6 +15,7 @@ export function LoginForm() {
   const [otp, setOtp] = useState("")
   const [isOtpSent, setIsOtpSent] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   const handleSendOTP = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -39,7 +41,7 @@ export function LoginForm() {
       const isVerified = await verifyOTP(otp)
       if (isVerified) {
         toast.success("Successfully logged in!")
-        // Router will handle redirect in auth provider
+        // router.push("/") // P666b
       } else {
         toast.error("Invalid OTP")
       }
@@ -120,3 +122,5 @@ export function LoginForm() {
     </Card>
   )
 }
+
+// currently we don't need otp means i am saying this is sample page only all web pages are working or not we are checking currently after we integrate database and devlopments this is now sample

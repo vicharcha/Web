@@ -16,3 +16,5 @@ export default function LoginPage() {
     </AuthProvider>
   )
 }
+
+// currently we don't need otp means i am saying this is sample page only all web pages are working or not we are checking currently after we integrate database and devlopments this is now sample
