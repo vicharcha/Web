@@ -48,13 +48,7 @@ export default function LoginForm() {
   const handleVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await startDigiLockerVerification()
-      const status = await checkVerificationStatus()
-      if (status === 'pending') {
-        router.push('/')
-      } else {
-        setError('Verification failed')
-      }
+      router.push('/')
     } catch (err) {
       setError('Verification failed')
     }
@@ -123,25 +117,8 @@ export default function LoginForm() {
           {step === 'verification' && (
             <form onSubmit={handleVerificationSubmit}>
               <div className="space-y-4">
-                <div className="bg-muted p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Why verify with DigiLocker?</h3>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Get verified badge
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Access premium features
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Enhanced trust in the community
-                    </li>
-                  </ul>
-                </div>
                 <Button type="submit" className="w-full">
-                  Verify with DigiLocker
+                  Continue
                 </Button>
               </div>
             </form>
@@ -156,4 +133,3 @@ export default function LoginForm() {
     </div>
   )
 }
-
