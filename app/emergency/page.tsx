@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card"
 import { Button } from "components/ui/button"
 import { AlertTriangle, Clock, Ambulance, BadgeIcon as Police, Flame } from "lucide-react"
 import { Badge } from "components/ui/badge"
+import { useEffect } from 'react';
 
 export default function EmergencyPage() {
   const services = [
@@ -27,6 +28,12 @@ export default function EmergencyPage() {
       bgColor: "bg-yellow-50",
     },
   ]
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Client-side code here
+    }
+  }, []);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -51,8 +58,8 @@ export default function EmergencyPage() {
           <div className="text-center space-y-6">
             <div className="grid gap-4 md:grid-cols-3">
               {services.map((service) => (
-                <div 
-                  key={service.title} 
+                <div
+                  key={service.title}
                   className={`${service.bgColor} rounded-lg p-4 flex items-center justify-center gap-2 opacity-50`}
                 >
                   <service.icon className={`h-6 w-6 ${service.color}`} />
@@ -60,7 +67,7 @@ export default function EmergencyPage() {
                 </div>
               ))}
             </div>
-            
+
             <div className="max-w-lg mx-auto space-y-4">
               <p className="text-lg text-muted-foreground">
                 We're building a comprehensive emergency response system to serve you better.
@@ -89,4 +96,3 @@ export default function EmergencyPage() {
     </div>
   )
 }
-
