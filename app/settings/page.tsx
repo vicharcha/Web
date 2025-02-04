@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Lock, Shield, HelpCircle } from "lucide-react"
+import { useAuth } from "@/app/components/auth-provider"
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
@@ -19,6 +20,13 @@ export default function SettingsPage() {
     push: false,
     sms: false,
   })
+  const { user, setUserName } = useAuth();
+  const [name, setName] = useState(user?.name || "");
+  const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
+
+  const handleSave = () => {
+    setUserName(name);
+  };
 
   return (
     <div className="container mx-auto py-10">
@@ -43,14 +51,14 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src="/placeholder.svg?height=80&width=80" alt="User" />
-                  <AvatarFallback>JD</AvatarFallback>
+                  <AvatarImage src={`/placeholder.svg?text=${name[0] || "U"}`} alt={name || "User"} />
+                  <AvatarFallback>{name[0] || "U"}</AvatarFallback>
                 </Avatar>
                 <Button>Change Avatar</Button>
               </div>
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="John Doe" />
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor="email">Email</Label>
@@ -58,11 +66,11 @@ export default function SettingsPage() {
               </div>
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" />
+                <Input id="phone" value={phoneNumber} disabled />
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Save Changes</Button>
+              <Button onClick={handleSave}>Save Changes</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -251,4 +259,3 @@ export default function SettingsPage() {
     </div>
   )
 }
-

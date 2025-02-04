@@ -46,6 +46,30 @@ class MessageModel {
       });
     });
   }
+
+  deleteMessage(id: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.db.run('DELETE FROM messages WHERE id = ?', [id], function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  updateMessage(id: number, content: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.db.run('UPDATE messages SET content = ? WHERE id = ?', [content, id], function (err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
 }
 
 export default MessageModel;

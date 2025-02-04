@@ -320,6 +320,18 @@ export default function SocialPage() {
         />
         <Button className="w-full sm:w-auto" onClick={handlePost}>Post</Button>
       </div>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-4">Messages</h2>
+        <div>
+          {messages.map((message) => (
+            <div key={message.id} className="mb-4 p-4 border rounded">
+              <p className="font-semibold">{message.sender}</p>
+              <p>{message.content}</p>
+              <p className="text-sm text-gray-500">{message.timestamp}</p>
+            </div>
+          ))}
+        </div>
+      </div>
       <Tabs defaultValue="tweets" className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-4">
           <TabsTrigger value="tweets">Tweets</TabsTrigger>

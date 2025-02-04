@@ -11,4 +11,17 @@ function dbConnect(): Promise<Database> {
   });
 }
 
+function closeDbConnection(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.close((err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
 export default dbConnect;
+export { closeDbConnection };

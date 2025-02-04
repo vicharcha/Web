@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Bell,
+  User,
 } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -45,6 +46,7 @@ const navItems = [
   { icon: ShoppingBag, label: "Shopping", href: "/shopping" },
   { icon: AlertTriangle, label: "Emergency", href: "/emergency" },
   { icon: CreditCard, label: "Payments", href: "/payments" },
+  { icon: User, label: "Profile", href: "/profile" },
 ]
 
 function SidebarLogo({ isCollapsed }: { isCollapsed?: boolean }) {
