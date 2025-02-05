@@ -110,25 +110,39 @@ const messages: { id: number; sender: string; content: string; time: string; sta
     }
   }, [scrollRef]) // Corrected dependency
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (messageText.trim()) {
-      // Add the new message to the messages array
-      // This is a placeholder. In a real app, you'd send this to your backend
       const newMessage = {
         id: messages.length + 1,
         sender: "you",
         content: messageText,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         status: "sent",
+        media: null,
       };
-      // messages.push(newMessage)
-      setMessageText("");
-      // Scroll to bottom
-      if (scrollRef.current) {
-        scrollRef.current.scrollTo({
-          top: scrollRef.current.scrollHeight,
-          behavior: "smooth",
+
+      try {
+        const response = await fetch('/api/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newMessage),
         });
+
+        if (response.ok) {
+          setMessageText("");
+          if (scrollRef.current) {
+            scrollRef.current.scrollTo({
+              top: scrollRef.current.scrollHeight,
+              behavior: "smooth",
+            });
+          }
+        } else {
+          console.error('Failed to send message');
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
       }
     }
   }
@@ -346,9 +360,6 @@ const messages: { id: number; sender: string; content: string; time: string; sta
             onChange={(e) => setMessageText(e.target.value)}
             onKeyPress={handleKeyPress}
           />
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Mic className="h-5 w-5" />
-          </Button>
           <Button size="icon" className="rounded-full" disabled={!messageText.trim()} onClick={handleSendMessage}>
             <Send className="h-5 w-5" />
           </Button>
