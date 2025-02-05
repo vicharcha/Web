@@ -1,8 +1,8 @@
 "use client"
 
 import React from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "components/ui/card"
-import { Button } from "components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Clock } from "lucide-react"
 
 export default function Payments() {

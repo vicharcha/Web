@@ -2,10 +2,10 @@
 
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Input } from "components/ui/input"
-import { Button } from "components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
-import { Card } from "components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card } from "@/components/ui/card"
 import {
   Send,
   Mic,
@@ -22,11 +22,11 @@ import {
   PlusCircle,
   Smile,
 } from "lucide-react"
-import { ScrollArea } from "components/ui/scroll-area"
-import { Tabs, TabsList, TabsTrigger } from "components/ui/tabs"
-import { Badge } from "components/ui/badge"
-import { cn } from "lib/utils"
-import { useMediaQuery } from "hooks/use-media-query"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
+import { useMediaQuery } from "@/hooks/use-media-query"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,7 +34,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu"
 import { MessageAttachments } from "./components/message-attachments"
 import { CallDialog } from "./components/call-dialog"
 import { ProfileInfo } from "./components/profile-info"
@@ -84,31 +84,31 @@ export default function Messages() {
     // ... other chats
   ]
 
-interface MessageMedia {
+interface Media {
   url: string;
   caption: string;
 }
 
-const messages = [
+const messages: { id: number; sender: string; content: string; time: string; status: string; media: Media | null }[] = [
   {
     id: 1,
     sender: "them",
     content: "Complete front end and give",
     time: "12:29 am",
     status: "read",
-    media: null as MessageMedia | null,
+    media: null, // Add media property
   },
-  // ... other messages
-]
+    // ... other messages
+  ]
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
         top: scrollRef.current.scrollHeight,
         behavior: "smooth",
-      })
+      });
     }
-  }, [messages]) // Corrected dependency
+  }, [scrollRef]) // Corrected dependency
 
   const handleSendMessage = () => {
     if (messageText.trim()) {
@@ -120,23 +120,23 @@ const messages = [
         content: messageText,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         status: "sent",
-      }
+      };
       // messages.push(newMessage)
-      setMessageText("")
+      setMessageText("");
       // Scroll to bottom
       if (scrollRef.current) {
         scrollRef.current.scrollTo({
           top: scrollRef.current.scrollHeight,
           behavior: "smooth",
-        })
+        });
       }
     }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSendMessage()
+      e.preventDefault();
+      handleSendMessage();
     }
   }
 
@@ -306,15 +306,15 @@ const messages = [
                   message.sender === "you" ? "bg-primary text-primary-foreground" : "bg-accent",
                 )}
               >
-                {message.media && (
-                  <div className="p-1">
-                    <img
-                      src={message.media.url || "/placeholder.svg"}
-                      alt={message.media.caption}
-                      className="rounded-lg max-h-[300px] w-auto object-cover"
-                    />
-                  </div>
-                )}
+{message.media && (
+  <div className="p-1">
+    <img
+      src={message.media.url}
+      alt={message.media.caption}
+      className="rounded-lg max-h-[300px] w-auto object-cover"
+    />
+  </div>
+)}
                 <div className="p-4">
                   <p>{message.content}</p>
                   <div className="flex items-center justify-end space-x-1 mt-1">

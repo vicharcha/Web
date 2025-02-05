@@ -1,8 +1,8 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs"
-import { ScrollArea } from "components/ui/scroll-area"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Image, FileText, Music, Video } from "lucide-react"
 
 interface MediaGalleryProps {
@@ -75,12 +75,12 @@ export function MediaGallery({ isOpen, onClose }: MediaGalleryProps) {
   )
 }
 
-function MediaItem({ item }: { item: { type: string; src?: string; name?: string; date: string } }) {
+function MediaItem({ item }) {
   switch (item.type) {
     case "image":
       return (
         <div className="relative aspect-square">
-          <img src={item.src || "/placeholder.svg"} alt="Media item" className="object-cover rounded-md" />
+          <Image src={item.src || "/placeholder.svg"} alt="Media item" className="object-cover rounded-md" fill />
         </div>
       )
     case "video":
@@ -107,3 +107,4 @@ function MediaItem({ item }: { item: { type: string; src?: string; name?: string
       return null
   }
 }
+

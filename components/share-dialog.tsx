@@ -1,10 +1,10 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "components/ui/dialog"
-import { Button } from "components/ui/button"
-import { Input } from "components/ui/input"
-import { ScrollArea } from "components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Check, Copy, Facebook, Instagram, Twitter, PhoneIcon as WhatsApp } from "lucide-react"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -14,9 +14,9 @@ interface ShareDialogProps {
   isOpen: boolean
   onClose: () => void
   post: {
-    id: number
+    id: string | number
     username: string
-    image: string
+    image?: string
   }
 }
 
@@ -69,10 +69,8 @@ export function ShareDialog({ isOpen, onClose, post }: ShareDialogProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Share Post</DialogTitle>
-          <DialogDescription>Choose how you want to share this post</DialogDescription>
         </DialogHeader>
 
-        {/* Social Share Options */}
         <div className="grid grid-cols-4 gap-4 py-4">
           {socialPlatforms.map((platform) => (
             <motion.button
@@ -93,7 +91,6 @@ export function ShareDialog({ isOpen, onClose, post }: ShareDialogProps) {
           ))}
         </div>
 
-        {/* Copy Link */}
         <div className="flex items-center space-x-2">
           <Input value={`https://vicharcha.com/p/${post.id}`} readOnly className="flex-1" />
           <Button size="icon" variant="outline" onClick={handleCopyLink}>
@@ -111,9 +108,8 @@ export function ShareDialog({ isOpen, onClose, post }: ShareDialogProps) {
           </Button>
         </div>
 
-        {/* Suggested Users */}
         <div className="mt-4">
-          <h4 className="text-sm font-medium mb-3">Share to Users</h4>
+          <h4 className="text-sm font-medium mb-3">Share with Users</h4>
           <ScrollArea className="h-[200px] rounded-md border p-2">
             {suggestedUsers.map((user) => (
               <motion.div

@@ -1,13 +1,13 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Button } from "components/ui/button"
-import { Textarea } from "components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
-import { Card, CardContent, CardFooter } from "components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { ImageIcon, Video, Music, X } from "lucide-react"
-import { useAuth } from "app/components/auth-provider"
-import { useToast } from "components/ui/use-toast"
+import { useAuth } from "@/app/components/auth-provider"
+import { useToast } from "@/components/ui/use-toast"
 
 export function CreatePost() {
   const [content, setContent] = useState("")
@@ -83,14 +83,12 @@ export function CreatePost() {
             <AvatarImage src={`/placeholder.svg?text=${user?.name?.[0] || "U"}`} alt={user?.name || "User"} />
             <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
           </Avatar>
-<label htmlFor="postContent" className="sr-only">What's on your mind?</label>
-<Textarea
-  id="postContent"
-  placeholder={`What's on your mind, ${user?.name?.split(" ")[0] || "there"}?`}
-  value={content}
-  onChange={(e) => setContent(e.target.value)}
-  className="flex-grow min-h-[100px] resize-none"
-/>
+          <Textarea
+            placeholder={`What's on your mind, ${user?.name?.split(" ")[0] || "there"}?`}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="flex-grow min-h-[100px] resize-none"
+          />
         </div>
         {mediaPreview && (
           <div className="mt-4 relative">
@@ -120,14 +118,7 @@ export function CreatePost() {
           <Button variant="outline" size="icon" onClick={() => handleMediaUpload("audio")} className="rounded-full">
             <Music className="h-4 w-4" />
           </Button>
-          <label htmlFor="fileInput" className="sr-only">Upload media</label>
-<input
-  id="fileInput"
-  type="file"
-  ref={fileInputRef}
-  onChange={handleFileChange}
-  className="hidden"
-/>
+          <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
         </div>
         <Button onClick={handleSubmit} disabled={!content.trim() && !mediaPreview} className="px-8">
           Post
@@ -136,3 +127,4 @@ export function CreatePost() {
     </Card>
   )
 }
+

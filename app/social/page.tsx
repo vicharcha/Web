@@ -1,14 +1,13 @@
 "use client"
 
-import { useState, useEffect, ChangeEvent } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs"
-import { Input } from "components/ui/input"
-import { Button } from "components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
-import { Card, CardContent, CardHeader, CardFooter } from "components/ui/card"
-import { Heart, MessageCircle, Share2, Play, Sparkles, Zap, TrendingUp, Users, Filter } from "lucide-react"
-import { Badge } from "components/ui/badge"
-import { ScrollArea } from "components/ui/scroll-area"
+import { useState, useEffect } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Sparkles, Zap, TrendingUp, Users, Filter, Image, Briefcase, PenSquare } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,166 +15,187 @@ import {
   DropdownMenuSeparator,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
-} from "components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu"
+import { Post } from "@/components/post"
+import { Reel } from "@/components/reel"
+import { ConnectionSuggestions } from "@/components/connection-suggestions"
 
-interface Message {
-  id: number;
-  content: string;
-  sender: string;
-  timestamp: string;
+// Story component interfaces and data
+const storyVariants = {
+  initial: { scale: 1 },
+  animate: { scale: 1 },
+  hover: { scale: 1.05 },
+  tap: { scale: 0.95 },
+};
+
+const stories = [
+  { id: 1, username: "frontlines", avatar: "/placeholder.svg?1", hasStory: true, isPremium: true, views: "1.2M" },
+  { id: 2, username: "lohithsai", avatar: "/placeholder.svg?2", hasStory: true, isPremium: false, views: "856K" },
+  { id: 3, username: "lizz_nikzz", avatar: "/placeholder.svg?3", hasStory: true, isPremium: true, views: "2.1M" },
+  { id: 4, username: "olgakay", avatar: "/placeholder.svg?4", hasStory: true, isPremium: false, views: "543K" },
+  { id: 5, username: "krishna_ta", avatar: "/placeholder.svg?5", hasStory: true, isPremium: true, views: "1.5M" },
+  { id: 6, username: "new_story", avatar: "/placeholder.svg?6", hasStory: true, isPremium: false, views: "100K" },
+];
+
+const user = { name: "John Doe" };
+
+interface StoryProps {
+  story: {
+    id: number;
+    username: string;
+    avatar: string;
+    hasStory: boolean;
+    isPremium: boolean;
+    views: string;
+  }
 }
 
-function Tweet({ username, content, likes, comments, shares, isSponsored, categories }: {
-  username: string;
-  content: string;
-  likes: number;
-  comments: number;
-  shares: number;
-  isSponsored: boolean;
-  categories: string[];
-}) {
-  return (
-    <Card className="mb-4">
-      <CardHeader className="flex flex-row items-center space-x-4 p-4">
-        <Avatar>
-          <AvatarImage src={`/placeholder.svg?height=40&width=40`} alt={username} />
-          <AvatarFallback>{username[0]}</AvatarFallback>
+const Story = ({ story }: StoryProps) => (
+  <motion.button
+    className="flex flex-col items-center space-y-1 relative group px-1"
+    variants={storyVariants}
+    initial="initial"
+    animate="animate"
+    whileHover="hover"
+    whileTap="tap"
+    aria-label={`View ${story.username}'s story`}
+  >
+    <div
+      className={`rounded-full p-1 ${
+        story.isPremium
+          ? "bg-premium-gradient"
+          : "bg-story-gradient"
+      }`}
+    >
+      <div className="rounded-full p-0.5 bg-background">
+        <Avatar className="w-14 h-14 md:w-16 md:h-16 group-hover:scale-105 transition-transform">
+          <AvatarImage src={story.avatar} alt={story.username} />
+          <AvatarFallback>{story.username[0].toUpperCase()}</AvatarFallback>
         </Avatar>
-        <div className="flex-1">
-          <div className="flex items-center justify-between">
-            <div className="font-semibold">{username}</div>
-            {isSponsored && (
-              <Badge variant="secondary" className="text-xs">
-                Sponsored
-              </Badge>
-            )}
+      </div>
+      {story.isPremium && (
+        <div className="absolute -top-1 -right-1 bg-premium-gradient rounded-full p-1">
+          <Sparkles className="h-3 w-3" />
+        </div>
+      )}
+    </div>
+    <div className="flex flex-col items-center">
+      <span className="text-xs font-medium truncate max-w-[80px]">{story.username}</span>
+      <span className="text-[10px] text-muted-foreground">{story.views} views</span>
+    </div>
+  </motion.button>
+);
+
+const StoriesSection = () => (
+  <div className="relative mb-6">
+    <div className="absolute inset-0 bg-gradient-to-r from-gradient-start/10 via-gradient-mid/10 to-gradient-end/10 rounded-xl blur-xl" />
+    <ScrollArea className="w-full rounded-xl border bg-background/50 backdrop-blur-sm overflow-x-auto">
+      <div className="flex items-center gap-2 p-4 md:gap-4">
+        {/* Your Story */}
+        <motion.button
+          className="flex flex-col items-center space-y-1 relative group px-1"
+          variants={storyVariants}
+          initial="initial"
+          animate="animate"
+          whileHover="hover"
+          whileTap="tap"
+          aria-label="Add your story"
+        >
+          <div className="rounded-full p-1 bg-story-gradient">
+            <div className="rounded-full p-0.5 bg-background">
+              <Avatar className="w-14 h-14 md:w-16 md:h-16 group-hover:scale-105 transition-transform">
+                <AvatarImage
+                  src={`/placeholder.svg?text=${user?.name?.[0] || "U"}`}
+                  alt={user?.name || "Your Story"}
+                />
+                <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
+              </Avatar>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="p-4">
-        <p>{content}</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {categories.map((category, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
-              {category}
-            </Badge>
-          ))}
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between p-4">
-        <Button variant="ghost" size="sm">
-          <Heart className="mr-2 h-4 w-4" /> {likes}
-        </Button>
-        <Button variant="ghost" size="sm">
-          <MessageCircle className="mr-2 h-4 w-4" /> {comments}
-        </Button>
-        <Button variant="ghost" size="sm">
-          <Share2 className="mr-2 h-4 w-4" /> {shares}
-        </Button>
-      </CardFooter>
-    </Card>
-  )
+          <span className="text-xs font-medium">Your Story</span>
+        </motion.button>
+
+        {/* Other Stories */}
+        {stories.map((story) => (
+          <Story key={story.id} story={story} />
+        ))}
+      </div>
+    </ScrollArea>
+  </div>
+);
+
+// Original interfaces
+interface Post {
+  id: string
+  username: string
+  userImage: string
+  content: string
+  image: string
+  likes: number
+  comments: number
+  shares: number
+  isLiked: boolean
+  isBookmarked: boolean
+  categories: string[]
+  isSponsored?: boolean
 }
 
-function Reel({ username, thumbnail, views, isSponsored, categories }: {
-  username: string;
-  thumbnail: string;
-  views: string;
-  isSponsored: boolean;
-  categories: string[];
-}) {
+interface Reel {
+  id: string
+  username: string
+  userImage: string
+  video: string
+  likes: number
+  comments: number
+  shares: number
+  isLiked: boolean
+  categories: string[]
+  isSponsored?: boolean
+}
+
+const CreatePost = () => {
+  const [postText, setPostText] = useState('')
+
   return (
-    <Card className="mb-4 overflow-hidden">
-      <CardContent className="p-0 relative">
-        <img
-          src={thumbnail || "/placeholder.svg?height=300&width=200"}
-          alt="Reel thumbnail"
-          className="w-full h-[300px] object-cover"
+    <div className="w-full space-y-4">
+      <div className="flex items-center gap-3 rounded-full border p-3">
+        <Avatar className="h-8 w-8">
+          <img src="/placeholder.svg" alt="Profile" className="rounded-full" />
+        </Avatar>
+        <input
+          type="text"
+          placeholder="Start a post, try writing with Vicharcha..."
+          className="flex-1 bg-transparent border-none outline-none text-sm"
+          value={postText}
+          onChange={(e) => setPostText(e.target.value)}
         />
-        <div className="absolute bottom-2 left-2 flex items-center space-x-2 bg-black bg-opacity-50 p-2 rounded">
-          <Play className="h-4 w-4 text-white" />
-          <span className="text-sm text-white">{views} views</span>
+      </div>
+
+      <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm">
+            <Image className="h-5 w-5 mr-2" />
+            Media
+          </Button>
+          <Button variant="ghost" size="sm">
+            <Briefcase className="h-5 w-5 mr-2" />
+            Job
+          </Button>
+          <Button variant="ghost" size="sm">
+            <PenSquare className="h-5 w-5 mr-2" />
+            Write article
+          </Button>
         </div>
-        {isSponsored && (
-          <Badge variant="secondary" className="absolute top-2 right-2">
-            Sponsored
-          </Badge>
-        )}
-      </CardContent>
-      <CardFooter className="p-2 flex flex-col items-start">
-        <div className="flex items-center w-full">
-          <Avatar className="h-8 w-8 mr-2">
-            <AvatarImage src={`/placeholder.svg?height=32&width=32`} alt={username} />
-            <AvatarFallback>{username[0]}</AvatarFallback>
-          </Avatar>
-          <span className="text-sm font-semibold">{username}</span>
-        </div>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {categories.map((category, index) => (
-            <Badge key={index} variant="outline" className="text-xs">
-              {category}
-            </Badge>
-          ))}
-        </div>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   )
 }
 
 export default function SocialPage() {
   const [activeMode, setActiveMode] = useState("normal")
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-  const [messages, setMessages] = useState<Message[]>([])
-  const [newMessage, setNewMessage] = useState("")
-
-  useEffect(() => {
-    fetchMessages()
-  }, [])
-
-  const fetchMessages = async () => {
-    try {
-      const response = await fetch('/api/messages')
-      const data = await response.json()
-      setMessages(data)
-    } catch (error) {
-      console.error('Failed to fetch messages:', error)
-    }
-  }
-
-  const handlePost = async () => {
-    try {
-      const response = await fetch('/api/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: newMessage,
-          sender: 'Current User', // Replace with actual user authentication
-          timestamp: new Date().toISOString(),
-          categories: selectedCategories,
-        }),
-      })
-      if (response.ok) {
-        setNewMessage('')
-        fetchMessages()
-      }
-    } catch (error) {
-      console.error('Failed to post message:', error)
-    }
-  }
-
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setNewMessage(e.target.value)
-  }
-
-  const handleDropdownCheck = (checked: boolean, category: string) => {
-    setSelectedCategories(
-      checked 
-        ? [...selectedCategories, category] 
-        : selectedCategories.filter((c) => c !== category)
-    )
-  }
+  const [posts, setPosts] = useState<Post[]>([])
+  const [reels, setReels] = useState<Reel[]>([])
 
   const allCategories = [
     "Technology",
@@ -190,221 +210,247 @@ export default function SocialPage() {
     "Fashion",
   ]
 
-  const tweets = [
-    {
-      username: "Priya Sharma",
-      content: "Just launched a new project! 🚀 #coding #innovation",
-      likes: 245,
-      comments: 23,
-      shares: 12,
-      isSponsored: false,
-      categories: ["Technology", "Education"],
-    },
-    {
-      username: "TechCorp",
-      content: "Discover our latest AI-powered solutions for your business needs! 🤖💼 #AI #BusinessTech",
-      likes: 189,
-      comments: 45,
-      shares: 78,
-      isSponsored: true,
-      categories: ["Technology", "News"],
-    },
-    {
-      username: "Rahul Patel",
-      content: "Great meeting with the team today. Exciting things coming up! 💡",
-      likes: 156,
-      comments: 18,
-      shares: 8,
-      isSponsored: false,
-      categories: ["Lifestyle", "Education"],
-    },
-    {
-      username: "Anita Desai",
-      content: "Beautiful sunset at the beach 🌅 #nature #peace",
-      likes: 302,
-      comments: 31,
-      shares: 15,
-      isSponsored: false,
-      categories: ["Travel", "Lifestyle"],
-    },
-  ]
+  useEffect(() => {
+    setPosts([
+      {
+        id: "1",
+        username: "techguru",
+        userImage: "/placeholder.svg?1",
+        content: "Just launched a new AI project! 🚀 #AI #Innovation",
+        image: "/placeholder.svg?2",
+        likes: 1245,
+        comments: 89,
+        shares: 56,
+        isLiked: false,
+        isBookmarked: false,
+        categories: ["Technology", "Innovation"],
+      },
+      {
+        id: "2",
+        username: "travelexplorer",
+        userImage: "/placeholder.svg?3",
+        content: "Beautiful sunset at the beach 🌅 #Travel #Nature",
+        image: "/placeholder.svg?4",
+        likes: 2890,
+        comments: 134,
+        shares: 78,
+        isLiked: true,
+        isBookmarked: true,
+        categories: ["Travel", "Nature"],
+      },
+    ])
 
-  const reels = [
-    {
-      username: "Vikram Singh",
-      thumbnail: "/placeholder.svg?height=300&width=200",
-      views: "10.5K",
-      isSponsored: false,
-      categories: ["Sports", "Lifestyle"],
-    },
-    {
-      username: "FitnessPro",
-      thumbnail: "/placeholder.svg?height=300&width=200",
-      views: "50.2K",
-      isSponsored: true,
-      categories: ["Health", "Lifestyle"],
-    },
-    {
-      username: "Neha Gupta",
-      thumbnail: "/placeholder.svg?height=300&width=200",
-      views: "8.2K",
-      isSponsored: false,
-      categories: ["Fashion", "Lifestyle"],
-    },
-    {
-      username: "Amit Kumar",
-      thumbnail: "/placeholder.svg?height=300&width=200",
-      views: "15.7K",
-      isSponsored: false,
-      categories: ["Technology", "Education"],
-    },
-  ]
+    setReels([
+      {
+        id: "1",
+        username: "dancepro",
+        userImage: "/placeholder.svg?5",
+        video: "/placeholder.mp4",
+        likes: 10500,
+        comments: 456,
+        shares: 789,
+        isLiked: false,
+        categories: ["Entertainment", "Dance"],
+      },
+      {
+        id: "2",
+        username: "fitnessguru",
+        userImage: "/placeholder.svg?6",
+        video: "/placeholder.mp4",
+        likes: 8900,
+        comments: 321,
+        shares: 654,
+        isLiked: true,
+        categories: ["Health", "Fitness"],
+      },
+    ])
+  }, [])
 
-  const filterContent = (content: any[]) => {
+  const filterContent = <T extends Post | Reel>(content: T[]): T[] => {
     if (selectedCategories.length === 0) return content
     return content.filter((item) => item.categories.some((category: string) => selectedCategories.includes(category)))
   }
 
-  const filteredTweets = filterContent(tweets)
-  const filteredReels = filterContent(reels)
+  const filteredPosts = filterContent<Post>(posts)
+  const filteredReels = filterContent<Reel>(reels)
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h1 className="text-3xl font-bold">Social Feed</h1>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={activeMode === "normal" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveMode("normal")}
-          >
-            Normal
-          </Button>
-          <Button
-            variant={activeMode === "focus" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveMode("focus")}
-          >
-            <Zap className="mr-2 h-4 w-4" />
-            Focus
-          </Button>
-          <Button
-            variant={activeMode === "discovery" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveMode("discovery")}
-          >
-            <Sparkles className="mr-2 h-4 w-4" />
-            Discovery
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
+    <div className="min-h-screen bg-background overflow-auto"> {/* Changed from bg-white to bg-background */}
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        <div className="flex flex-col space-y-4">
+          {/* Stories Section */}
+          <StoriesSection />
+
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-semibold">Social Feed</h1>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant={activeMode === "normal" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveMode("normal")}
+                className="h-8"
+              >
+                Normal
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {allCategories.map((category) => (
-                <DropdownMenuCheckboxItem
-                  key={category}
-                  checked={selectedCategories.includes(category)}
-                  onCheckedChange={(checked: boolean) => handleDropdownCheck(checked, category)}
-                >
-                  {category}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-      <div className="mb-6">
-        <Input
-          placeholder="What's on your mind?"
-          className="mb-2"
-          value={newMessage}
-          onChange={handleInputChange}
-        />
-        <Button className="w-full sm:w-auto" onClick={handlePost}>Post</Button>
-      </div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-4">Messages</h2>
-        <div>
-          {messages.map((message) => (
-            <div key={message.id} className="mb-4 p-4 border rounded">
-              <p className="font-semibold">{message.sender}</p>
-              <p>{message.content}</p>
-              <p className="text-sm text-gray-500">{message.timestamp}</p>
+              <Button
+                variant={activeMode === "focus" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveMode("focus")}
+                className="h-8"
+              >
+                <Zap className="mr-2 h-4 w-4" />
+                Focus
+              </Button>
+              <Button
+                variant={activeMode === "discovery" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveMode("discovery")}
+                className="h-8"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Discovery
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8">
+                    <Filter className="mr-2 h-4 w-4" />
+                    Filter
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {allCategories.map((category) => (
+                    <DropdownMenuCheckboxItem
+                      key={category}
+                      checked={selectedCategories.includes(category)}
+                      onCheckedChange={(checked) => {
+                        setSelectedCategories(
+                          checked
+                            ? [...selectedCategories, category]
+                            : selectedCategories.filter((c) => c !== category)
+                        )
+                      }}
+                    >
+                      {category}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          ))}
+          </div>
+
+          <Card>
+            <CardContent className="p-4">
+              <CreatePost />
+            </CardContent>
+          </Card>
+
+          <Tabs defaultValue="feed" className="w-full">
+            <TabsList className="w-full grid grid-cols-4 mb-4">
+              <TabsTrigger value="feed">
+                Feed
+              </TabsTrigger>
+              <TabsTrigger value="reels">
+                Reels
+              </TabsTrigger>
+              <TabsTrigger value="trending">
+                <TrendingUp className="mr-2 h-4 w-4" />
+                Trending
+              </TabsTrigger>
+              <TabsTrigger value="network">
+                <Users className="mr-2 h-4 w-4" />
+                Network
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="feed" className="mt-0">
+              <ScrollArea className="h-[calc(100vh-24rem)] min-h-[400px] scrollbar-thin scrollbar-thumb-gray-400">
+                <div className="space-y-4">
+                  <AnimatePresence>
+                    {filteredPosts
+                      .filter((post) => activeMode !== "focus" || !post.isSponsored)
+                      .map((post, index) => (
+                        <motion.div
+                          key={post.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <Card className="overflow-hidden">
+                            <CardContent className="p-0">
+                              <Post {...post} />
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                  </AnimatePresence>
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="reels" className="mt-0">
+              <ScrollArea className="scrollbar-thin scrollbar-thumb-gray-400">
+                <div className="grid grid-cols-1 gap-4">
+                  {filteredReels
+                    .filter((reel) => activeMode !== "focus" || !reel.isSponsored)
+                    .map((reel) => (
+                      <Card key={reel.id} className="overflow-hidden">
+                        <CardContent className="p-0">
+                          <Reel {...reel} />
+                        </CardContent>
+                      </Card>
+                    ))}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="trending" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <h3 className="text-lg font-semibold">Trending Topics</h3>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    <li className="flex items-center space-x-2">
+                      <TrendingUp className="h-4 w-4" />
+                      <span>#TechInnovation</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <TrendingUp className="h-4 w-4" />
+                      <span>#SustainableLiving</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <TrendingUp className="h-4 w-4" />
+                      <span>#HealthAndWellness</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <TrendingUp className="h-4 w-4" />
+                      <span>#ArtificialIntelligence</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <TrendingUp className="h-4 w-4" />
+                      <span>#ClimateAction</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="network" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <h3 className="text-lg font-semibold">Your Network</h3>
+                </CardHeader>
+                <CardContent>
+                  <ConnectionSuggestions />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
-      <Tabs defaultValue="tweets" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-4">
-          <TabsTrigger value="tweets">Tweets</TabsTrigger>
-          <TabsTrigger value="reels">Reels</TabsTrigger>
-          <TabsTrigger value="trending">
-            <TrendingUp className="mr-2 h-4 w-4" />
-            Trending
-          </TabsTrigger>
-          <TabsTrigger value="communities">
-            <Users className="mr-2 h-4 w-4" />
-            Communities
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="tweets">
-          <ScrollArea className="h-[calc(100vh-300px)]">
-            {filteredTweets
-              .filter((tweet) => activeMode !== "focus" || !tweet.isSponsored)
-              .map((tweet, index) => (
-                <Tweet key={index} {...tweet} />
-              ))}
-          </ScrollArea>
-        </TabsContent>
-        <TabsContent value="reels" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {filteredReels
-            .filter((reel) => activeMode !== "focus" || !reel.isSponsored)
-            .map((reel, index) => (
-              <Reel key={index} {...reel} />
-            ))}
-        </TabsContent>
-        <TabsContent value="trending">
-          <Card>
-            <CardHeader>Trending Topics</CardHeader>
-            <CardContent>
-              <ul className="list-disc pl-5">
-                <li>#TechInnovation</li>
-                <li>#SustainableLiving</li>
-                <li>#HealthAndWellness</li>
-                <li>#ArtificialIntelligence</li>
-                <li>#ClimateAction</li>
-              </ul>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="communities">
-          <Card>
-            <CardHeader>Your Communities</CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                <li className="flex items-center space-x-2">
-                  <Users className="h-5 w-5" />
-                  <span>Tech Enthusiasts (5.2K members)</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <Users className="h-5 w-5" />
-                  <span>Fitness Freaks (3.8K members)</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <Users className="h-5 w-5" />
-                  <span>Book Club (1.5K members)</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   )
 }

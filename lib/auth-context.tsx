@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Simulate DigiLocker API integration
     console.log("Starting DigiLocker verification flow")
     if (user) {
-      const updatedUser = { ...user, verificationStatus: "pending" as VerificationStatus }
+      const updatedUser = { ...user, verificationStatus: "pending" }
       setUser(updatedUser)
       localStorage.setItem("user", JSON.stringify(updatedUser))
     }
@@ -82,12 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const verifyOTP = async (otp: string) => {
     // Simulate OTP verification
     console.log(`Verifying OTP: ${otp}`)
-    const isValid = true; // Simulate OTP validation
-    if (isValid) {
-      // router.push("/") // P30c4
-    }
-    return isValid
-    // currently we don't need otp means i am saying this is sample page only all web pages are working or not we are checking currently after we integrate database and devlopments this is now sample // P10cd
+    return true
   }
 
   const setUserName = (name: string) => {
@@ -128,3 +123,4 @@ export const useAuth = () => {
   }
   return context
 }
+

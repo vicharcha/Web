@@ -1,6 +1,6 @@
 "use client"
 
-import { Dialog, DialogContent } from "components/ui/dialog"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import data from "@emoji-mart/data"
 import Picker from "@emoji-mart/react"
 import { useTheme } from "next-themes"

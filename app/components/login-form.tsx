@@ -1,13 +1,12 @@
 "use client"
 
-import React, { useState } from "react"
-import { useAuth } from "../components/auth-provider"
-import { Button } from "components/ui/button"
-import { Input } from "components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "components/ui/card"
-import { Label } from "components/ui/label"
+import { useState } from "react"
+import { useAuth } from "@/app/components/auth-provider" // Updated import path
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
 
 export function LoginForm() {
   const { login, verifyOTP } = useAuth()
@@ -15,9 +14,8 @@ export function LoginForm() {
   const [otp, setOtp] = useState("")
   const [isOtpSent, setIsOtpSent] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
 
-  const handleSendOTP = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
@@ -33,7 +31,7 @@ export function LoginForm() {
     }
   }
 
-  const handleVerifyOTP = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
@@ -41,7 +39,7 @@ export function LoginForm() {
       const isVerified = await verifyOTP(otp)
       if (isVerified) {
         toast.success("Successfully logged in!")
-        // router.push("/") // P666b
+        // Router will handle redirect in auth provider
       } else {
         toast.error("Invalid OTP")
       }
@@ -73,7 +71,7 @@ export function LoginForm() {
                   type="tel"
                   placeholder="+91 your phone number"
                   value={phoneNumber}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhoneNumber(e.target.value)}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                   required
                   pattern="^(\+91)?[6-9]\d{9}$"
                   className="text-base"
@@ -92,7 +90,7 @@ export function LoginForm() {
                   type="text"
                   placeholder="Enter 6-digit OTP"
                   value={otp}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOtp(e.target.value)}
+                  onChange={(e) => setOtp(e.target.value)}
                   required
                   pattern="\d{6}"
                   maxLength={6}
@@ -123,4 +121,3 @@ export function LoginForm() {
   )
 }
 
-// currently we don't need otp means i am saying this is sample page only all web pages are working or not we are checking currently after we integrate database and devlopments this is now sample

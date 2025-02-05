@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/auth-provider'
-import { Button } from 'components/ui/button'
-import { Input } from 'components/ui/input'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from 'components/ui/card'
-import { Alert, AlertDescription } from 'components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { CheckCircle2, AlertCircle } from 'lucide-react'
 
 export default function LoginForm() {
@@ -48,7 +48,13 @@ export default function LoginForm() {
   const handleVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      router.push('/')
+      await startDigiLockerVerification()
+      const status = await checkVerificationStatus()
+      if (status === 'pending') {
+        router.push('/')
+      } else {
+        setError('Verification failed')
+      }
     } catch (err) {
       setError('Verification failed')
     }
@@ -117,8 +123,25 @@ export default function LoginForm() {
           {step === 'verification' && (
             <form onSubmit={handleVerificationSubmit}>
               <div className="space-y-4">
+                <div className="bg-muted p-4 rounded-lg">
+                  <h3 className="font-semibold mb-2">Why verify with DigiLocker?</h3>
+                  <ul className="space-y-2 text-sm">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      Get verified badge
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      Access premium features
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      Enhanced trust in the community
+                    </li>
+                  </ul>
+                </div>
                 <Button type="submit" className="w-full">
-                  Continue
+                  Verify with DigiLocker
                 </Button>
               </div>
             </form>
@@ -133,3 +156,4 @@ export default function LoginForm() {
     </div>
   )
 }
+

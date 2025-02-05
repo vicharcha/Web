@@ -8,8 +8,12 @@ type VerificationStatus = "unverified" | "pending" | "verified"
 type User = {
   phoneNumber: string
   name: string
+  email?: string
   verificationStatus: VerificationStatus
   isPremium: boolean
+  digiLockerVerified: boolean
+  joinedDate: string
+  lastActive: string
 } | null
 
 type AuthContextType = {
@@ -20,6 +24,7 @@ type AuthContextType = {
   setUserName: (name: string) => void
   startDigiLockerVerification: () => Promise<void>
   checkVerificationStatus: () => Promise<VerificationStatus>
+  upgradeToPremuim: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -33,7 +38,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User>(null)
   const router = useRouter()
 
-  // Handle hydration mismatch by using useEffect for localStorage
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem("user")
@@ -42,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error("Error reading from localStorage:", error)
-      localStorage.removeItem("user") // Clear potentially corrupted data
+      localStorage.removeItem("user")
     }
   }, [])
 
@@ -57,13 +61,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // Simulate API call to send OTP
-      console.log(`Sending OTP to ${phoneNumber}`)
       const newUser = {
         phoneNumber,
         name: "",
         verificationStatus: "unverified" as const,
         isPremium: false,
+        digiLockerVerified: false,
+        joinedDate: new Date().toISOString(),
+        lastActive: new Date().toISOString(),
       }
       setUser(newUser)
       localStorage.setItem("user", JSON.stringify(newUser))
@@ -80,10 +85,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       // Simulate DigiLocker API integration
-      console.log("Starting DigiLocker verification flow")
-      const updatedUser = { ...user, verificationStatus: "pending" as const }
+      const updatedUser = {
+        ...user,
+        verificationStatus: "pending" as const,
+        digiLockerVerified: false,
+      }
       setUser(updatedUser)
       localStorage.setItem("user", JSON.stringify(updatedUser))
+
+      // Redirect to DigiLocker OAuth page
+      window.location.href = "https://api.digitallocker.gov.in/public/oauth2/1/authorize"
     } catch (error) {
       console.error("Error during DigiLocker verification:", error)
       throw new Error("Verification process failed. Please try again.")
@@ -97,6 +108,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       // Simulate checking DigiLocker verification status
+      if (user.digiLockerVerified) {
+        return "verified"
+      }
       return user.verificationStatus
     } catch (error) {
       console.error("Error checking verification status:", error)
@@ -104,25 +118,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-const verifyOTP = async (otp: string): Promise<boolean> => {
-  if (!otp || otp.length !== 6) {
-    throw new Error("Invalid OTP format")
-  }
-
-  try {
-    // Simulate OTP verification
-    console.log(`Verifying OTP: ${otp}`)
-    const isValid = true; // Simulate OTP validation
-    if (isValid) {
-      // router.push("/") // P8d07
+  const verifyOTP = async (otp: string): Promise<boolean> => {
+    if (!otp || otp.length !== 6) {
+      throw new Error("Invalid OTP format")
     }
-    return isValid
-  } catch (error) {
-    console.error("Error during OTP verification:", error)
-    throw new Error("OTP verification failed")
+
+    try {
+      // Simulate OTP verification
+      return true
+    } catch (error) {
+      console.error("Error during OTP verification:", error)
+      throw new Error("OTP verification failed")
+    }
   }
-  // currently we don't need otp means i am saying this is sample page only all web pages are working or not we are checking currently after we integrate database and devlopments this is now sample // Pdc04
-}
 
   const setUserName = (name: string) => {
     if (!user) {
@@ -143,6 +151,21 @@ const verifyOTP = async (otp: string): Promise<boolean> => {
     }
   }
 
+  const upgradeToPremuim = async () => {
+    if (!user) {
+      throw new Error("User must be logged in to upgrade")
+    }
+
+    try {
+      const updatedUser = { ...user, isPremium: true }
+      setUser(updatedUser)
+      localStorage.setItem("user", JSON.stringify(updatedUser))
+    } catch (error) {
+      console.error("Error upgrading to premium:", error)
+      throw new Error("Failed to upgrade to premium")
+    }
+  }
+
   const logout = () => {
     try {
       setUser(null)
@@ -150,7 +173,6 @@ const verifyOTP = async (otp: string): Promise<boolean> => {
       router.push("/login")
     } catch (error) {
       console.error("Error during logout:", error)
-      // Still clear the user state even if there's an error
       setUser(null)
       localStorage.removeItem("user")
     }
@@ -166,6 +188,7 @@ const verifyOTP = async (otp: string): Promise<boolean> => {
         setUserName,
         startDigiLockerVerification,
         checkVerificationStatus,
+        upgradeToPremuim,
       }}
     >
       {children}
@@ -180,3 +203,4 @@ export const useAuth = () => {
   }
   return context
 }
+

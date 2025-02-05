@@ -1,40 +1,64 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "components/ui/dialog"
-import { Button } from "components/ui/button"
-import { Input } from "components/ui/input"
-import { ScrollArea } from "components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "components/ui/avatar"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Heart, MoreHorizontal, Send, Smile } from "lucide-react"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Badge } from "components/ui/badge"
+import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
+import { useAuth } from "@/app/components/auth-provider"
+
+interface Comment {
+  id: number
+  username: string
+  content: string
+  timestamp: string
+  likes: number
+  isPremium?: boolean
+}
+
+interface Post {
+  id: number
+  username: string
+  avatar: string
+  verified: boolean
+  isPremium: boolean
+  image: string
+  caption: string
+  timestamp: string
+  likes: number
+  views: string
+  comments?: Comment[] // Make comments optional
+}
 
 interface CommentDialogProps {
   isOpen: boolean
   onClose: () => void
-  post: {
-    id: number
-    username: string
-    comments: Array<{
-      id: number
-      username: string
-      content: string
-      timestamp: string
-      likes: number
-      isPremium?: boolean
-    }>
-  }
+  post: Post
   onAddComment: (comment: string) => void
 }
 
 export function CommentDialog({ isOpen, onClose, post, onAddComment }: CommentDialogProps) {
   const [newComment, setNewComment] = useState("")
   const [likedComments, setLikedComments] = useState<Set<number>>(new Set())
+  const { user } = useAuth()
+  const [comments, setComments] = useState<Comment[]>(() => post?.comments ?? []) // Use nullish coalescing and ensure post exists
 
   const handleAddComment = () => {
     if (newComment.trim()) {
+      const comment: Comment = {
+        id: comments.length + 1,
+        username: user?.name || "Anonymous",
+        content: newComment,
+        timestamp: new Date().toISOString(),
+        likes: 0,
+        isPremium: user?.isPremium,
+      }
+      setComments([...comments, comment])
       onAddComment(newComment)
       setNewComment("")
     }
@@ -59,7 +83,7 @@ export function CommentDialog({ isOpen, onClose, post, onAddComment }: CommentDi
 
         <ScrollArea className="flex-1 pr-4 -mr-4">
           <AnimatePresence>
-            {post.comments.map((comment, index) => (
+            {comments.map((comment, index) => (
               <motion.div
                 key={comment.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -76,7 +100,10 @@ export function CommentDialog({ isOpen, onClose, post, onAddComment }: CommentDi
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm">{comment.username}</span>
                     {comment.isPremium && (
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+                      >
                         Premium
                       </Badge>
                     )}
@@ -130,4 +157,3 @@ export function CommentDialog({ isOpen, onClose, post, onAddComment }: CommentDi
     </Dialog>
   )
 }
-
