@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/auth-provider';
 
 export default function Login() {
   const [phoneNumber, setPhoneNumber] = useState('');
