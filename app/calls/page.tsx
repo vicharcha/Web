@@ -66,10 +66,26 @@ export default function Calls() {
     },
   ]
 
-  const initiateCall = (call: Call) => {
-    setActiveCall(call)
-    setIsCallActive(true)
-  }
+  const initiateCall = async (call: Call) => {
+    try {
+      const response = await fetch('/api/initiate-call', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(call),
+      });
+
+      if (response.ok) {
+        setActiveCall(call);
+        setIsCallActive(true);
+      } else {
+        console.error('Failed to initiate call');
+      }
+    } catch (error) {
+      console.error('Error initiating call:', error);
+    }
+  };
 
   const CallIcon = ({ type, isVideo }: { type: Call["type"]; isVideo: boolean }) => {
     if (isVideo) return <Video className="h-4 w-4" />
