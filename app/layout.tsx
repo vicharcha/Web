@@ -1,4 +1,3 @@
-
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Toaster } from "sonner"
@@ -7,6 +6,7 @@ import "./globals.css"
 import { Sidebar } from "@/app/components/sidebar"
 import { ThemeProvider } from "@/app/components/theme-provider"
 import { AuthProvider } from "@/app/components/auth-provider"
+import Login from "@/app/login/page"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -75,6 +75,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 <Sidebar />
                 <main className="flex-1 overflow-y-auto">
                   <div className="container mx-auto p-4 pt-16 pb-20 md:pt-4 md:pb-4">
+                    <AuthProvider>
+                      <Login />
+                    </AuthProvider>
                     {children}
                   </div>
                 </main>
