@@ -23,11 +23,30 @@ interface FeedProps {
 }
 
 const Feed: React.FC<FeedProps> = ({ posts }) => {
+  // Add sample posts if none provided
+  const defaultPosts: TweetProps[] = [
+    {
+      username: "Sample User",
+      handle: "@sampleuser",
+      avatar: "/placeholder-avatar.png",
+      content: "Welcome to Vicharcha!",
+      timestamp: new Date().toISOString(),
+      isVerified: true,
+      metrics: {
+        replies: 0,
+        retweets: 0,
+        likes: 0
+      }
+    }
+  ];
+
+  const displayPosts = posts.length > 0 ? posts : defaultPosts;
+
   return (
     <ScrollArea className="h-[calc(100vh-24rem)] min-h-[400px]">
       <div className="space-y-4">
         <AnimatePresence>
-          {posts.map((post, index) => (
+          {displayPosts.map((post, index) => (
             <motion.div
               key={post.username}
               initial={{ opacity: 0, y: 20 }}
