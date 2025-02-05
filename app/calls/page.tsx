@@ -147,7 +147,7 @@ export default function Calls() {
                 </TabsList>
               </div>
               <TabsContent value="all" className="m-0">
-                <ScrollArea className="h-[calc(100vh-16rem)]">
+                <ScrollArea className="h-[calc(100vh-16rem)] smooth-scroll">
                   <div className="divide-y">
                     {recentCalls.map((call) => (
                       <div
