@@ -1,80 +1,50 @@
-"use client";
+"use client"
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/components/auth-provider';
+import { Card, CardFooter } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
 
-export default function Login() {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState('');
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const router = useRouter();
-  const { login, verifyOTP } = useAuth();
-
-  const handleSendOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await login(phoneNumber);
-      setIsOtpSent(true);
-    } catch (error) {
-      alert('Failed to send OTP');
-    }
-  };
-
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const isVerified = await verifyOTP(otp);
-      if (isVerified) {
-        router.push('/');
-      } else {
-        alert('Invalid OTP');
-      }
-    } catch (error) {
-      alert('Failed to verify OTP');
-    }
-  };
+export default function LoginPage() {
+  const [step, setStep] = useState("email")
+  const [otp, setOtp] = useState("")
 
   return (
-    <div className="w-full min-h-screen bg-background flex items-center justify-center">
-      <form onSubmit={isOtpSent ? handleVerifyOTP : handleSendOTP} className="bg-white p-8 rounded shadow-md">
-        <h1 className="text-2xl mb-4">Login</h1>
-        {!isOtpSent ? (
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="phoneNumber">
-              Phone Number
-            </label>
-            <input
-              type="text"
-              id="phoneNumber"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
+    <div className="flex min-h-screen flex-col items-center justify-center py-2">
+      <Card>
+        <div className="p-6">{/* rest of code here */}</div>
+        <CardFooter className="flex flex-col gap-4">
+          {step === "otp" && (
+            <>
+<Button
+  variant="ghost"
+  onClick={() => {
+    setStep("email")
+  }}
+              >
+                Change Phone Number
+              </Button>
+              <p className="text-sm text-muted-foreground text-center">
+                Didn't receive OTP?{" "}
+                <Button variant="link" className="p-0 h-auto">
+                  Resend
+                </Button>
+              </p>
+            </>
+          )}
+          <div className="text-xs text-muted-foreground text-center space-y-2">
+            <p>By continuing, you agree to our</p>
+            <div className="flex justify-center gap-2">
+              <Button variant="link" className="p-0 h-auto text-xs">
+                Terms of Service
+              </Button>
+              <span>and</span>
+              <Button variant="link" className="p-0 h-auto text-xs">
+                Privacy Policy
+              </Button>
+            </div>
           </div>
-        ) : (
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="otp">
-              OTP
-            </label>
-            <input
-              type="text"
-              id="otp"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
-          </div>
-        )}
-        <div className="flex items-center justify-between">
-          <button
-            type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            {isOtpSent ? 'Verify OTP' : 'Send OTP'}
-          </button>
-        </div>
-      </form>
+        </CardFooter>
+      </Card>
     </div>
-  );
+  )
 }

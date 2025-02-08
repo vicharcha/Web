@@ -40,12 +40,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/app/components/auth-provider"
+import SocialPage from "@/app/social/page"
 
 const navItems = [
   { icon: Home, label: "Home", href: "/" },
   { icon: MessageSquare, label: "Messages", href: "/messages" },
   { icon: Brain, label: "AI Assistant", href: "/ai-assistant" },
   { icon: Phone, label: "Calls", href: "/calls" },
+  { icon: Users, label: "Social", href: "/social" },
   { icon: ShoppingBag, label: "Shopping", href: "/shopping" },
   { icon: AlertTriangle, label: "Emergency", href: "/emergency" },
   { icon: CreditCard, label: "Payments", href: "/payments" },

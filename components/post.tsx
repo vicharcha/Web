@@ -1,26 +1,27 @@
-"use client"
-
-import { useState } from "react"
+import { 
+  Bookmark,
+  MessageCircle, 
+  Share2,
+  ThumbsUp
+} from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Sparkles } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
-import { CommentDialog } from "./comment-dialog"
-import { ShareDialog } from "./share-dialog"
-import { useAuth } from "@/app/components/auth-provider"
+import { Card } from "@/components/ui/card"
 
 interface PostProps {
-  id: string  // Changed from number to string
-  username: string
-  userImage: string
-  content: string
-  image?: string
-  video?: string
-  likes: number
-  isPremium?: boolean
-  categories: string[]
+  id: number | string;
+  username: string;
+  userImage: string;
+  content: string;
+  image?: string;
+  video?: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  isLiked: boolean;
+  isBookmarked: boolean;
+  categories: string[];
+  isSponsored?: boolean;
 }
 
 export function Post({
@@ -30,120 +31,114 @@ export function Post({
   content,
   image,
   video,
-  likes: initialLikes,
-  isPremium,
+  likes,
+  comments,
+  shares,
+  isLiked,
+  isBookmarked,
   categories,
+  isSponsored
 }: PostProps) {
-  const [isLiked, setIsLiked] = useState(false)
-  const [isBookmarked, setIsBookmarked] = useState(false)
-  const [likeCount, setLikeCount] = useState(initialLikes)
-  const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false)
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
-  const [commentCount, setCommentCount] = useState(0)
-  const { user } = useAuth()
-
-  const handleLike = () => {
-    setIsLiked(!isLiked)
-    setLikeCount(isLiked ? likeCount - 1 : likeCount + 1)
-  }
-
-  const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked)
-  }
-
-  const handleAddComment = (comment: string) => {
-    setCommentCount(commentCount + 1)
-  }
-
   return (
-    <Card className="w-full max-w-2xl mx-auto mb-4">
-      <CardHeader className="flex flex-row items-center space-x-4 p-4">
-        <div className="relative">
-          <Avatar>
-            <AvatarImage src={userImage} alt={username} />
-            <AvatarFallback>{username[0]}</AvatarFallback>
-          </Avatar>
-          {isPremium && (
-            <Badge
-              variant="default"
-              className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-gradient-to-r from-amber-500 to-orange-500"
-            >
-              <Sparkles className="h-3 w-3" />
-            </Badge>
+    <Card className="mb-4 overflow-hidden hover:shadow-lg transition-shadow duration-200 group">
+      <div className="p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 ring-2 ring-offset-2 ring-offset-background ring-primary/10 group-hover:ring-primary/20 transition-all duration-200">
+              <AvatarImage src={userImage} alt={username} />
+              <AvatarFallback>{username[0]}</AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold hover:text-primary transition-colors cursor-pointer">{username}</p>
+                {isSponsored && (
+                  <Badge variant="outline" className="text-xs font-normal">Sponsored</Badge>
+                )}
+              </div>
+              <div className="flex gap-1 flex-wrap mt-1">
+                {categories.map((category) => (
+                  <Badge 
+                    key={`${id}-${category}`} 
+                    variant="secondary" 
+                    className="text-[10px] px-2 py-0 hover:bg-secondary/80 transition-colors cursor-pointer"
+                  >
+                    {category}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="space-y-4">
+          {content && (
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {content}
+            </p>
+          )}
+          {image && (
+            <div className="relative rounded-lg overflow-hidden bg-muted">
+              <img 
+                src={image} 
+                alt={`Post by ${username}`} 
+                className="w-full object-cover hover:scale-105 transition-transform duration-500" 
+              />
+            </div>
+          )}
+          {video && (
+            <div className="relative rounded-lg overflow-hidden bg-muted">
+              <video 
+                src={video} 
+                controls 
+                className="w-full hover:scale-105 transition-transform duration-500"
+              />
+            </div>
           )}
         </div>
-        <div className="flex-1">
-          <div className="font-semibold">{username}</div>
-        </div>
-        <Button variant="ghost" size="icon">
-          <MoreHorizontal className="h-5 w-5" />
-        </Button>
-      </CardHeader>
-      <CardContent className="p-0">
-        {image && <img src={image || "/placeholder.svg"} alt="Post" className="w-full h-auto" />}
-        {video && <video src={video} className="w-full h-auto" controls />}
-        <div className="p-4">
-          <p>{content}</p>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {categories.map((category) => (
-              <span key={category} className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                #{category}
-              </span>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex flex-col items-start p-4">
-        <div className="flex justify-between w-full mb-2">
-          <div className="flex space-x-4">
-            <Button variant="ghost" size="sm" onClick={handleLike} className="flex items-center space-x-2">
-              <AnimatePresence>
-                <motion.div
-                  key={isLiked ? "liked" : "unliked"}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                >
-                  <Heart className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
-                </motion.div>
-              </AnimatePresence>
-              <span>{likeCount}</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsCommentDialogOpen(true)}
-              className="flex items-center space-x-2"
+
+        {/* Actions */}
+        <div className="flex items-center justify-between mt-6 pt-4 border-t">
+          <div className="flex items-center gap-4">
+            <button
+              aria-label={`Like post. ${likes} likes`}
+              className={`group flex items-center gap-2 transition-colors duration-200 ${
+                isLiked ? "text-blue-500" : "text-muted-foreground hover:text-blue-500"
+              }`}
             >
-              <MessageCircle className="h-5 w-5" />
-              <span>{commentCount}</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsShareDialogOpen(true)}
-              className="flex items-center space-x-2"
+              <ThumbsUp className={`h-5 w-5 transition-all duration-200 ${
+                isLiked ? "scale-110" : "group-hover:scale-110"
+              }`} />
+              <span className="text-sm font-medium">{likes}</span>
+            </button>
+            <button 
+              aria-label={`Comment on post. ${comments} comments`}
+              className="group flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors duration-200"
             >
-              <Share2 className="h-5 w-5" />
-            </Button>
+              <MessageCircle className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-sm font-medium">{comments}</span>
+            </button>
+            <button 
+              aria-label={`Share post. ${shares} shares`}
+              className="group flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors duration-200"
+            >
+              <Share2 className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+              <span className="text-sm font-medium">{shares}</span>
+            </button>
           </div>
-          <Button variant="ghost" size="sm" onClick={handleBookmark}>
-            <Bookmark className={`h-5 w-5 ${isBookmarked ? "fill-current" : ""}`} />
-          </Button>
+          <button
+            aria-label={isBookmarked ? "Remove bookmark" : "Bookmark post"}
+            className={`group transition-colors duration-200 ${
+              isBookmarked ? "text-primary" : "text-muted-foreground hover:text-primary"
+            }`}
+          >
+            <Bookmark className={`h-5 w-5 transition-all duration-200 ${
+              isBookmarked ? "scale-110 fill-current" : "group-hover:scale-110"
+            }`} />
+          </button>
         </div>
-      </CardFooter>
-      <CommentDialog
-        isOpen={isCommentDialogOpen}
-        onClose={() => setIsCommentDialogOpen(false)}
-        postId={Number(id)}
-        onAddComment={handleAddComment}
-      />
-      <ShareDialog
-        isOpen={isShareDialogOpen}
-        onClose={() => setIsShareDialogOpen(false)}
-        post={{ id, username, image }}
-      />
+      </div>
     </Card>
   )
 }
-

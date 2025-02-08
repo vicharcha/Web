@@ -1,74 +1,119 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
-import { Tweet } from "@/components/tweet";
+import { Post } from './post';
+import { Button } from "@/components/ui/button";
+import { RefreshCw, TrendingUp, Clock } from "lucide-react";
 
-interface TweetProps {
+interface FeedPost {
+  id: string | number;
   username: string;
-  handle: string;
-  avatar: string;
+  userImage: string;
   content: string;
+  image?: string;
+  video?: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  isLiked: boolean;
+  isBookmarked: boolean;
+  categories: string[];
+  isSponsored?: boolean;
   timestamp: string;
-  isVerified?: boolean;
-  metrics: {
-    replies: number;
-    retweets: number;
-    likes: number;
-  };
-  images?: string[];
 }
 
 interface FeedProps {
-  posts: TweetProps[];
+  posts: FeedPost[];
 }
 
 const Feed: React.FC<FeedProps> = ({ posts }) => {
-  // Add sample posts if none provided
-  const defaultPosts: TweetProps[] = [
+  const [sortBy, setSortBy] = useState<'new' | 'trending' | 'top'>('new');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const defaultPosts: FeedPost[] = [
     {
+      id: 1,
       username: "Sample User",
-      handle: "@sampleuser",
-      avatar: "/placeholder-avatar.png",
-      content: "Welcome to Vicharcha!",
-      timestamp: new Date().toISOString(),
-      isVerified: true,
-      metrics: {
-        replies: 0,
-        retweets: 0,
-        likes: 0
-      }
+      userImage: "/placeholder-user.jpg",
+      content: "Welcome to the network!",
+      likes: 0,
+      comments: 0,
+      shares: 0,
+      isLiked: false,
+      isBookmarked: false,
+      categories: ["General"],
+      timestamp: new Date().toISOString()
     }
   ];
 
   const displayPosts = posts.length > 0 ? posts : defaultPosts;
 
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    // Simulating refresh delay
+    setTimeout(() => setIsRefreshing(false), 1000);
+  };
+
   return (
-    <ScrollArea className="h-[calc(100vh-24rem)] min-h-[400px]">
-      <div className="space-y-4">
-        <AnimatePresence>
-          {displayPosts.map((post, index) => (
-            <motion.div
-              key={post.username}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ delay: index * 0.1 }}
+    <div className="space-y-4">
+      {/* Feed Controls */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4 border-b">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex gap-2">
+            <Button 
+              variant={sortBy === 'new' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setSortBy('new')}
+              className="gap-2"
             >
-              <Tweet
-                username={post.username}
-                handle={post.handle}
-                avatar={post.avatar}
-                content={post.content}
-                timestamp={post.timestamp}
-                isVerified={post.isVerified}
-                metrics={post.metrics}
-                images={post.images}
-              />
-            </motion.div>
-          ))}
-        </AnimatePresence>
+              <Clock className="h-4 w-4" />
+              New
+            </Button>
+            <Button
+              variant={sortBy === 'trending' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setSortBy('trending')}
+              className="gap-2"
+            >
+              <TrendingUp className="h-4 w-4" />
+              Trending
+            </Button>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleRefresh}
+            className={`transition-transform ${isRefreshing ? 'animate-spin' : ''}`}
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-    </ScrollArea>
+
+      {/* Posts List */}
+      <ScrollArea className="h-[calc(100vh-12rem)] min-h-[400px]">
+        <div className="space-y-4 px-4">
+          <AnimatePresence mode="popLayout">
+            {displayPosts.map((post, index) => (
+              <motion.div
+                key={post.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ 
+                  type: "spring",
+                  stiffness: 500,
+                  damping: 30,
+                  delay: index * 0.05 
+                }}
+              >
+                <Post {...post} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </ScrollArea>
+    </div>
   )
 }
 

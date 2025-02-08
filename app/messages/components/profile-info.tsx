@@ -15,8 +15,7 @@ export function ProfileInfo({ isOpen, onClose }: ProfileInfoProps) {
   const profile = {
     name: "John Doe",
     avatar: "/placeholder.svg?height=128&width=128",
-    phone: "+1 (555) 123-4567",
-    email: "john.doe@example.com",
+        email: "john.doe@example.com",
     location: "New York, NY",
     website: "https://johndoe.com",
     bio: "Software developer passionate about creating amazing user experiences.",
@@ -37,9 +36,7 @@ export function ProfileInfo({ isOpen, onClose }: ProfileInfoProps) {
             <h2 className="text-2xl font-semibold">{profile.name}</h2>
             <div className="w-full space-y-4">
               <div className="flex items-center space-x-4">
-                <Phone className="h-5 w-5 text-muted-foreground" />
-                <span>{profile.phone}</span>
-              </div>
+                                              </div>
               <div className="flex items-center space-x-4">
                 <Mail className="h-5 w-5 text-muted-foreground" />
                 <span>{profile.email}</span>
@@ -75,4 +72,3 @@ export function ProfileInfo({ isOpen, onClose }: ProfileInfoProps) {
     </Dialog>
   )
 }
-

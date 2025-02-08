@@ -1,4 +1,3 @@
-
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Toaster } from "sonner"
@@ -42,18 +41,16 @@ export const metadata: Metadata = {
     description: "A responsible social media application",
     creator: "@vicharcha",
   },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "white" },
+    { media: "(prefers-color-scheme: dark)", color: "black" },
+  ],
 }
-
-export const viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-}
-
-export const themeColor = [
-  { media: "(prefers-color-scheme: light)", color: "white" },
-  { media: "(prefers-color-scheme: dark)", color: "black" },
-]
 
 interface RootLayoutProps {
   children: React.ReactNode
@@ -87,3 +84,4 @@ export default function RootLayout({ children }: RootLayoutProps) {
     </html>
   )
 }
+

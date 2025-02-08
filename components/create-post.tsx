@@ -1,25 +1,12 @@
-import { useState, useRef, useEffect } from "react"
+"use client"
+
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import {
-  ImageIcon,
-  Video,
-  Music,
-  X,
-  Sparkles,
-  Globe,
-  Lock,
-  Users,
-  Radio,
-  Mic,
-  MicOff,
-  Camera,
-  CameraOff,
-  PenLine
-} from "lucide-react"
+import { ImageIcon, Video, Music, X, Sparkles, Globe, Lock, Users } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,239 +16,187 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/app/components/auth-provider"
 import { toast } from "sonner"
+import { motion } from "framer-motion"
 
-const CreatePost = () => {
+export function CreatePost() {
   const [content, setContent] = useState("")
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
-  const [mediaType, setMediaType] = useState<string | null>(null)
-  const [visibility, setVisibility] = useState("public")
-  const [isStreaming, setIsStreaming] = useState(false)
-  const [streamSettings, setStreamSettings] = useState({
-    video: true,
-    audio: true
-  })
-  const [streamDuration, setStreamDuration] = useState(0)
-  const [viewers, setViewers] = useState(0)
-
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const videoRef = useRef<HTMLVideoElement | null>(null)
-  const streamTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [mediaType, setMediaType] = useState<"image" | "video" | "audio" | null>(null)
+  const [visibility, setVisibility] = useState<"public" | "private" | "connections">("public")
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { user } = useAuth()
 
-  const handleMediaUpload = (type: string) => {
+  const handleMediaUpload = (type: "image" | "video" | "audio") => {
     if (fileInputRef.current) {
       fileInputRef.current.accept = type === "image" ? "image/*" : type === "video" ? "video/*" : "audio/*"
       fileInputRef.current.click()
     }
   }
 
-const toggleStream = async () => {
-  if (!isStreaming) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: streamSettings.video,
-        audio: streamSettings.audio
-      })
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream as MediaStream
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("File too large. Please upload a file smaller than 10MB")
+        return
       }
-      setIsStreaming(true)
-      setViewers(Math.floor(Math.random() * 50))
-      streamTimerRef.current = setInterval(() => {
-        setStreamDuration(prev => prev + 1)
-      }, 1000)
-    } catch (error) {
-      toast.error("Could not start stream. Please check your permissions.")
-    }
-  } else {
-    const stream = videoRef.current?.srcObject as MediaStream | null
-    if (stream) {
-      stream.getTracks().forEach((track: MediaStreamTrack) => track.stop())
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null
-    }
-    setIsStreaming(false)
-    if (streamTimerRef.current) {
-      clearInterval(streamTimerRef.current)
-    }
-    setStreamDuration(0)
-    setViewers(0)
-  }
-}
 
-  useEffect(() => {
-    return () => {
-      if (streamTimerRef.current) {
-        clearInterval(streamTimerRef.current)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setMediaPreview(reader.result as string)
+        setMediaType(file.type.split("/")[0] as "image" | "video" | "audio")
       }
+      reader.readAsDataURL(file)
     }
-  }, [])
+  }
+
+  const removeMedia = () => {
+    setMediaPreview(null)
+    setMediaType(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const handleSubmit = () => {
+    if (!content.trim() && !mediaPreview) {
+      toast.error("Please add some content to your post")
+      return
+    }
+
+    toast.success("Post created successfully!")
+    setContent("")
+    setMediaPreview(null)
+    setMediaType(null)
+  }
+
+  const visibilityIcons = {
+    public: Globe,
+    private: Lock,
+    connections: Users,
+  }
+
+  const VisibilityIcon = visibilityIcons[visibility]
 
   return (
-    <Card className="w-full bg-background border-none shadow-none">
-      <CardContent className="p-0">
-        <div className="rounded-3xl bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/90 shadow-sm border p-4">
-          <div className="flex gap-3">
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={`/placeholder.svg?text=${user?.name?.[0] || "U"}`} alt={user?.name || "User"} />
-              <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
-            </Avatar>
-
-            <div className="flex-1 space-y-4">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="w-full bg-card">
+        <CardContent className="pt-6">
+          <div className="flex gap-4">
+            <div className="relative">
+              <Avatar className="w-10 h-10">
+                <AvatarImage src={`/placeholder.svg?text=${user?.name?.[0] || "U"}`} alt={user?.name || "User"} />
+                <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
+              </Avatar>
+              {user?.isPremium && (
+                <Badge
+                  variant="premium"
+                  className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-gradient-to-r from-amber-500 to-orange-500"
+                >
+                  <Sparkles className="h-3 w-3" />
+                </Badge>
+              )}
+            </div>
+            <div className="flex-1">
               <Textarea
-                placeholder="Start a tweet, try writing with AI"
+                placeholder={`What's on your mind, ${user?.name?.split(" ")[0] || "there"}?`}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="min-h-[60px] resize-none border-none bg-transparent p-0 focus-visible:ring-0 text-lg placeholder:text-muted-foreground/60"
+                className="min-h-[100px] resize-none border-none bg-muted/50 focus-visible:ring-1"
               />
-
-              {isStreaming ? (
-                <div className="relative rounded-2xl overflow-hidden bg-black/95 border border-slate-200/20">
-                  <video ref={videoRef} autoPlay muted className="w-full h-64 object-cover" />
-                  <div className="absolute bottom-4 right-4 flex gap-2">
-                    <Button
-                      size="sm"
-                      variant={streamSettings.audio ? "default" : "secondary"}
-                      onClick={() => setStreamSettings(prev => ({ ...prev, audio: !prev.audio }))}
-                      className="rounded-full"
-                    >
-                      {streamSettings.audio ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={streamSettings.video ? "default" : "secondary"}
-                      onClick={() => setStreamSettings(prev => ({ ...prev, video: !prev.video }))}
-                      className="rounded-full"
-                    >
-                      {streamSettings.video ? <Camera className="h-4 w-4" /> : <CameraOff className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
-              ) : mediaPreview && (
-                <div className="relative rounded-2xl overflow-hidden">
+              {mediaPreview && (
+                <div className="mt-4 relative">
                   {mediaType === "image" && (
                     <img
-                      src={mediaPreview}
+                      src={mediaPreview || "/placeholder.svg"}
                       alt="Preview"
-                      className="max-h-[300px] w-full object-cover rounded-2xl"
+                      className="max-h-[300px] w-full rounded-lg object-cover"
                     />
                   )}
                   {mediaType === "video" && (
-                    <video src={mediaPreview} className="max-h-[300px] w-full rounded-2xl" controls />
+                    <video src={mediaPreview} className="max-h-[300px] w-full rounded-lg" controls />
                   )}
-                  {mediaType === "audio" && (
-                    <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl">
-                      <audio src={mediaPreview} className="w-full" controls />
-                    </div>
-                  )}
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="absolute top-2 right-2 rounded-full bg-black/50 hover:bg-black/70"
-                    onClick={() => {
-                      setMediaPreview(null)
-                      setMediaType(null)
-                    }}
-                  >
-                    <X className="h-4 w-4 text-white" />
+                  {mediaType === "audio" && <audio src={mediaPreview} className="w-full mt-2" controls />}
+                  <Button variant="destructive" size="icon" className="absolute top-2 right-2" onClick={removeMedia}>
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               )}
             </div>
           </div>
-
-          <div className="mt-4 pt-4 border-t flex items-center justify-between">
-            <div className="flex -ml-2 items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleMediaUpload("image")}
-                className="rounded-full h-9 w-9"
-              >
-                <ImageIcon className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleMediaUpload("video")}
-                className="rounded-full h-9 w-9"
-              >
-                <Video className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleMediaUpload("audio")}
-                className="rounded-full h-9 w-9"
-              >
-                <Music className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleStream}
-                className="rounded-full h-9 w-9"
-              >
-                <Radio className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full h-9 w-9"
-              >
-                <PenLine className="h-5 w-5" />
-              </Button>
+        </CardContent>
+        <CardFooter className="flex justify-between border-t pt-4">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleMediaUpload("image")}
+              className="rounded-full hover:bg-muted"
+            >
+              <ImageIcon className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleMediaUpload("video")}
+              className="rounded-full hover:bg-muted"
+            >
+              <Video className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleMediaUpload("audio")}
+              className="rounded-full hover:bg-muted"
+            >
+              <Music className="h-5 w-5" />
+            </Button>
+            <div className="sr-only">
+              <label htmlFor="file-upload">Upload media file</label>
             </div>
-
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-2 rounded-full text-xs">
-                    {visibility === "public" ? (
-                      <Globe className="h-4 w-4" />
-                    ) : visibility === "private" ? (
-                      <Lock className="h-4 w-4" />
-                    ) : (
-                      <Users className="h-4 w-4" />
-                    )}
-                    Everyone
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="rounded-xl">
-                  <DropdownMenuItem onClick={() => setVisibility("public")}>
-                    <Globe className="h-4 w-4 mr-2" /> Everyone
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setVisibility("connections")}>
-                    <Users className="h-4 w-4 mr-2" /> Connections Only
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setVisibility("private")}>
-                    <Lock className="h-4 w-4 mr-2" /> Private
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Button
-                onClick={() => {
-                  if (isStreaming) {
-                    toggleStream()
-                  }
-                  toast.success("Post created successfully!")
-                  setContent("")
-                  setMediaPreview(null)
-                  setMediaType(null)
-                }}
-                disabled={(!content.trim() && !mediaPreview && !isStreaming)}
-                className="rounded-full px-6 bg-primary hover:bg-primary/90"
-              >
-                Post
-              </Button>
-            </div>
+            <input
+              type="file"
+              id="file-upload"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+              title="Upload media file"
+              aria-label="Upload media file"
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <VisibilityIcon className="h-4 w-4" />
+                  {visibility.charAt(0).toUpperCase() + visibility.slice(1)}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem onClick={() => setVisibility("public")}>
+                  <Globe className="h-4 w-4 mr-2" /> Public
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setVisibility("connections")}>
+                  <Users className="h-4 w-4 mr-2" /> Connections Only
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setVisibility("private")}>
+                  <Lock className="h-4 w-4 mr-2" /> Private
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+          <Button
+            onClick={handleSubmit}
+            disabled={!content.trim() && !mediaPreview}
+            className="px-8 bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 text-white hover:opacity-90"
+          >
+            Post
+          </Button>
+        </CardFooter>
+      </Card>
+    </motion.div>
   )
 }
-
-export default CreatePost

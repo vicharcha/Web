@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -17,60 +16,18 @@ export function CallDialog({ isOpen, onClose }: CallDialogProps) {
   const [isMuted, setIsMuted] = useState(false)
   const [isVideoOff, setIsVideoOff] = useState(false)
   const [callStatus, setCallStatus] = useState<"calling" | "connected" | "ended">("calling")
-  const [microphonePermission, setMicrophonePermission] = useState<boolean | null>(null)
 
   useEffect(() => {
-    // Request microphone permission when dialog opens
-    if (isOpen && microphonePermission === null) {
-      navigator.mediaDevices
-        .getUserMedia({ audio: true })
-        .then(() => {
-          setMicrophonePermission(true)
-          setIsMuted(false)
-        })
-        .catch(() => {
-          setMicrophonePermission(false)
-          setIsMuted(true)
-        })
-    }
-
     if (isOpen) {
       // Simulate call connection after 3 seconds
       const timer = setTimeout(() => setCallStatus("connected"), 3000)
       return () => clearTimeout(timer)
-    }
-  }, [isOpen, microphonePermission])
-
-  // Reset states when dialog closes
-  useEffect(() => {
-    if (!isOpen) {
-      setIsMuted(false)
-      setIsVideoOff(false)
-      setCallStatus("calling")
     }
   }, [isOpen])
 
   const handleEndCall = () => {
     setCallStatus("ended")
     setTimeout(onClose, 1000) // Close dialog after 1 second
-  }
-
-  const toggleMicrophone = () => {
-    if (microphonePermission) {
-      setIsMuted(!isMuted)
-    } else {
-      // Re-request microphone permission if denied
-      navigator.mediaDevices
-        .getUserMedia({ audio: true })
-        .then(() => {
-          setMicrophonePermission(true)
-          setIsMuted(false)
-        })
-        .catch(() => {
-          setMicrophonePermission(false)
-          setIsMuted(true)
-        })
-    }
   }
 
   return (
@@ -101,12 +58,8 @@ export function CallDialog({ isOpen, onClose }: CallDialogProps) {
             <Button
               variant="outline"
               size="icon"
-              onClick={toggleMicrophone}
-              className={cn(
-                isMuted ? "bg-destructive text-destructive-foreground" : "",
-                !microphonePermission && "opacity-50 cursor-not-allowed"
-              )}
-              title={!microphonePermission ? "Microphone access denied" : "Toggle microphone"}
+              onClick={() => setIsMuted(!isMuted)}
+              className={isMuted ? "bg-destructive text-destructive-foreground" : ""}
             >
               {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </Button>
@@ -129,3 +82,4 @@ export function CallDialog({ isOpen, onClose }: CallDialogProps) {
     </Dialog>
   )
 }
+

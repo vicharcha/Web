@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Camera, File, Image, Paperclip, Sticker, GiftIcon as Gif, Mic } from "lucide-react"
+import { Gift, File, Image, Paperclip, Sticker, Mic } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -26,7 +26,7 @@ export function MessageAttachments() {
   const attachmentOptions = [
     { icon: File, label: "Document", accept: ".pdf,.doc,.docx,.txt" },
     { icon: Image, label: "Photos & Videos", accept: "image/*,video/*" },
-    { icon: Camera, label: "Camera", accept: "image/*,video/*" },
+    { icon: Gift, label: "Camera", accept: "image/*,video/*" },
   ]
 
   const startRecording = async () => {
@@ -97,6 +97,8 @@ export function MessageAttachments() {
                       accept={option.accept}
                       className="hidden"
                       onChange={handleFileChange}
+                      aria-label={`Upload ${option.label}`}
+                      title={`Upload ${option.label}`}
                     />
                   </Button>
                 ))}
@@ -108,7 +110,7 @@ export function MessageAttachments() {
                   {/* Replace with actual GIF data */}
                   {Array.from({ length: 10 }).map((_, i) => (
                     <div key={i} className="aspect-square bg-muted rounded-md flex items-center justify-center">
-                      <Gif className="h-8 w-8 text-muted-foreground" />
+                      <Gift className="h-8 w-8 text-muted-foreground" />
                     </div>
                   ))}
                 </div>
@@ -142,4 +144,3 @@ export function MessageAttachments() {
     </div>
   )
 }
-
