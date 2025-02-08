@@ -204,7 +204,7 @@ const messages: Message[] = [
         </Tabs>
       </div>
 
-      <ScrollArea className="flex-1 px-2">
+      <ScrollArea className="flex-1 px-2 smooth-scroll">
         <AnimatePresence>
           {allChats.map((chat) => (
             <motion.button
@@ -309,7 +309,7 @@ const messages: Message[] = [
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-6" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-6 smooth-scroll" ref={scrollRef}>
         <div className="space-y-6">
           {messages.map((message) => (
             <motion.div
