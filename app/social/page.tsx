@@ -22,7 +22,15 @@ interface Job {
   description: string
   requirements: string[]
 }
-
+interface ReelPlayerProps {
+  username: string
+  userImage: string
+  videoUrl: string
+  title: string
+  likes: number
+  comments: number
+  shares: number
+}
 interface Reel {
   id: string
   username: string
@@ -288,7 +296,3 @@ export default function SocialPage() {
     </div>
   )
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> 4e2df3b363aa00d9dfae7022c21ff6a2963fcc29

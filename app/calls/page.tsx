@@ -16,10 +16,12 @@ import {
   PhoneMissed,
   Clock,
   Users,
+  Sparkles,
 } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Badge } from "@/components/ui/badge"
 
 interface Call {
   id: string
@@ -28,6 +30,7 @@ interface Call {
   time: string
   type: "incoming" | "outgoing" | "missed"
   isVideo: boolean
+  isPremium?: boolean
 }
 
 export default function Calls() {
@@ -42,6 +45,7 @@ export default function Calls() {
       time: "14:30",
       type: "incoming",
       isVideo: false,
+      isPremium: true,
     },
     {
       id: "2",
@@ -58,6 +62,7 @@ export default function Calls() {
       time: "18:45",
       type: "missed",
       isVideo: false,
+      isPremium: true,
     },
   ]
 
@@ -85,13 +90,12 @@ export default function Calls() {
       <Card>
         <CardHeader className="border-b">
           <div className="flex items-center justify-between">
-            <CardTitle>Recent Calls</CardTitle>
+            <CardTitle>Calls</CardTitle>
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Search calls" className="pl-9 w-[200px]" />
               </div>
-<<<<<<< HEAD
               <Button>
                 <Phone className="mr-2 h-4 w-4" />
                 New Call
@@ -116,113 +120,72 @@ export default function Calls() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="all" className="m-0">
-              <ScrollArea className="h-[calc(100vh-16rem)]">
+              <ScrollArea className="h-[calc(100vh-16rem)] smooth-scroll">
                 <div className="divide-y">
                   {recentCalls.map((call) => (
                     <div
                       key={call.id}
-                      className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                      className="relative group"
                     >
-                      <div className="flex items-center space-x-4">
-                        <Avatar>
-                          <AvatarImage src={`/placeholder.svg?height=40&width=40`} alt={call.name} />
-                          <AvatarFallback>{call.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{call.name}</p>
-                          <div className="flex items-center text-sm text-muted-foreground">
-                            <CallIcon type={call.type} isVideo={call.isVideo} />
-                            <span className="ml-2">{new Date(`${call.date} ${call.time}`).toLocaleString()}</span>
-=======
-              <TabsContent value="all" className="m-0">
-                <ScrollArea className="h-[calc(100vh-16rem)] smooth-scroll">
-                  <div className="divide-y">
-                    {recentCalls.map((call) => (
-                      <div
-                        key={call.id}
-                        className="relative group"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-rose-500/0 via-purple-500/0 to-blue-500/0 group-hover:from-rose-500/5 group-hover:via-purple-500/5 group-hover:to-blue-500/5 transition-colors" />
-                        <div className="flex items-center justify-between p-4 relative">
-                          <div className="flex items-center space-x-4">
-                            <div className="relative">
-                              <Avatar className="ring-2 ring-background">
-                                <AvatarImage src={`/placeholder.svg?height=40&width=40`} alt={call.name} />
-                                <AvatarFallback>{call.name[0]}</AvatarFallback>
-                              </Avatar>
+                      <div className="absolute inset-0 bg-gradient-to-r from-rose-500/0 via-purple-500/0 to-blue-500/0 group-hover:from-rose-500/5 group-hover:via-purple-500/5 group-hover:to-blue-500/5 transition-colors" />
+                      <div className="flex items-center justify-between p-4 relative">
+                        <div className="flex items-center space-x-4">
+                          <div className="relative">
+                            <Avatar className="ring-2 ring-background">
+                              <AvatarImage src={`/placeholder.svg?height=40&width=40`} alt={call.name} />
+                              <AvatarFallback>{call.name[0]}</AvatarFallback>
+                            </Avatar>
+                            {call.isPremium && (
+                              <div className="absolute -top-1 -right-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full p-1">
+                                <Sparkles className="h-3 w-3 text-white" />
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">{call.name}</p>
                               {call.isPremium && (
-                                <div className="absolute -top-1 -right-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full p-1">
-                                  <Sparkles className="h-3 w-3 text-white" />
-                                </div>
+                                <Badge variant="secondary" className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                                  Premium
+                                </Badge>
                               )}
                             </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium">{call.name}</p>
-                                {call.isPremium && (
-                                  <Badge variant="secondary" className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
-                                    Premium
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="flex items-center text-sm text-muted-foreground">
-                                <CallIcon type={call.type} isVideo={call.isVideo} />
-                                <span className="ml-2">{new Date(`${call.date} ${call.time}`).toLocaleString()}</span>
-                              </div>
+                            <div className="flex items-center text-sm text-muted-foreground">
+                              <CallIcon type={call.type} isVideo={call.isVideo} />
+                              <span className="ml-2">{new Date(`${call.date} ${call.time}`).toLocaleString()}</span>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => initiateCall({ ...call, isVideo: false })}
-                              className="hover:bg-purple-500/10"
-                            >
-                              <Phone className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => initiateCall({ ...call, isVideo: true })}
-                              className="hover:bg-blue-500/10"
-                            >
-                              <Video className="h-4 w-4" />
-                            </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="hover:bg-rose-500/10">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Call Details</DropdownMenuItem>
-                                <DropdownMenuItem>Block Contact</DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive">Remove from History</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
->>>>>>> 4e2df3b363aa00d9dfae7022c21ff6a2963fcc29
-                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="icon" onClick={() => initiateCall({ ...call, isVideo: false })}>
-                          <Phone className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => initiateCall({ ...call, isVideo: true })}>
-                          <Video className="h-4 w-4" />
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Call Details</DropdownMenuItem>
-                            <DropdownMenuItem>Block Contact</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">Remove from History</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => initiateCall({ ...call, isVideo: false })}
+                            className="hover:bg-purple-500/10"
+                          >
+                            <Phone className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => initiateCall({ ...call, isVideo: true })}
+                            className="hover:bg-blue-500/10"
+                          >
+                            <Video className="h-4 w-4" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="hover:bg-rose-500/10">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>Call Details</DropdownMenuItem>
+                              <DropdownMenuItem>Block Contact</DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive">Remove from History</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -263,4 +226,3 @@ export default function Calls() {
     </div>
   )
 }
-
