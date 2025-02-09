@@ -41,7 +41,7 @@ const shareOptions = [
 
 export function ShareDialog({ isOpen, onClose, post }: ShareDialogProps) {
   const [copied, setCopied] = useState(false)
-  const shareUrl = `https://yourapp.com/posts/${post.id}`
+  const shareUrl = `https://vicharcha.com/posts/${post.id}`
 
   const handleCopy = async () => {
     try {

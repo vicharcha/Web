@@ -8,7 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { toast } from "sonner"
 
-export function MessageAttachments() {
+interface MessageAttachmentsProps {
+  onFileSelect: (file: File) => void;
+}
+
+export function MessageAttachments({ onFileSelect }: MessageAttachmentsProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isRecording, setIsRecording] = useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -17,9 +21,8 @@ export function MessageAttachments() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      setSelectedFile(file)
-      // Here you would typically upload the file to your server
-      console.log("File selected:", file.name)
+      setSelectedFile(file);
+      onFileSelect(file);
     }
   }
 

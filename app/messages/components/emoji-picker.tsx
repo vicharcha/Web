@@ -5,13 +5,13 @@ import data from "@emoji-mart/data"
 import Picker from "@emoji-mart/react"
 import { useTheme } from "next-themes"
 
-interface EmojiPickerProps {
+interface EmojiPickerDialogProps {
   isOpen: boolean
   onClose: () => void
   onEmojiSelect: (emoji: string) => void
 }
 
-export function EmojiPicker({ isOpen, onClose, onEmojiSelect }: EmojiPickerProps) {
+export function EmojiPickerDialog({ isOpen, onClose, onEmojiSelect }: EmojiPickerDialogProps) {
   const { theme } = useTheme()
 
   return (
@@ -30,4 +30,3 @@ export function EmojiPicker({ isOpen, onClose, onEmojiSelect }: EmojiPickerProps
     </Dialog>
   )
 }
-

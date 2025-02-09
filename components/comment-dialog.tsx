@@ -115,7 +115,13 @@ export function CommentDialog({ isOpen, onClose, post, onAddComment }: CommentDi
                       </Badge>
                     )}
                     <span className="text-xs text-muted-foreground">
-                      {format(new Date(comment.timestamp), "MMM d, yyyy")}
+                      {(() => {
+                        try {
+                          return format(new Date(comment.timestamp), "MMM d, yyyy")
+                        } catch (e) {
+                          return "Invalid date"
+                        }
+                      })()}
                     </span>
                   </div>
                   <p className="text-sm">{comment.content}</p>
