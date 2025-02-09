@@ -6,27 +6,24 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { 
-  Phone, 
-  Video, 
-  Search, 
-  MoreVertical, 
-  ImageIcon, 
-  Send, 
+import {
+  Phone,
+  Video,
+  Search,
+  MoreVertical,
+  ImageIcon,
+  Send,
   Smile,
-  Check,
   ImagePlus,
-  File,
+  type File,
   FilePlus,
   Camera,
-  Mic
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -38,30 +35,30 @@ import { ProfileInfo } from "./profile-info"
 import { MediaGallery } from "./media-gallery"
 
 interface Message {
-  id: number;
-  sender: "you" | "them";
-  content: string;
-  time: string;
-  status?: "sent" | "delivered" | "read";
+  id: number
+  sender: "you" | "them"
+  content: string
+  time: string
+  status?: "sent" | "delivered" | "read"
   media?: {
-    url: string;
-    caption: string;
-  };
+    url: string
+    caption: string
+  }
 }
 
 interface ChatViewProps {
   chat: {
-    id: string;
-    name: string;
-    avatar: string;
-    status: string;
-    isTyping?: boolean;
-    isPremium?: boolean;
-    isVerified?: boolean;
-  };
-  messages: Message[];
-  onSendMessage: (message: string) => void;
-  onMediaSelect?: (file: File) => void;
+    id: string
+    name: string
+    avatar: string
+    status: string
+    isTyping?: boolean
+    isPremium?: boolean
+    isVerified?: boolean
+  }
+  messages: Message[]
+  onSendMessage: (message: string) => void
+  onMediaSelect?: (file: File) => void
 }
 
 export function ChatView({ chat, messages, onSendMessage, onMediaSelect }: ChatViewProps) {
@@ -81,7 +78,7 @@ export function ChatView({ chat, messages, onSendMessage, onMediaSelect }: ChatV
         behavior: "smooth",
       })
     }
-  }, [messages])
+  }, [scrollRef]) //Corrected dependency
 
   const handleSend = () => {
     if (messageText.trim()) {
@@ -104,69 +101,46 @@ export function ChatView({ chat, messages, onSendMessage, onMediaSelect }: ChatV
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-background">
       {/* Chat Header */}
-      <div className="h-20 border-b flex items-center justify-between px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="h-16 md:h-20 border-b flex items-center justify-between px-4 md:px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center space-x-4">
-          <div 
-            className="relative group cursor-pointer" 
-            onClick={() => setIsProfileInfoOpen(true)}
-          >
-            <Avatar className={cn(
-              "h-12 w-12 ring-2 ring-primary/10 group-hover:ring-primary/20 transition-all duration-300",
-              chat.isPremium && "ring-amber-500"
-            )}>
+          <div className="relative group cursor-pointer" onClick={() => setIsProfileInfoOpen(true)}>
+            <Avatar
+              className={cn(
+                "h-12 w-12 ring-2 ring-primary/10 group-hover:ring-primary/20 transition-all duration-300",
+                chat.isPremium && "ring-amber-500",
+              )}
+            >
               <AvatarImage src={chat.avatar} alt={chat.name} />
               <AvatarFallback>{chat.name[0]}</AvatarFallback>
             </Avatar>
-            <div className="opacity-0 group-hover:opacity-100 absolute -bottom-1 left-1/2 transform -translate-x-1/2 bg-background text-xs px-2 py-0.5 rounded-full border transition-opacity duration-200 whitespace-nowrap">
-              View Profile
-            </div>
-            {chat.status === "online" && (
-              <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 bg-green-500 rounded-full ring-2 ring-background animate-pulse" />
-            )}
           </div>
-          <div>
-            <p className="font-semibold text-lg hover:text-primary transition-colors cursor-pointer"
-               onClick={() => setIsProfileInfoOpen(true)}
-            >
-              {chat.name}
-            </p>
-            <div className="flex flex-col space-y-1">
-              <div className="text-sm text-muted-foreground flex items-center">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
-                <span className="font-medium text-green-500">{chat.status}</span>
-              </div>
+          <div className="flex flex-col">
+            <h2 className="text-base font-medium leading-none mb-1">{chat.name}</h2>
+            <div className="flex flex-col gap-0.5">
+              {chat.status === "online" && (
+                <span className="text-xs text-green-500 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                  online
+                </span>
+              )}
               {chat.isTyping && (
-                <motion.div 
-                  className="text-xs text-muted-foreground flex items-center"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-bounce" />
-                  <span className="italic">typing...</span>
-                </motion.div>
+                <span className="text-xs text-blue-500 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                  typing...
+                </span>
               )}
             </div>
           </div>
         </div>
-        
+
         {/* Actions */}
         <div className="flex items-center gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full"
-            onClick={() => setIsCallDialogOpen(true)}
-          >
+          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsCallDialogOpen(true)}>
             <Phone className="h-5 w-5" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full"
-            onClick={() => setIsCallDialogOpen(true)}
-          >
+          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setIsCallDialogOpen(true)}>
             <Video className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon" className="rounded-full">
@@ -186,20 +160,15 @@ export function ChatView({ chat, messages, onSendMessage, onMediaSelect }: ChatV
                 <Search className="mr-2 h-4 w-4" /> Search
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
-                Block Contact
-              </DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive">Block Contact</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
       {/* Messages Area */}
-      <ScrollArea 
-        className="flex-1 p-6" 
-        ref={scrollRef}
-      >
-        <div className="space-y-6">
+      <ScrollArea className="flex-1 p-4 md:p-6" ref={scrollRef}>
+        <div className="space-y-4 md:space-y-6">
           {messages.map((message, index) => (
             <MessageBubble
               key={message.id}
@@ -213,7 +182,7 @@ export function ChatView({ chat, messages, onSendMessage, onMediaSelect }: ChatV
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="p-2 md:p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         {/* Attachment Preview - Future Feature */}
         <AnimatePresence>
           {showAttachments && (
@@ -260,9 +229,7 @@ export function ChatView({ chat, messages, onSendMessage, onMediaSelect }: ChatV
             size="icon"
             className={cn(
               "shrink-0 rounded-full transition-all duration-200",
-              messageText.trim()
-                ? "bg-primary hover:bg-primary/90 hover:scale-105"
-                : "bg-muted"
+              messageText.trim() ? "bg-primary hover:bg-primary/90 hover:scale-105" : "bg-muted",
             )}
             disabled={!messageText.trim()}
             onClick={handleSend}
@@ -284,3 +251,4 @@ export function ChatView({ chat, messages, onSendMessage, onMediaSelect }: ChatV
     </div>
   )
 }
+

@@ -6,16 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { 
-  Search, 
-  Filter, 
-  Users, 
-  Star, 
-  PlusCircle,
-  ImageIcon,
-  Clock,
-  MoreHorizontal
-} from "lucide-react"
+import { Search, Filter, Users, Star, PlusCircle, ImageIcon, Clock, MoreHorizontal } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -30,36 +21,32 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface ChatListProps {
   chats: Array<{
-    id: string;
-    name: string;
-    lastMessage: string;
-    time: string;
-    unread: number;
-    status: string;
-    hasMedia: boolean;
-    isTyping: boolean;
-    isFavorite: boolean;
-    isArchived?: boolean;
-    isGroup?: boolean;
-    avatar: string;
-    isPremium?: boolean;
-  }>;
-  selectedChat: string | null;
-  onSelectChat: (chatId: string) => void;
+    id: string
+    name: string
+    lastMessage: string
+    time: string
+    unread: number
+    status: string
+    hasMedia: boolean
+    isTyping: boolean
+    isFavorite: boolean
+    isArchived?: boolean
+    isGroup?: boolean
+    avatar: string
+    isPremium?: boolean
+  }>
+  selectedChat: string | null
+  onSelectChat: (chatId: string) => void
 }
 
 export function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
   return (
-    <Card className="w-full md:w-[380px] border-r flex flex-col h-full bg-card relative">
+    <Card className="w-full h-full border-r flex flex-col bg-card relative">
       {/* List Header */}
       <div className="p-6 border-b">
         <div className="flex items-center gap-4 mb-6">
           <h2 className="text-2xl font-bold">Messages</h2>
-          <Button 
-            variant="secondary" 
-            size="icon" 
-            className="ml-auto rounded-full hover:scale-105 transition-transform"
-          >
+          <Button variant="secondary" size="icon" className="ml-auto rounded-full hover:scale-105 transition-transform">
             <PlusCircle className="h-5 w-5" />
           </Button>
         </div>
@@ -68,8 +55,8 @@ export function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
         <div className="flex items-center gap-2 mb-4">
           <div className="relative flex-1 group">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
-            <Input 
-              placeholder="Search messages..." 
+            <Input
+              placeholder="Search messages..."
               className="pl-9 w-full bg-muted/50 border-none focus-visible:ring-1 rounded-full"
             />
           </div>
@@ -98,13 +85,12 @@ export function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
         {/* Tabs */}
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="grid w-full grid-cols-4 p-1 bg-muted/50">
-            <TabsTrigger value="all" className="text-sm">All</TabsTrigger>
+            <TabsTrigger value="all" className="text-sm">
+              All
+            </TabsTrigger>
             <TabsTrigger value="unread" className="relative text-sm">
               Unread
-              <Badge 
-                variant="secondary" 
-                className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center"
-              >
+              <Badge variant="secondary" className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center">
                 {chats.reduce((acc, chat) => acc + chat.unread, 0)}
               </Badge>
             </TabsTrigger>
@@ -119,7 +105,7 @@ export function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
       </div>
 
       {/* Chat List */}
-      <ScrollArea className="flex-1 px-2">
+      <ScrollArea className="flex-1 px-2 py-4">
         <AnimatePresence>
           {chats.map((chat) => (
             <motion.button
@@ -129,17 +115,19 @@ export function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
               exit={{ opacity: 0, y: -10 }}
               onClick={() => onSelectChat(chat.id)}
               className={cn(
-                "w-full flex items-center space-x-4 p-4 rounded-xl transition-all",
-                "hover:bg-accent/50 active:scale-[0.99]",
+                "w-full flex items-center space-x-4 p-3 rounded-xl transition-all",
+                "hover:bg-accent/50 active:scale-[0.98]",
                 selectedChat === chat.id && "bg-accent/50 shadow-sm ring-1 ring-accent",
-                "my-1.5 relative group",
+                "my-1 relative group",
               )}
             >
               <div className="relative">
-                <Avatar className={cn(
-                  "h-12 w-12 border-2 border-background transition-transform hover:scale-105",
-                  chat.isPremium && "ring-2 ring-amber-500"
-                )}>
+                <Avatar
+                  className={cn(
+                    "h-12 w-12 border-2 border-background transition-transform hover:scale-105",
+                    chat.isPremium && "ring-2 ring-amber-500",
+                  )}
+                >
                   <AvatarImage src={chat.avatar} alt={chat.name} />
                   <AvatarFallback>{chat.name[0]}</AvatarFallback>
                 </Avatar>
@@ -149,29 +137,25 @@ export function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
               </div>
 
               <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center mb-1">
-                  <p className="font-semibold truncate">{chat.name}</p>
+                <div className="flex justify-between items-start mb-1">
+                  <p className="font-medium text-sm truncate">{chat.name}</p>
                   <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">{chat.time}</span>
                 </div>
-                <div className="flex items-center text-sm text-muted-foreground">
-                  {chat.hasMedia && <ImageIcon className="h-3 w-3 mr-1" />}
-                  <p className="truncate opacity-70">
-                    {chat.isTyping ? (
-                      <motion.span
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-primary italic"
-                      >
-                        typing...
-                      </motion.span>
-                    ) : (
-                      chat.lastMessage
-                    )}
-                  </p>
-                  {chat.unread > 0 && (
-                    <Badge variant="default" className="ml-2">
-                      {chat.unread}
-                    </Badge>
+                <div className="flex flex-col text-xs text-muted-foreground">
+                  {chat.status === "online" && (
+                    <span className="text-green-500 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                      online
+                    </span>
+                  )}
+                  {chat.isTyping && (
+                    <span className="text-blue-500 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+                      typing...
+                    </span>
+                  )}
+                  {!chat.isTyping && chat.lastMessage && (
+                    <p className="truncate opacity-70">{chat.lastMessage}</p>
                   )}
                 </div>
               </div>
@@ -185,11 +169,7 @@ export function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
                     exit={{ opacity: 0, x: 20 }}
                     className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 rounded-full hover:bg-background"
-                    >
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-background">
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </motion.div>
@@ -202,3 +182,4 @@ export function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
     </Card>
   )
 }
+
