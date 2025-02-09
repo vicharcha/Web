@@ -136,17 +136,24 @@ export default function ChatApp() {
       setMessages(prevMessages => [...prevMessages, newMessage])
       setMessageText("")
 
-      // Bot response for "hi"
+      // Bot response for "hi" - using local state update to prevent page refresh
       if (messageText.toLowerCase().trim() === "hi") {
-        setTimeout(() => {
-          setMessages(prevMessages => [...prevMessages, {
-            id: prevMessages.length + 1,
-            sender: "them",
-            content: "How are you?",
-            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            status: "sent",
-          }])
-        }, 1000)
+        const newId = messages.length + 2; // Skip one ID to account for user message
+        const botResponse = {
+          id: newId,
+          sender: "them",
+          content: "How are you?",
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          status: "sent",
+        };
+        
+        // Queue bot response with a slight delay
+        const timeoutId = setTimeout(() => {
+          setMessages(prev => [...prev, botResponse]);
+        }, 1000);
+        
+        // Clean up timeout if component unmounts
+        return () => clearTimeout(timeoutId);
       }
     }
   }
