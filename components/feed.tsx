@@ -1,65 +1,105 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { motion, AnimatePresence } from "framer-motion"
 import { Post } from './post'
 import { Button } from "@/components/ui/button"
 import { RefreshCw, TrendingUp, Clock } from "lucide-react"
 import { Stories } from './stories'
-
-interface FeedPost {
-  id: string | number;
-  username: string;
-  userImage: string;
-  content: string;
-  image?: string;
-  video?: string;
-  likes: number;
-  comments: number;
-  shares: number;
-  isLiked: boolean;
-  isBookmarked: boolean;
-  categories: string[];
-  isSponsored?: boolean;
-  timestamp: string;
-  isPremium?: boolean;
-  isVerified?: boolean;
-}
+import { PostCategories, type FeedPost } from "@/lib/types"
+import { useAuth } from "@/app/components/auth-provider"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface FeedProps {
-  posts: FeedPost[];
+  initialPosts?: FeedPost[];
 }
 
-const Feed: React.FC<FeedProps> = ({ posts }) => {
-  const [sortBy, setSortBy] = useState<'new' | 'trending' | 'top'>('new');
-  const [isRefreshing, setIsRefreshing] = useState(false);
+const Feed: React.FC<FeedProps> = ({ initialPosts = [] }) => {
+  const { user } = useAuth()
+  const [posts, setPosts] = useState<FeedPost[]>(initialPosts)
+  const [sortBy, setSortBy] = useState<'new' | 'trending' | 'top'>('new')
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const defaultPosts: FeedPost[] = [
-    {
-      id: 1,
-      username: "Sample User",
-      userImage: "/placeholder-user.jpg",
-      content: "Welcome to the network!",
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      isLiked: false,
-      isBookmarked: false,
-      categories: ["General"],
-      timestamp: new Date().toISOString(),
-      isPremium: false,
-      isVerified: false
+  const fetchPosts = async () => {
+    try {
+      const isAdultAllowed = user?.verificationStatus === 'verified'
+      const queryParams = new URLSearchParams()
+      if (selectedCategory !== 'all') {
+        queryParams.append('category', selectedCategory)
+      }
+      queryParams.append('userAge', isAdultAllowed ? '18' : '0')
+
+      const response = await fetch(`/api/posts?${queryParams.toString()}`)
+      if (!response.ok) throw new Error('Failed to fetch posts')
+      
+      const data = await response.json()
+      setPosts(data.map((post: any) => ({
+        ...post,
+        username: "User", // In a real app, fetch user details
+        userImage: "/placeholder-user.jpg",
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        isLiked: false,
+        isBookmarked: false,
+        categories: [post.category], // Convert single category to array for Post component
+        timestamp: post.createdAt,
+        isPremium: false,
+        isVerified: false
+      })))
+    } catch (error) {
+      console.error('Error fetching posts:', error)
+      // Show error state
+    } finally {
+      setIsLoading(false)
     }
-  ];
+  }
 
-  const displayPosts = posts.length > 0 ? posts : defaultPosts;
+  useEffect(() => {
+    fetchPosts()
+  }, [selectedCategory])
 
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    // Simulating refresh delay
-    setTimeout(() => setIsRefreshing(false), 1000);
-  };
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await fetchPosts()
+    setIsRefreshing(false)
+  }
+
+      const defaultPosts: FeedPost[] = [{
+        // Base Post properties
+        id: "default",
+        userId: "default",
+        content: "Welcome to the network!",
+        category: PostCategories.GENERAL,
+        ageRestricted: false,
+        mediaUrls: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        
+        // FeedPostExtension properties
+        username: "Sample User",
+        userImage: "/placeholder-user.jpg",
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        isLiked: false,
+        isBookmarked: false,
+        categories: [PostCategories.GENERAL],
+        timestamp: new Date().toISOString(),
+        isPremium: false,
+        isVerified: false
+      }]
+
+  const displayPosts = posts.length > 0 ? posts : defaultPosts
 
   return (
     <div className="space-y-4">
@@ -86,14 +126,32 @@ const Feed: React.FC<FeedProps> = ({ posts }) => {
               Trending
             </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleRefresh}
-            className={`transition-transform ${isRefreshing ? 'animate-spin' : ''}`}
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
+
+          <div className="flex items-center gap-2">
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-[150px] h-9">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {Object.entries(PostCategories).map(([key, value]) => (
+                  <SelectItem key={key} value={value}>
+                    {key.charAt(0) + key.slice(1).toLowerCase()}
+                    {value === PostCategories.ADULT && " (18+)"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              className={`transition-transform ${isRefreshing ? 'animate-spin' : ''}`}
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -129,4 +187,4 @@ const Feed: React.FC<FeedProps> = ({ posts }) => {
   )
 }
 
-export default Feed;
+export default Feed

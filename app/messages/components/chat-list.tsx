@@ -41,7 +41,7 @@ interface ChatListProps {
 
 export function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
   return (
-    <Card className="w-full h-full border-r flex flex-col bg-card relative">
+    <Card className="w-[380px] min-w-[380px] h-full border-r flex flex-col bg-card relative overflow-hidden">
       {/* List Header */}
       <div className="p-6 border-b">
         <div className="flex items-center gap-4 mb-6">
@@ -105,7 +105,7 @@ export function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
       </div>
 
       {/* Chat List */}
-      <ScrollArea className="flex-1 px-2 py-4">
+      <ScrollArea className="flex-1 px-2 py-4 overflow-y-auto">
         <AnimatePresence>
           {chats.map((chat) => (
             <motion.button
@@ -182,4 +182,3 @@ export function ChatList({ chats, selectedChat, onSelectChat }: ChatListProps) {
     </Card>
   )
 }
-

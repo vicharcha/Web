@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -9,13 +9,33 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/components/ui/use-toast"
-import { Heart, MessageCircle, Bookmark, MoreHorizontal, Smile, Sparkles, Share2, Verified } from "lucide-react"
+import { 
+  Heart, 
+  MessageCircle, 
+  Bookmark, 
+  MoreHorizontal, 
+  Smile, 
+  Sparkles, 
+  Share2, 
+  Verified,
+  ChevronLeft,
+  ChevronRight 
+} from "lucide-react"
 import Image from "next/image"
 import { CreatePost } from "@/components/create-post"
 import { useAuth } from "@/app/components/auth-provider"
 import { ShareDialog } from "./share-dialog"
 import { CommentDialog } from "./comment-dialog"
 import { LikeButton } from "./like-button"
+
+// Stories data
+const stories = [
+  { id: 1, username: "frontlines", avatar: "/placeholder.svg?1", hasStory: true, isPremium: true, views: "1.2M" },
+  { id: 2, username: "lohithsai", avatar: "/placeholder.svg?2", hasStory: true, isPremium: false, views: "856K" },
+  { id: 3, username: "lizz_nikzz", avatar: "/placeholder.svg?3", hasStory: true, isPremium: true, views: "2.1M" },
+  { id: 4, username: "olgakay", avatar: "/placeholder.svg?4", hasStory: true, isPremium: false, views: "543K" },
+  { id: 5, username: "krishna_ta", avatar: "/placeholder.svg?5", hasStory: true, isPremium: true, views: "1.5M" },
+]
 
 // Mock data for suggested topics
 const suggestedTopics = [
@@ -59,6 +79,13 @@ const postVariants = {
   },
 }
 
+const storyVariants = {
+  initial: { scale: 0.9, opacity: 0 },
+  animate: { scale: 1, opacity: 1 },
+  hover: { scale: 1.05 },
+  tap: { scale: 0.95 },
+}
+
 export function MainContent() {
   const { user } = useAuth()
   const [posts, setPosts] = useState<Post[]>([])
@@ -67,6 +94,37 @@ export function MainContent() {
   const { toast } = useToast()
   const [shareDialogPost, setShareDialogPost] = useState<Post | null>(null)
   const [commentDialogPost, setCommentDialogPost] = useState<Post | null>(null)
+  const storiesRef = useRef<HTMLDivElement>(null)
+  const [showLeftScroll, setShowLeftScroll] = useState(false)
+  const [showRightScroll, setShowRightScroll] = useState(true)
+
+  const handleScroll = () => {
+    if (storiesRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = storiesRef.current
+      setShowLeftScroll(scrollLeft > 0)
+      setShowRightScroll(scrollLeft < scrollWidth - clientWidth - 10)
+    }
+  }
+
+  const scrollStories = (direction: 'left' | 'right') => {
+    if (storiesRef.current) {
+      const scrollAmount = 200
+      const newScrollLeft = storiesRef.current.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount)
+      storiesRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+      })
+    }
+  }
+
+  useEffect(() => {
+    const currentRef = storiesRef.current
+    if (currentRef) {
+      currentRef.addEventListener('scroll', handleScroll)
+      handleScroll() // Check initial scroll state
+      return () => currentRef.removeEventListener('scroll', handleScroll)
+    }
+  }, [])
 
   // Fetch posts
   const fetchPosts = useCallback(async () => {
@@ -184,19 +242,15 @@ export function MainContent() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <Skeleton className="h-[120px] w-full rounded-xl" />
-        {[1, 2].map((i) => (
-          <div key={i} className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <Skeleton className="h-12 w-12 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-[200px]" />
-                <Skeleton className="h-4 w-[150px]" />
-              </div>
-            </div>
-            <Skeleton className="h-[300px] w-full rounded-xl" />
+        <div className="space-y-4">
+          <Skeleton className="h-20 w-full rounded-xl" />
+          <div className="flex space-x-4 overflow-hidden">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-24 w-24 rounded-xl flex-shrink-0" />
+            ))}
           </div>
-        ))}
+        </div>
+        <Skeleton className="h-[600px] w-full rounded-xl" />
       </div>
     )
   }
@@ -205,6 +259,101 @@ export function MainContent() {
     <div className="space-y-6">
       {/* Create Post */}
       <CreatePost />
+
+      {/* Stories */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-violet-500/10 rounded-xl blur-xl" />
+        <div className="relative rounded-xl border bg-card/50 backdrop-blur-sm">
+          {/* Left Scroll Button */}
+          {showLeftScroll && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-background/80 rounded-full shadow-lg"
+              onClick={() => scrollStories('left')}
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          )}
+
+          {/* Right Scroll Button */}
+          {showRightScroll && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-background/80 rounded-full shadow-lg"
+              onClick={() => scrollStories('right')}
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+
+          <div 
+            ref={storiesRef}
+            className="flex overflow-x-auto scrollbar-hide p-4 space-x-4"
+            style={{ scrollBehavior: 'smooth' }}
+          >
+            {/* Your Story */}
+            <motion.button
+              className="flex flex-col items-center space-y-1 relative group flex-shrink-0"
+              variants={storyVariants}
+              initial="initial"
+              animate="animate"
+              whileHover="hover"
+              whileTap="tap"
+              aria-label="Your Story"
+            >
+              <div className="rounded-full p-1 bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500">
+                <div className="rounded-full p-0.5 bg-background">
+                  <Avatar className="w-16 h-16">
+                    <AvatarImage src={`/placeholder.svg?text=${user?.name?.[0] || "Y"}`} />
+                    <AvatarFallback>{user?.name?.[0] || "Y"}</AvatarFallback>
+                  </Avatar>
+                </div>
+              </div>
+              <span className="text-xs font-medium">Your Story</span>
+            </motion.button>
+
+            {/* Other Stories */}
+            {stories.map((story) => (
+              <motion.button
+                key={story.id}
+                className="flex flex-col items-center space-y-1 relative group flex-shrink-0"
+                variants={storyVariants}
+                initial="initial"
+                animate="animate"
+                whileHover="hover"
+                whileTap="tap"
+                aria-label={`Story by ${story.username}`}
+              >
+                <div className={`rounded-full p-1 ${
+                  story.isPremium
+                    ? "bg-gradient-to-r from-amber-500 to-orange-500"
+                    : "bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500"
+                }`}>
+                  <div className="rounded-full p-0.5 bg-background">
+                    <Avatar className="w-16 h-16">
+                      <AvatarImage src={story.avatar} />
+                      <AvatarFallback>{story.username[0].toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                  {story.isPremium && (
+                    <div className="absolute -top-1 -right-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full p-1">
+                      <Sparkles className="h-3 w-3 text-white" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-xs font-medium">{story.username}</span>
+                  <span className="text-[10px] text-muted-foreground">{story.views} views</span>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Suggested Topics */}
       <div className="relative mb-6">
@@ -218,6 +367,7 @@ export function MainContent() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="px-3 py-1.5 rounded-full bg-primary/10 text-sm font-medium hover:bg-primary/20 transition-colors"
+                aria-label={`Topic: ${topic.name}`}
               >
                 {topic.name}
                 <span className="ml-2 text-xs text-muted-foreground">
@@ -261,7 +411,7 @@ export function MainContent() {
                       <span className="text-muted-foreground">• {post.timestamp}</span>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="rounded-full">
+                  <Button variant="ghost" size="icon" className="rounded-full" aria-label="More options">
                     <MoreHorizontal className="h-5 w-5" />
                   </Button>
                 </div>
@@ -276,6 +426,7 @@ export function MainContent() {
                     alt={`Post by ${post.username}`}
                     fill
                     className="object-cover"
+                    loading="lazy"
                   />
                 </div>
 
@@ -288,6 +439,7 @@ export function MainContent() {
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setCommentDialogPost(post)}
                       className="flex items-center gap-1"
+                      aria-label="Comment"
                     >
                       <MessageCircle className="h-6 w-6" />
                       <span className="text-sm font-medium">{post.comments.length}</span>

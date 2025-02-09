@@ -5,15 +5,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/app/components/auth-provider"
 import { FileUpload } from "@/components/file-upload"
 import { motion, AnimatePresence } from "framer-motion"
 import { Image, Video, Music, Smile, AtSign, Hash, MapPin, X, Sparkles } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { PostCategories } from "@/lib/types"
 
 export function CreatePost() {
   const { user } = useAuth()
   const [content, setContent] = useState("")
+  const [category, setCategory] = useState<string>(PostCategories.GENERAL)
+  const [mediaUrls, setMediaUrls] = useState<string[]>([])
   const [isExpanded, setIsExpanded] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -29,19 +33,47 @@ export function CreatePost() {
     }, 100)
   }
 
-  const handleSubmit = () => {
-    // Handle post submission
-    console.log({
-      content,
-      mentions,
-      hashtags,
-      location
-    })
-    setContent("")
-    setMentions([])
-    setHashtags([])
-    setLocation("")
-    setIsExpanded(false)
+  const handleFileSelect = (file: File) => {
+    // In a real app, implement file upload to storage and get URL
+    // For now, we'll just use a placeholder URL
+    const url = `/placeholder-${Date.now()}.jpg`
+    setMediaUrls([...mediaUrls, url])
+  }
+
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content,
+          category,
+          mediaUrls,
+          userId: user?.phoneNumber, // Use phoneNumber as userId
+          mentions,
+          hashtags,
+          location
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create post')
+      }
+
+      // Reset form
+      setContent("")
+      setCategory(PostCategories.GENERAL)
+      setMediaUrls([])
+      setMentions([])
+      setHashtags([])
+      setLocation("")
+      setIsExpanded(false)
+    } catch (error) {
+      console.error('Error creating post:', error)
+      // In a real app, show error toast/notification
+    }
   }
 
   return (
@@ -71,49 +103,85 @@ export function CreatePost() {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {mentions.map((mention) => (
-                      <div
-                        key={mention}
-                        className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-sm"
-                      >
-                        <AtSign className="h-3 w-3" />
-                        {mention}
-                        <button
-                          onClick={() => setMentions(mentions.filter(m => m !== mention))}
-                          className="hover:text-destructive"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                    {hashtags.map((tag) => (
-                      <div
-                        key={tag}
-                        className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-sm"
-                      >
-                        <Hash className="h-3 w-3" />
-                        {tag}
-                        <button
-                          onClick={() => setHashtags(hashtags.filter(t => t !== tag))}
-                          className="hover:text-destructive"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
-                    {location && (
-                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-sm">
-                        <MapPin className="h-3 w-3" />
-                        {location}
-                        <button
-                          onClick={() => setLocation("")}
-                          className="hover:text-destructive"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
+                  <div className="space-y-4 mb-4">
+                    <Select value={category} onValueChange={setCategory}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(PostCategories).map(([key, value]) => (
+                          <SelectItem key={key} value={value}>
+                            {key.charAt(0) + key.slice(1).toLowerCase()}
+                            {value === PostCategories.ADULT && " (18+)"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {mediaUrls.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {mediaUrls.map((url, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={url}
+                              alt=""
+                              className="w-20 h-20 object-cover rounded-lg"
+                            />
+                            <button
+                              onClick={() => setMediaUrls(mediaUrls.filter((_, i) => i !== index))}
+                              className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
+
+                    <div className="flex flex-wrap gap-2">
+                      {mentions.map((mention) => (
+                        <div
+                          key={mention}
+                          className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-sm"
+                        >
+                          <AtSign className="h-3 w-3" />
+                          {mention}
+                          <button
+                            onClick={() => setMentions(mentions.filter(m => m !== mention))}
+                            className="hover:text-destructive"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                      {hashtags.map((tag) => (
+                        <div
+                          key={tag}
+                          className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-sm"
+                        >
+                          <Hash className="h-3 w-3" />
+                          {tag}
+                          <button
+                            onClick={() => setHashtags(hashtags.filter(t => t !== tag))}
+                            className="hover:text-destructive"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                      {location && (
+                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-sm">
+                          <MapPin className="h-3 w-3" />
+                          {location}
+                          <button
+                            onClick={() => setLocation("")}
+                            className="hover:text-destructive"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -129,7 +197,7 @@ export function CreatePost() {
                             <DialogTitle>Upload Media</DialogTitle>
                           </DialogHeader>
                           <FileUpload 
-                            onFileSelect={() => {}} 
+                            onFileSelect={handleFileSelect}
                             maxSize={100}
                             allowedTypes={{ image: true, video: true }}
                           />
