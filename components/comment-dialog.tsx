@@ -21,34 +21,39 @@ interface Comment {
   isPremium?: boolean
 }
 
+interface Post {
+  id: number
+  username: string
+  avatar: string
+  verified: boolean
+  isPremium: boolean
+  image: string
+  caption: string
+  timestamp: string
+  likes: number
+  views: string
+  comments: Array<{
+    id: number
+    username: string
+    content: string
+    timestamp: string
+    likes: number
+    isPremium?: boolean
+  }>
+}
+
 interface CommentDialogProps {
   isOpen: boolean
   onClose: () => void
-  postId: string
-  onAddComment?: (comment: string) => void
+  post: Post
+  onAddComment: (comment: string) => void
 }
 
-export function CommentDialog({ isOpen, onClose, postId, onAddComment }: CommentDialogProps) {
+export function CommentDialog({ isOpen, onClose, post, onAddComment }: CommentDialogProps) {
   const [newComment, setNewComment] = useState("")
   const [likedComments, setLikedComments] = useState<Set<number>>(new Set())
   const { user } = useAuth()
-  const [comments, setComments] = useState<Comment[]>([
-    {
-      id: 1,
-      username: "johndoe",
-      content: "Great post! 👍",
-      timestamp: new Date().toISOString(),
-      likes: 5,
-      isPremium: true,
-    },
-    {
-      id: 2,
-      username: "janedoe",
-      content: "Thanks for sharing!",
-      timestamp: new Date().toISOString(),
-      likes: 3,
-    },
-  ])
+  const [comments, setComments] = useState<Comment[]>(post.comments)
 
   const handleAddComment = () => {
     if (newComment.trim()) {
@@ -159,4 +164,3 @@ export function CommentDialog({ isOpen, onClose, postId, onAddComment }: Comment
     </Dialog>
   )
 }
-

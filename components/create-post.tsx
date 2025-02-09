@@ -1,202 +1,179 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ImageIcon, Video, Music, X, Sparkles, Globe, Lock, Users } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/app/components/auth-provider"
-import { toast } from "sonner"
-import { motion } from "framer-motion"
+import { FileUpload } from "@/components/file-upload"
+import { motion, AnimatePresence } from "framer-motion"
+import { Image, Video, Music, Smile, AtSign, Hash, MapPin, X, Sparkles } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 export function CreatePost() {
-  const [content, setContent] = useState("")
-  const [mediaPreview, setMediaPreview] = useState<string | null>(null)
-  const [mediaType, setMediaType] = useState<"image" | "video" | "audio" | null>(null)
-  const [visibility, setVisibility] = useState<"public" | "private" | "connections">("public")
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const { user } = useAuth()
+  const [content, setContent] = useState("")
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [mentions, setMentions] = useState<string[]>([])
+  const [hashtags, setHashtags] = useState<string[]>([])
+  const [location, setLocation] = useState("")
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const handleMediaUpload = (type: "image" | "video" | "audio") => {
-    if (fileInputRef.current) {
-      fileInputRef.current.accept = type === "image" ? "image/*" : type === "video" ? "video/*" : "audio/*"
-      fileInputRef.current.click()
-    }
-  }
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error("File too large. Please upload a file smaller than 10MB")
-        return
-      }
-
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setMediaPreview(reader.result as string)
-        setMediaType(file.type.split("/")[0] as "image" | "video" | "audio")
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const removeMedia = () => {
-    setMediaPreview(null)
-    setMediaType(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ""
-    }
+  const handleExpandClick = () => {
+    setIsExpanded(true)
+    setTimeout(() => {
+      textareaRef.current?.focus()
+    }, 100)
   }
 
   const handleSubmit = () => {
-    if (!content.trim() && !mediaPreview) {
-      toast.error("Please add some content to your post")
-      return
-    }
-
-    toast.success("Post created successfully!")
+    // Handle post submission
+    console.log({
+      content,
+      mentions,
+      hashtags,
+      location
+    })
     setContent("")
-    setMediaPreview(null)
-    setMediaType(null)
+    setMentions([])
+    setHashtags([])
+    setLocation("")
+    setIsExpanded(false)
   }
-
-  const visibilityIcons = {
-    public: Globe,
-    private: Lock,
-    connections: Users,
-  }
-
-  const VisibilityIcon = visibilityIcons[visibility]
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <Card className="w-full bg-card">
-        <CardContent className="pt-6">
-          <div className="flex gap-4">
-            <div className="relative">
-              <Avatar className="w-10 h-10">
-                <AvatarImage src={`/placeholder.svg?text=${user?.name?.[0] || "U"}`} alt={user?.name || "User"} />
-                <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
-              </Avatar>
-              {user?.isPremium && (
-                <Badge
-                  variant="premium"
-                  className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center bg-gradient-to-r from-amber-500 to-orange-500"
-                >
-                  <Sparkles className="h-3 w-3" />
-                </Badge>
-              )}
-            </div>
-            <div className="flex-1">
-              <Textarea
-                placeholder={`What's on your mind, ${user?.name?.split(" ")[0] || "there"}?`}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="min-h-[100px] resize-none border-none bg-muted/50 focus-visible:ring-1"
-              />
-              {mediaPreview && (
-                <div className="mt-4 relative">
-                  {mediaType === "image" && (
-                    <img
-                      src={mediaPreview || "/placeholder.svg"}
-                      alt="Preview"
-                      className="max-h-[300px] w-full rounded-lg object-cover"
-                    />
-                  )}
-                  {mediaType === "video" && (
-                    <video src={mediaPreview} className="max-h-[300px] w-full rounded-lg" controls />
-                  )}
-                  {mediaType === "audio" && <audio src={mediaPreview} className="w-full mt-2" controls />}
-                  <Button variant="destructive" size="icon" className="absolute top-2 right-2" onClick={removeMedia}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-between border-t pt-4">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleMediaUpload("image")}
-              className="rounded-full hover:bg-muted"
-            >
-              <ImageIcon className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleMediaUpload("video")}
-              className="rounded-full hover:bg-muted"
-            >
-              <Video className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleMediaUpload("audio")}
-              className="rounded-full hover:bg-muted"
-            >
-              <Music className="h-5 w-5" />
-            </Button>
-            <div className="sr-only">
-              <label htmlFor="file-upload">Upload media file</label>
-            </div>
-            <input
-              type="file"
-              id="file-upload"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              className="hidden"
-              title="Upload media file"
-              aria-label="Upload media file"
+    <div className="relative">
+      <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-violet-500/10 rounded-xl blur-xl" />
+      <Card className="relative border bg-card/50 backdrop-blur-sm p-4">
+        <div className="flex gap-4">
+          <Avatar className="w-10 h-10 border-2 border-background">
+            <AvatarImage src={`/placeholder.svg?text=${user?.name?.[0] || "U"}`} alt={user?.name} />
+            <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 space-y-4">
+            <Textarea
+              ref={textareaRef}
+              placeholder="What's on your mind?"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              onClick={handleExpandClick}
+              className="min-h-[60px] bg-background/50 resize-none border-none focus-visible:ring-1"
             />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <VisibilityIcon className="h-4 w-4" />
-                  {visibility.charAt(0).toUpperCase() + visibility.slice(1)}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem onClick={() => setVisibility("public")}>
-                  <Globe className="h-4 w-4 mr-2" /> Public
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setVisibility("connections")}>
-                  <Users className="h-4 w-4 mr-2" /> Connections Only
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setVisibility("private")}>
-                  <Lock className="h-4 w-4 mr-2" /> Private
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {mentions.map((mention) => (
+                      <div
+                        key={mention}
+                        className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-sm"
+                      >
+                        <AtSign className="h-3 w-3" />
+                        {mention}
+                        <button
+                          onClick={() => setMentions(mentions.filter(m => m !== mention))}
+                          className="hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {hashtags.map((tag) => (
+                      <div
+                        key={tag}
+                        className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-sm"
+                      >
+                        <Hash className="h-3 w-3" />
+                        {tag}
+                        <button
+                          onClick={() => setHashtags(hashtags.filter(t => t !== tag))}
+                          className="hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {location && (
+                      <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-sm">
+                        <MapPin className="h-3 w-3" />
+                        {location}
+                        <button
+                          onClick={() => setLocation("")}
+                          className="hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-1">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                            <Image className="h-5 w-5" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Upload Media</DialogTitle>
+                          </DialogHeader>
+                          <FileUpload 
+                            onFileSelect={() => {}} 
+                            maxSize={100}
+                            allowedTypes={{ image: true, video: true }}
+                          />
+                        </DialogContent>
+                      </Dialog>
+
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                        <AtSign className="h-5 w-5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                        <Hash className="h-5 w-5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                        <MapPin className="h-5 w-5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
+                        <Smile className="h-5 w-5" />
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setIsExpanded(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleSubmit} 
+                        className="gap-2 bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 text-white hover:opacity-90"
+                        disabled={!content.trim()}
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Post
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-          <Button
-            onClick={handleSubmit}
-            disabled={!content.trim() && !mediaPreview}
-            className="px-8 bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 text-white hover:opacity-90"
-          >
-            Post
-          </Button>
-        </CardFooter>
+        </div>
       </Card>
-    </motion.div>
+    </div>
   )
 }

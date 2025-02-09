@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   CreditCard,
   ShoppingBag,
+  Film,
   X,
   Sun,
   Moon,
@@ -45,6 +46,7 @@ import SocialPage from "@/app/social/page"
 const navItems = [
   { icon: Home, label: "Home", href: "/" },
   { icon: MessageSquare, label: "Messages", href: "/messages" },
+  { icon: Film, label: "Reels", href: "/reels" },
   { icon: Brain, label: "AI Assistant", href: "/ai-assistant" },
   { icon: Phone, label: "Calls", href: "/calls" },
   { icon: Users, label: "Social", href: "/social" },
