@@ -78,7 +78,7 @@ export function ChatView({ chat, messages, onSendMessage, onMediaSelect }: ChatV
         behavior: "smooth",
       })
     }
-  }, [scrollRef]) //Corrected dependency
+  }, [messages]) // Scroll when messages update
 
   const handleSend = () => {
     if (messageText.trim()) {
@@ -101,7 +101,7 @@ export function ChatView({ chat, messages, onSendMessage, onMediaSelect }: ChatV
   }
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-[100dvh] bg-background relative">
       {/* Chat Header */}
       <div className="h-16 md:h-20 border-b flex items-center justify-between px-4 md:px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center space-x-4">
@@ -167,7 +167,7 @@ export function ChatView({ chat, messages, onSendMessage, onMediaSelect }: ChatV
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4 md:p-6" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-4 md:p-6 overflow-y-auto pb-20" ref={scrollRef}>
         <div className="space-y-4 md:space-y-6">
           {messages.map((message, index) => (
             <MessageBubble
@@ -182,7 +182,7 @@ export function ChatView({ chat, messages, onSendMessage, onMediaSelect }: ChatV
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-2 md:p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="sticky bottom-0 left-0 right-0 p-2 md:p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
         {/* Attachment Preview - Future Feature */}
         <AnimatePresence>
           {showAttachments && (
@@ -251,4 +251,3 @@ export function ChatView({ chat, messages, onSendMessage, onMediaSelect }: ChatV
     </div>
   )
 }
-

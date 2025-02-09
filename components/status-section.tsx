@@ -163,8 +163,14 @@ export function StatusSection() {
   }
 
   return (
-    <div className="py-4">
-      <div className="flex gap-4 overflow-x-auto pb-4 px-4 scrollbar-hide">
+    <div className="py-4 relative">
+      <div 
+        className="flex gap-4 overflow-x-auto pb-4 px-4 scrollbar-hide touch-pan-x cursor-grab active:cursor-grabbing"
+        style={{
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch'
+        }}
+      >
         {/* Add Story Button */}
         <div className="flex flex-col items-center gap-1 min-w-[80px] cursor-pointer group">
           <div className="relative">
@@ -200,10 +206,11 @@ export function StatusSection() {
         </div>
 
         {/* Story Previews */}
-        {stories.filter(s => s.username !== "Your Story").map((story) => (
+        {stories.filter(s => s.username !== "Your Story").map((story, index) => (
           <button
             key={story.id}
             className="flex flex-col items-center gap-1 min-w-[80px] group"
+            style={{ scrollSnapAlign: 'start' }}
             onClick={() => handleStoryOpen(story)}
           >
             <div className="relative">
