@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { motion, AnimatePresence } from "framer-motion";
-import { Post } from './post';
-import { Button } from "@/components/ui/button";
-import { RefreshCw, TrendingUp, Clock } from "lucide-react";
+"use client"
+
+import { useState } from 'react'
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { motion, AnimatePresence } from "framer-motion"
+import { Post } from './post'
+import { Button } from "@/components/ui/button"
+import { RefreshCw, TrendingUp, Clock } from "lucide-react"
+import { Stories } from './stories'
 
 interface FeedPost {
   id: string | number;
@@ -20,6 +23,8 @@ interface FeedPost {
   categories: string[];
   isSponsored?: boolean;
   timestamp: string;
+  isPremium?: boolean;
+  isVerified?: boolean;
 }
 
 interface FeedProps {
@@ -42,7 +47,9 @@ const Feed: React.FC<FeedProps> = ({ posts }) => {
       isLiked: false,
       isBookmarked: false,
       categories: ["General"],
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      isPremium: false,
+      isVerified: false
     }
   ];
 
@@ -90,8 +97,13 @@ const Feed: React.FC<FeedProps> = ({ posts }) => {
         </div>
       </div>
 
+      {/* Stories Section */}
+      <div className="px-4">
+        <Stories />
+      </div>
+
       {/* Posts List */}
-      <ScrollArea className="h-[calc(100vh-12rem)] min-h-[400px]">
+      <ScrollArea className="h-[calc(100vh-16rem)] min-h-[400px]">
         <div className="space-y-4 px-4">
           <AnimatePresence mode="popLayout">
             {displayPosts.map((post, index) => (
