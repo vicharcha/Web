@@ -1,4 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
+
+// Make route dynamic
+export const dynamic = 'force-dynamic';
 import { createPost, getPosts, deletePost } from '@/lib/db/client'
 import { PostCategories, type PostCategory } from '@/lib/db'
 
