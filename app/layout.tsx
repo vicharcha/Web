@@ -73,7 +73,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
               <div className="flex flex-1">
                 <Sidebar />
                 <main className="flex-1 overflow-y-auto">
-                  <div className="container mx-auto p-4 pt-16 pb-20 md:pt-4 md:pb-4">
+                  <div className="container mx-auto p-4 pt-16 pb-20 md:pt-4 md:pb-4 responsive-container">
                     {children}
                   </div>
                 </main>

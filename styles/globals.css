@@ -92,3 +92,34 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Add specific UI fixes and compatibility styles for different views */
+@media (max-width: 768px) {
+  .responsive-container {
+    padding: 1rem;
+  }
+
+  .responsive-text {
+    font-size: 1rem;
+  }
+
+  .responsive-button {
+    width: 100%;
+    padding: 0.75rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .responsive-container {
+    padding: 2rem;
+  }
+
+  .responsive-text {
+    font-size: 1.25rem;
+  }
+
+  .responsive-button {
+    width: auto;
+    padding: 1rem 2rem;
+  }
+}
