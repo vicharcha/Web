@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { RefreshCw, TrendingUp, Clock } from "lucide-react"
 import { Stories } from './stories'
 import { PostCategories, type FeedPost } from "@/lib/types"
-import { useAuth } from "@/app/components/auth-provider"
+import { useAuth } from "@/components/auth-provider"
 import {
   Select,
   SelectContent,

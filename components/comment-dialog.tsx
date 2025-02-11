@@ -10,45 +10,25 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
-import { useAuth } from "@/app/components/auth-provider"
+import { useAuth } from "@/components/auth-provider"
 import { cn } from "@/lib/utils"
+import type { FeedPost } from "@/lib/types"
 
 interface Comment {
-  id: number;
-  username: string;
-  content: string;
-  timestamp: string;
-  likes: number;
-  isPremium?: boolean;
-}
-
-interface Post {
-  id: number;
-  username: string;
-  avatar: string;
-  verified: boolean;
-  isPremium: boolean;
-  image: string;
-  caption: string;
-  timestamp: string;
-  likes: number;
-  views: string;
-  comments: Array<{
-    id: number;
-    username: string;
-    content: string;
-    timestamp: string;
-    likes: number;
-    isPremium?: boolean;
-  }>;
+  id: number
+  username: string
+  content: string
+  timestamp: string
+  likes: number
+  isPremium?: boolean
 }
 
 interface CommentDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  post: Post;
-  onAddComment: (comment: string) => void;
-  variant?: "dialog" | "sidebar";
+  isOpen: boolean
+  onClose: () => void
+  post: FeedPost
+  onAddComment: (comment: string) => void
+  variant?: "dialog" | "sidebar"
 }
 
 export function CommentDialog({ 
@@ -58,11 +38,11 @@ export function CommentDialog({
   onAddComment,
   variant = "dialog" 
 }: CommentDialogProps) {
-  const [newComment, setNewComment] = useState("");
-  const [likedComments, setLikedComments] = useState<Set<number>>(new Set());
-  const { user } = useAuth();
-  const [comments, setComments] = useState<Comment[]>(post.comments);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [newComment, setNewComment] = useState("")
+  const [likedComments, setLikedComments] = useState<Set<number>>(new Set())
+  const { user } = useAuth()
+  const [comments, setComments] = useState<Comment[]>([]) // Initialize with empty array
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
   const handleAddComment = () => {
     if (newComment.trim()) {
@@ -73,22 +53,22 @@ export function CommentDialog({
         timestamp: new Date().toISOString(),
         likes: 0,
         isPremium: user?.isPremium,
-      };
-      setComments([...comments, comment]);
-      onAddComment?.(newComment);
-      setNewComment("");
+      }
+      setComments([...comments, comment])
+      onAddComment?.(newComment)
+      setNewComment("")
     }
-  };
+  }
 
   const toggleLike = (commentId: number) => {
-    const newLiked = new Set(likedComments);
+    const newLiked = new Set(likedComments)
     if (newLiked.has(commentId)) {
-      newLiked.delete(commentId);
+      newLiked.delete(commentId)
     } else {
-      newLiked.add(commentId);
+      newLiked.add(commentId)
     }
-    setLikedComments(newLiked);
-  };
+    setLikedComments(newLiked)
+  }
 
   const CommentContent = () => (
     <>
@@ -96,11 +76,11 @@ export function CommentDialog({
         <div className="text-lg font-semibold text-white">Comments ({comments.length})</div>
         <div className="flex items-center gap-2 text-sm text-white/90">
           <Avatar className="w-6 h-6">
-            <AvatarImage src={post.avatar} />
+            <AvatarImage src={post.userImage} />
             <AvatarFallback>{post.username[0]}</AvatarFallback>
           </Avatar>
           <span>{post.username}</span>
-          {post.verified && (
+          {post.isVerified && (
             <div className="h-4 w-4 bg-blue-500 rounded-full flex items-center justify-center">
               <Check className="h-3 w-3 text-white" />
             </div>
@@ -137,17 +117,17 @@ export function CommentDialog({
                   <span className="text-xs text-white/60">
                     {(() => {
                       try {
-                        const date = new Date(comment.timestamp);
-                        const now = new Date();
-                        const diff = (now.getTime() - date.getTime()) / 1000;
+                        const date = new Date(comment.timestamp)
+                        const now = new Date()
+                        const diff = (now.getTime() - date.getTime()) / 1000
                         
-                        if (diff < 60) return 'Just now';
-                        if (diff < 3600) return `${Math.floor(diff/60)}m`;
-                        if (diff < 86400) return `${Math.floor(diff/3600)}h`;
-                        if (diff < 604800) return `${Math.floor(diff/86400)}d`;
-                        return format(date, "MMM d");
+                        if (diff < 60) return 'Just now'
+                        if (diff < 3600) return `${Math.floor(diff/60)}m`
+                        if (diff < 86400) return `${Math.floor(diff/3600)}h`
+                        if (diff < 604800) return `${Math.floor(diff/86400)}d`
+                        return format(date, "MMM d")
                       } catch (e) {
-                        return "Invalid date";
+                        return "Invalid date"
                       }
                     })()}
                   </span>
@@ -208,8 +188,8 @@ export function CommentDialog({
           className="flex-1 bg-white/10 border-none text-white placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/20"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleAddComment();
+              e.preventDefault()
+              handleAddComment()
             }
           }}
         />
@@ -228,7 +208,7 @@ export function CommentDialog({
         </Button>
       </div>
     </>
-  );
+  )
 
   if (variant === "sidebar") {
     return (
@@ -258,7 +238,7 @@ export function CommentDialog({
           </motion.div>
         )}
       </AnimatePresence>
-    );
+    )
   }
 
   return (
@@ -267,5 +247,5 @@ export function CommentDialog({
         <CommentContent />
       </DialogContent>
     </Dialog>
-  );
+  )
 }

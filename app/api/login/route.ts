@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Make route dynamic
 export const dynamic = 'force-dynamic';
-import { createUser, getUser } from '@/lib/db/client';
+
+// Import from our mock db instead of Cassandra
+import { createUser, getUser } from '@/lib/db';
 import type { User } from '@/lib/types';
 
 export async function POST(req: NextRequest) {
@@ -32,17 +34,11 @@ export async function POST(req: NextRequest) {
       };
 
       user = await createUser(newUser);
-    } else {
-      // Update last active time
-      await createUser({
-        ...user,
-        lastActive: new Date().toISOString()
-      });
     }
 
     return NextResponse.json({
       user,
-      token: 'dummy-token' // In a real app, generate a proper JWT token here
+      token: 'demo-token' // Mock token for demo
     });
   } catch (error) {
     console.error('Error during login:', error);
@@ -64,7 +60,7 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    const user = await getUser(phoneNumber);
+    let user = await getUser(phoneNumber);
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -73,13 +69,13 @@ export async function PUT(req: NextRequest) {
     }
 
     // Update user verification status
-    await createUser({
+    user = await createUser({
       ...user,
       verificationStatus,
       lastActive: new Date().toISOString()
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(user);
   } catch (error) {
     console.error('Error updating verification status:', error);
     return NextResponse.json(

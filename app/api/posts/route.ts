@@ -1,93 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Make route dynamic
-export const dynamic = 'force-dynamic';
-import { createPost, getPosts, deletePost } from '@/lib/db/client'
-import { PostCategories, type PostCategory } from '@/lib/db'
-
-export async function POST(req: NextRequest) {
-  try {
-    const data = await req.json()
-    const { content, category, mediaUrls = [], userId } = data
-
-    // Validate category
-    if (!Object.values(PostCategories).includes(category)) {
-      return NextResponse.json(
-        { error: 'Invalid category' },
-        { status: 400 }
-      )
-    }
-
-    // Check if content should be age restricted
-    const isAdultContent = category === PostCategories.ADULT
-
-    const post = await createPost({
-      userId,
-      content,
-      category,
-      ageRestricted: isAdultContent,
-      mediaUrls
-    })
-
-    return NextResponse.json(post)
-  } catch (error) {
-    console.error('Error creating post:', error)
-    return NextResponse.json(
-      { error: 'Failed to create post' },
-      { status: 500 }
-    )
-  }
-}
+import { createPost, getPosts } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   try {
-    const searchParams = new URL(req.url).searchParams
-    const category = searchParams.get('category')
-    const userAge = parseInt(searchParams.get('userAge') || '0', 10)
+    const { searchParams } = new URL(req.url);
+    const category = searchParams.get('category') as any;
+    const ageRestricted = searchParams.get('ageRestricted') === 'true';
 
-    // Filter out adult content for underage users
-    const isAdultAllowed = userAge >= 18
-    const showAdultContent = category === PostCategories.ADULT && isAdultAllowed
+    const posts = await getPosts();
 
-    const posts = await getPosts({
-      category: category ? (category as PostCategory) : undefined,
-      ageRestricted: showAdultContent ? undefined : false
-    })
+    // Apply filters if provided
+    let filteredPosts = posts;
+    if (category) {
+      filteredPosts = filteredPosts.filter(post => post.category === category);
+    }
+    if (ageRestricted !== undefined) {
+      filteredPosts = filteredPosts.filter(post => post.ageRestricted === ageRestricted);
+    }
 
-    return NextResponse.json(posts)
+    return NextResponse.json(filteredPosts);
   } catch (error) {
-    console.error('Error fetching posts:', error)
+    console.error('Error fetching posts:', error);
     return NextResponse.json(
       { error: 'Failed to fetch posts' },
       { status: 500 }
-    )
+    );
   }
 }
 
-export async function DELETE(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const { id, userId } = await req.json()
-
-    await deletePost(id, userId)
-    return NextResponse.json({ success: true })
+    const post = await req.json();
+    const newPost = await createPost(post);
+    return NextResponse.json(newPost);
   } catch (error) {
-    console.error('Error deleting post:', error)
-    let status = 500
-    let message = 'Failed to delete post'
-
-    if (error instanceof Error) {
-      if (error.message === 'Post not found') {
-        status = 404
-        message = 'Post not found'
-      } else if (error.message === 'Unauthorized') {
-        status = 403
-        message = 'Unauthorized'
-      }
-    }
-
+    console.error('Error creating post:', error);
     return NextResponse.json(
-      { error: message },
-      { status }
-    )
+      { error: 'Failed to create post' },
+      { status: 500 }
+    );
   }
 }

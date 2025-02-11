@@ -19,42 +19,47 @@ export default function ReelsPage() {
   }
 
   return (
-    <div className="container py-6 max-w-7xl">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <Film className="h-8 w-8" />
-          <h1 className="text-3xl font-bold">Reels</h1>
-        </div>
-        <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2 bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 text-white hover:opacity-90">
-              <Plus className="h-5 w-5" />
-              Create Reel
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-xl">
-            <DialogHeader>
-              <DialogTitle>Create New Reel</DialogTitle>
-            </DialogHeader>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <FileUpload 
-                onFileSelect={handleFileSelect} 
-                maxSize={100} 
-                allowedTypes={{ video: true }}
-              />
-            </motion.div>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="flex-1 w-full">
+      <div className="w-full mx-auto pt-4 md:pt-6">
+        <div className="w-full mx-auto px-2 md:px-6 max-w-3xl">
+          <div className="flex items-center justify-between mb-4 md:mb-6">
+            <div className="flex items-center gap-2 md:gap-3">
+              <Film className="h-6 w-6" />
+              <h1 className="text-xl md:text-2xl font-bold">Reels</h1>
+            </div>
+            <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-1.5 bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 text-white hover:opacity-90">
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden md:inline">Create Reel</span>
+                  <span className="md:hidden">New</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-xl">
+                <DialogHeader>
+                  <DialogTitle>Create New Reel</DialogTitle>
+                </DialogHeader>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <FileUpload 
+                    onFileSelect={handleFileSelect} 
+                    maxSize={100} 
+                    allowedTypes={{ video: true }}
+                  />
+                </motion.div>
+              </DialogContent>
+            </Dialog>
+          </div>
 
-      <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-violet-500/10 rounded-xl blur-xl" />
-        <div className="relative">
-          <SidebarReels />
+          <div className="relative mt-4">
+            <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-violet-500/10 rounded-lg blur-xl" />
+            <div className="relative bg-background/80 backdrop-blur-sm rounded-lg p-3 md:p-4">
+              <SidebarReels />
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1,210 +1,249 @@
 "use client"
 
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { useMediaQuery } from "@/hooks/use-media-query"
-import { ChatList } from "./components/chat-list"
+import { useEffect, useState } from "react"
+import { useResponsive } from "@/hooks/use-responsive"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/components/auth-provider"
 import { ChatView } from "./components/chat-view"
-import { Button } from "@/components/ui/button"
-import { MessageSquarePlus, ArrowLeft } from "lucide-react"
+import { ChatList } from "./components/chat-list"
+import { ArrowLeft } from "lucide-react"
+import { cn } from "@/lib/utils"
+import type { ChatWithDetails, Message, IndividualChat } from "@/lib/types"
 
-// Helper function to format phone number
-function formatPhoneNumber(number: string) {
-  const cleaned = number.replace(/\D/g, "")
-  const match = cleaned.match(/^(\d{2})(\d{5})(\d{5})$/)
-  if (match) {
-    return `+${match[1]} ${match[2]} ${match[3]}`
-  }
-  return number
-}
-
-interface Message {
-  id: number
-  sender: "you" | "them"
-  content: string
-  time: string
-  status?: "sent" | "delivered" | "read"
-  media?: {
-    url: string
-    caption: string
-  }
-}
-
-interface Chat {
-  id: string
-  name: string
-  avatar: string
-  lastMessage: string
-  time: string
-  unread: number
-  status: string
-  hasMedia: boolean
-  isTyping: boolean
-  isFavorite: boolean
-  isPremium?: boolean
-  isArchived?: boolean
-  isGroup?: boolean
-}
-
-// Sample data
-const chats: Chat[] = [
+const demoChats: IndividualChat[] = [
   {
-    id: "1",
-    name: formatPhoneNumber("919182883649"),
+    id: "demo-chat-1",
+    name: "Alice Johnson",
     avatar: "/placeholder-user.jpg",
-    lastMessage: "Hi, how are you?",
-    time: "now",
-    unread: 1,
+    participants: ["1234567890", "alice123"],
+    participantDetails: [
+      {
+        id: "alice123",
+        name: "Alice Johnson",
+        avatar: "/placeholder-user.jpg",
+        status: "online",
+        lastSeen: new Date().toISOString(),
+        isPremium: true
+      }
+    ],
     status: "online",
-    hasMedia: false,
-    isTyping: true,
-    isFavorite: true,
-    isPremium: true,
-  },
-  {
-    id: "2",
-    name: "Project Team",
-    avatar: "/placeholder-user.jpg",
-    lastMessage: "Meeting at 3 PM",
-    time: "10:15 am",
-    unread: 3,
-    status: "online",
-    hasMedia: false,
     isTyping: false,
-    isFavorite: true,
-    isArchived: false,
-    isGroup: true,
+    isGroup: false,
+    lastMessage: {
+      id: "msg-1",
+      content: "Hey! How's it going?",
+      senderId: "alice123",
+      chatId: "demo-chat-1",
+      createdAt: new Date(Date.now() - 1000 * 60 * 5),
+      status: "delivered"
+    },
+    unreadCount: 2,
+    createdAt: new Date(),
+    updatedAt: new Date()
   },
+  {
+    id: "demo-chat-2",
+    name: "Team Project",
+    avatar: "/placeholder-user.jpg",
+    participants: ["1234567890", "bob123", "carol123"],
+    participantDetails: [
+      {
+        id: "bob123",
+        name: "Bob Smith",
+        avatar: "/placeholder-user.jpg",
+        status: "offline",
+        lastSeen: new Date().toISOString(),
+        isPremium: false
+      },
+      {
+        id: "carol123",
+        name: "Carol White",
+        avatar: "/placeholder-user.jpg",
+        status: "online",
+        lastSeen: new Date().toISOString(),
+        isPremium: true
+      }
+    ],
+    status: "online",
+    isTyping: true,
+    isGroup: false,
+    lastMessage: {
+      id: "msg-2",
+      content: "Let's schedule a meeting for tomorrow",
+      senderId: "bob123",
+      chatId: "demo-chat-2",
+      createdAt: new Date(Date.now() - 1000 * 60 * 30),
+      status: "read"
+    },
+    unreadCount: 5,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: "demo-chat-3",
+    name: "Support Chat",
+    avatar: "/placeholder-user.jpg",
+    participants: ["1234567890", "support123"],
+    participantDetails: [
+      {
+        id: "support123",
+        name: "Customer Support",
+        avatar: "/placeholder-user.jpg",
+        status: "online",
+        lastSeen: new Date().toISOString(),
+        isPremium: true
+      }
+    ],
+    status: "online",
+    isTyping: false,
+    isGroup: false,
+    lastMessage: {
+      id: "msg-3",
+      content: "How can I help you today?",
+      senderId: "support123",
+      chatId: "demo-chat-3",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60),
+      status: "read"
+    },
+    unreadCount: 0,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
 ]
 
-// Sample messages
-const sampleMessages: Record<string, Message[]> = {
-  "1": [
-    {
-      id: 1,
-      sender: "them",
-      content: "Hi, how are you?",
-      time: "10:00 AM",
-      status: "read",
-    },
-    {
-      id: 2,
-      sender: "you",
-      content: "I'm good, thanks for asking! How are you?",
-      time: "10:01 AM",
-      status: "read",
-    },
-    {
-      id: 3,
-      sender: "them",
-      content: "I'm doing great! Would you like to get coffee sometime?",
-      time: "10:02 AM",
-      status: "delivered",
-    },
-  ],
-  "2": [
-    {
-      id: 1,
-      sender: "them",
-      content: "Team, let's meet at 3 PM today.",
-      time: "9:30 AM",
-      status: "read",
-    },
-    {
-      id: 2,
-      sender: "you",
-      content: "Sure, I'll be there!",
-      time: "9:35 AM",
-      status: "read",
-    },
-  ],
-}
-
 export default function MessagesPage() {
-  const [selectedChat, setSelectedChat] = useState<string | null>(null)
-  const isMobile = useMediaQuery("(max-width: 768px)")
-  const isHalfDesktop = useMediaQuery("(min-width: 769px) and (max-width: 1200px)")
+  // Mock a logged-in user for demo
+  const mockUser = {
+    phoneNumber: "1234567890",
+    name: "Demo User",
+    avatar: "/placeholder-user.jpg"
+  }
+  const { user = mockUser, loading = false } = useAuth()
+  const router = useRouter()
+  const [selectedChat, setSelectedChat] = useState<ChatWithDetails | null>(demoChats[0])
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "demo-msg-1",
+      content: "👋 Hi there! Hope you're doing well!",
+      senderId: "alice123",
+      chatId: "demo-chat-1",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+      status: "read"
+    },
+    {
+      id: "demo-msg-2",
+      content: "Thanks! Just checking out the new messaging interface.",
+      senderId: "1234567890",
+      chatId: "demo-chat-1",
+      createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
+      status: "read"
+    },
+    {
+      id: "demo-msg-3",
+      content: "It looks great! Love the new features 🎉",
+      senderId: "alice123",
+      chatId: "demo-chat-1",
+      createdAt: new Date(Date.now() - 1000 * 60 * 29), // 29 minutes ago
+      status: "delivered"
+    },
+    {
+      id: "demo-msg-4",
+      content: "Have you tried the emoji picker? 😊",
+      senderId: "alice123",
+      chatId: "demo-chat-1",
+      createdAt: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
+      status: "delivered"
+    }
+  ])
+  const [showChatView, setShowChatView] = useState(false)
+  const { isMobile } = useResponsive()
 
-  const handleSendMessage = (message: string) => {
-    console.log("Sending message:", message)
+  useEffect(() => {
+    if (!loading && !user) {
+      const savedUser = localStorage.getItem("user")
+      if (!savedUser) {
+        router.push("/login")
+      }
+    }
+  }, [user, loading, router])
+
+  // Skip loading check for demo
+  if (!user) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    )
   }
 
-  const handleMediaSelect = (file: File) => {
-    console.log("Selected file:", file)
-  }
+  const handleSendMessage = async (message: string) => {
+    if (!selectedChat) return
 
-  // Empty state
-  const EmptyState = () => (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-background">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md mx-auto">
-        <div className="inline-flex h-20 w-20 rounded-full bg-primary/10 items-center justify-center mb-8">
-          <MessageSquarePlus className="h-10 w-10 text-primary" />
-        </div>
-        <h2 className="text-2xl font-bold tracking-tight mb-4">Select a chat to start messaging</h2>
-        <p className="text-muted-foreground mb-8">
-          Choose from your existing conversations or start a new chat with someone.
-        </p>
-        <Button size="lg" className="rounded-full">
-          <MessageSquarePlus className="mr-2 h-5 w-5" />
-          Start a New Chat
-        </Button>
-      </motion.div>
-    </div>
-  )
+    const newMessage: Message = {
+      id: `msg-${Date.now()}`,
+      content: message,
+      senderId: user.phoneNumber,
+      chatId: selectedChat.id,
+      createdAt: new Date(),
+      status: "sent"
+    }
+    setMessages(prev => [...prev, newMessage])
+  }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background">
-      {/* Chat List with Animation */}
-      <AnimatePresence mode="wait">
-        {(!isMobile || !selectedChat) && (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: "auto", opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className={`overflow-hidden ${isMobile ? "w-full" : "w-[380px]"} ${isHalfDesktop ? "w-[300px]" : ""}`}
-          >
-            <ChatList chats={chats} selectedChat={selectedChat} onSelectChat={setSelectedChat} />
-          </motion.div>
+    <div className="relative flex h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)] overflow-hidden bg-background md:flex-row">
+      {/* Sidebar - Chat List */}
+      <aside
+        className={cn(
+          "w-full md:w-[320px] lg:w-[380px] shrink-0 border-r",
+          "transition-transform duration-300 ease-in-out",
+          "md:relative md:translate-x-0",
+          {
+            "absolute inset-0 z-20 translate-x-0 bg-background": !showChatView && isMobile,
+            "absolute inset-0 z-20 -translate-x-full": showChatView && isMobile
+          }
         )}
-      </AnimatePresence>
+      >
+        <ChatList
+          chats={demoChats}
+          selectedChat={selectedChat?.id || ""}
+          onSelectChat={(chatId) => {
+            const chat = demoChats.find(c => c.id === chatId)
+            if (chat) {
+              setSelectedChat(chat)
+              setShowChatView(true)
+            }
+          }}
+        />
+      </aside>
 
-      {/* Chat View or Empty State with Animation */}
-      <AnimatePresence mode="wait">
-        {(!isMobile || selectedChat) && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex-1 relative"
-          >
-            {selectedChat ? (
-              <>
-                {isMobile && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute top-2 left-2 z-10"
-                    onClick={() => setSelectedChat(null)}
-                  >
-                    <ArrowLeft className="h-6 w-6" />
-                  </Button>
-                )}
-                <ChatView
-                  chat={chats.find((c) => c.id === selectedChat)!}
-                  messages={sampleMessages[selectedChat] || []}
-                  onSendMessage={handleSendMessage}
-                  onMediaSelect={handleMediaSelect}
-                />
-              </>
-            ) : (
-              <EmptyState />
-            )}
-          </motion.div>
+      {/* Chat View */}
+      <main 
+        className={cn(
+          "flex-1 flex flex-col",
+          "transition-transform duration-300 ease-in-out",
+          "relative md:translate-x-0",
+          {
+            "absolute inset-0 z-10 translate-x-full": !showChatView && isMobile,
+            "absolute inset-0 z-10 translate-x-0": showChatView && isMobile
+          }
         )}
-      </AnimatePresence>
+      >
+        {selectedChat ? (
+          <ChatView
+            currentUserId={user.phoneNumber}
+            chat={selectedChat}
+            messages={messages}
+            onSendMessage={handleSendMessage}
+            onMediaSelect={(file) => console.log("Media selected:", file)}
+            onBack={() => setShowChatView(false)}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            <p>Select a chat to start messaging</p>
+          </div>
+        )}
+      </main>
     </div>
   )
 }
-

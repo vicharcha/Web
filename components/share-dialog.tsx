@@ -18,15 +18,12 @@ import {
   Mail,
   MessageCircle
 } from "lucide-react"
+import type { FeedPost } from "@/lib/types"
 
 interface ShareDialogProps {
   isOpen: boolean
   onClose: () => void
-  post: {
-    id: number
-    username: string
-    caption: string
-  }
+  post: FeedPost
 }
 
 const shareOptions = [
@@ -58,8 +55,12 @@ export function ShareDialog({ isOpen, onClose, post }: ShareDialogProps) {
     console.log(`Sharing to ${platform}:`, {
       url: shareUrl,
       title: `Post by ${post.username}`,
-      text: post.caption
+      text: post.content,
+      image: post.mediaUrls?.[0]
     })
+
+    // Close dialog after sharing
+    onClose()
   }
 
   return (
@@ -114,11 +115,27 @@ export function ShareDialog({ isOpen, onClose, post }: ShareDialogProps) {
             <p className="text-sm font-medium">Post Preview</p>
           </div>
           <p className="text-sm text-muted-foreground truncate">
-            {post.caption || "No caption"}
+            {post.content || "No content"}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Posted by @{post.username}
-          </p>
+          {post.mediaUrls?.[0] && (
+            <div className="mt-2">
+              <img
+                src={post.mediaUrls[0]}
+                alt="Post media"
+                className="w-full h-32 object-cover rounded-md"
+              />
+            </div>
+          )}
+          <div className="flex items-center gap-2 mt-2">
+            <p className="text-xs text-muted-foreground">
+              Posted by @{post.username}
+            </p>
+            {post.isVerified && (
+              <div className="h-3 w-3 bg-blue-500 rounded-full flex items-center justify-center">
+                <Check className="h-2 w-2 text-white" />
+              </div>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

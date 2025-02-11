@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useAuth } from "@/app/components/auth-provider" // Updated import path
+import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 
 export function LoginForm() {
-  const { login, verifyOTP } = useAuth()
+  const { login, verifyOtp } = useAuth()
   const [phoneNumber, setPhoneNumber] = useState("")
   const [otp, setOtp] = useState("")
   const [isOtpSent, setIsOtpSent] = useState(false)
@@ -36,13 +36,9 @@ const handleVerifyOTP = async (e: React.FormEvent) => {
   setIsLoading(true)
 
   try {
-    const isVerified = await verifyOTP(otp)
-    if (isVerified) {
-      toast.success("Successfully logged in!")
-      // Router will handle redirect in auth provider
-    } else {
-      toast.error("Invalid OTP")
-    }
+    await verifyOtp(otp)
+    toast.success("Successfully logged in!")
+    // Router will handle redirect in auth provider
   } catch (error) {
     toast.error(error instanceof Error ? error.message : "Failed to verify OTP")
   } finally {

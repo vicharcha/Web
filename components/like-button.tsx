@@ -6,11 +6,12 @@ import { useState } from "react"
 
 interface LikeButtonProps {
   initialLikes: number
+  isLiked?: boolean
   onLike: () => void
 }
 
-export function LikeButton({ initialLikes, onLike }: LikeButtonProps) {
-  const [liked, setLiked] = useState(false)
+export function LikeButton({ initialLikes, isLiked = false, onLike }: LikeButtonProps) {
+  const [liked, setLiked] = useState(isLiked)
   const [likeCount, setLikeCount] = useState(initialLikes)
 
   const handleLike = () => {
@@ -56,4 +57,3 @@ export function LikeButton({ initialLikes, onLike }: LikeButtonProps) {
     </button>
   )
 }
-
