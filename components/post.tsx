@@ -15,42 +15,14 @@ import { CommentDialog } from "./comment-dialog";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ShareDialog } from "./share-dialog";
-
-interface PostProps {
-  id: number | string;
-  username: string;
-  userImage: string;
-  content: string;
-  image?: string;
-  video?: string;
-  likes: number;
-  comments: number;
-  shares: number;
-  isLiked: boolean;
-  isBookmarked: boolean;
-  categories: string[];
-  isSponsored?: boolean;
-  isPremium?: boolean;
-  isVerified?: boolean;
-  timestamp?: string;
-}
-
-interface Comment {
-  id: number;
-  username: string;
-  content: string;
-  timestamp: string;
-  likes: number;
-  isPremium?: boolean;
-}
+import { type FeedPost, type PostCategory, PostCategories } from "@/lib/types";
 
 export function Post({
   id,
   username,
   userImage,
   content,
-  image,
-  video,
+  mediaUrls,
   likes,
   comments,
   shares,
@@ -61,13 +33,14 @@ export function Post({
   isPremium,
   isVerified,
   timestamp = new Date().toISOString()
-}: PostProps) {
+}: FeedPost) {
+  const [image, video] = mediaUrls || [];
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
   const [showComments, setShowComments] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [localLikes, setLocalLikes] = useState(likes);
-  const [localComments, setLocalComments] = useState<Comment[]>([]);
+  const [localCommentCount, setLocalCommentCount] = useState(comments);
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -75,15 +48,7 @@ export function Post({
   };
 
   const handleAddComment = (comment: string) => {
-    const newComment = {
-      id: localComments.length + 1,
-      username: "You", // You might want to get this from auth context
-      content: comment,
-      timestamp: new Date().toISOString(),
-      likes: 0,
-      isPremium: false
-    };
-    setLocalComments([...localComments, newComment]);
+    setLocalCommentCount(prev => prev + 1);
   };
 
   return (
@@ -178,11 +143,11 @@ export function Post({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowComments(true)}
-                aria-label={`Comment on post. ${comments + localComments.length} comments`}
+                aria-label={`Comment on post. ${localCommentCount} comments`}
                 className="group flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors duration-200"
               >
                 <MessageCircle className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
-                <span className="text-sm font-medium">{comments + localComments.length}</span>
+                <span className="text-sm font-medium">{localCommentCount}</span>
               </motion.button>
               <motion.button 
                 whileHover={{ scale: 1.05 }}
@@ -220,17 +185,26 @@ export function Post({
         isOpen={showComments}
         onClose={() => setShowComments(false)}
         post={{
-          id: typeof id === 'string' ? parseInt(id) : id,
+          id,
+          userId: id,
+          content,
+          category: (categories[0] as PostCategory) || PostCategories.GENERAL,
+          ageRestricted: false,
+          mediaUrls,
+          createdAt: new Date(timestamp),
+          updatedAt: new Date(timestamp),
           username,
-          avatar: userImage,
-          verified: isVerified || false,
-          isPremium: isPremium || false,
-          image: image || video || '',
-          caption: content,
-          timestamp: timestamp,
+          userImage,
           likes: localLikes,
-          views: `${Math.floor(localLikes * 2)}`,
-          comments: localComments
+          comments: localCommentCount,
+          shares,
+          isLiked,
+          isBookmarked,
+          categories,
+          isSponsored,
+          isPremium,
+          isVerified,
+          timestamp
         }}
         onAddComment={handleAddComment}
       />
@@ -240,9 +214,27 @@ export function Post({
         isOpen={showShare}
         onClose={() => setShowShare(false)}
         post={{
-          id: typeof id === 'string' ? parseInt(id) : id,
+          id,
+          userId: id,
+          content,
+          category: (categories[0] as PostCategory) || PostCategories.GENERAL,
+          ageRestricted: false,
+          mediaUrls,
+          createdAt: new Date(timestamp),
+          updatedAt: new Date(timestamp),
+          // FeedPostExtension properties
           username,
-          caption: content
+          userImage,
+          likes,
+          comments: localCommentCount,
+          shares,
+          isLiked,
+          isBookmarked,
+          categories,
+          isSponsored,
+          isPremium,
+          isVerified,
+          timestamp
         }}
       />
     </>

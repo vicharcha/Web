@@ -9,6 +9,7 @@ import { CommentDialog } from "@/components/comment-dialog"
 import { ShareDialog } from "@/components/share-dialog"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { cn } from "@/lib/utils"
+import { type FeedPost, type PostCategory, PostCategories } from "@/lib/types"
 
 interface Comment {
   id: number;
@@ -30,13 +31,8 @@ interface Reel {
   comments: number;
   shares: number;
   isVerified: boolean;
-  avatar: string;
-  verified: boolean;
   isPremium: boolean;
-  image: string;
-  caption: string;
   timestamp: string;
-  views: string;
   comments_data: Comment[];
 }
 
@@ -52,13 +48,8 @@ const reels: Reel[] = [
     comments: 89,
     shares: 45,
     isVerified: true,
-    avatar: "/placeholder-user.jpg",
-    verified: true,
     isPremium: true,
-    image: "/placeholder.mp4",
-    caption: "Beautiful sunset at the beach #sunset #vibes",
     timestamp: new Date().toISOString(),
-    views: "1.2K",
     comments_data: Array(89).fill({}).map((_, i) => ({
       id: i + 1,
       username: `user${i + 1}`,
@@ -79,13 +70,8 @@ const reels: Reel[] = [
     comments: 245,
     shares: 123,
     isVerified: false,
-    avatar: "/placeholder-user.jpg",
-    verified: false,
     isPremium: false,
-    image: "/placeholder.mp4",
-    caption: "Try this new dance trend! #dancechallenge",
     timestamp: new Date().toISOString(),
-    views: "3.5K",
     comments_data: Array(245).fill({}).map((_, i) => ({
       id: i + 1,
       username: `user${i + 1}`,
@@ -106,13 +92,8 @@ const reels: Reel[] = [
     comments: 56,
     shares: 22,
     isVerified: false,
-    avatar: "/placeholder-user.jpg",
-    verified: false,
     isPremium: true,
-    image: "/placeholder.mp4",
-    caption: "Quick tips for developers #coding #tech",
     timestamp: new Date().toISOString(),
-    views: "850",
     comments_data: Array(56).fill({}).map((_, i) => ({
       id: i + 1,
       username: `user${i + 1}`,
@@ -246,8 +227,17 @@ export function SidebarReels() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <ReelPlayer 
-              {...reel} 
+            <ReelPlayer
+              id={reel.id}
+              username={reel.username}
+              userImage={reel.userImage}
+              videoUrl={reel.videoUrl}
+              title={reel.title}
+              description={reel.description}
+              likes={reel.likes}
+              comments={reel.comments}
+              shares={reel.shares}
+              isVerified={reel.isVerified}
               onCommentClick={() => handleCommentClick(reel.id)}
               onShareClick={() => handleShareClick(reel.id)}
             />
@@ -262,8 +252,26 @@ export function SidebarReels() {
           isOpen={showComments}
           onClose={handleCommentClose}
           post={{
-            ...selectedReelData,
-            comments: selectedReelData.comments_data
+            id: selectedReelData.id.toString(),
+            userId: selectedReelData.id.toString(),
+            category: PostCategories.ENTERTAINMENT,
+            ageRestricted: false,
+            mediaUrls: [selectedReelData.videoUrl],
+            createdAt: new Date(selectedReelData.timestamp),
+            updatedAt: new Date(selectedReelData.timestamp),
+            username: selectedReelData.username,
+            userImage: selectedReelData.userImage,
+            content: selectedReelData.description,
+            likes: selectedReelData.likes,
+            comments: selectedReelData.comments_data.length,
+            shares: selectedReelData.shares,
+            isLiked: false,
+            isBookmarked: false,
+            categories: [PostCategories.ENTERTAINMENT],
+            isSponsored: false,
+            isPremium: selectedReelData.isPremium,
+            isVerified: selectedReelData.isVerified,
+            timestamp: selectedReelData.timestamp
           }}
           onAddComment={() => {}}
         />
@@ -275,9 +283,26 @@ export function SidebarReels() {
           isOpen={showShare}
           onClose={handleShareClose}
           post={{
-            id: selectedReelData.id,
+            id: selectedReelData.id.toString(),
+            userId: selectedReelData.id.toString(),
+            category: PostCategories.ENTERTAINMENT,
+            ageRestricted: false,
+            mediaUrls: [selectedReelData.videoUrl],
+            createdAt: new Date(selectedReelData.timestamp),
+            updatedAt: new Date(selectedReelData.timestamp),
             username: selectedReelData.username,
-            caption: selectedReelData.caption
+            userImage: selectedReelData.userImage,
+            content: selectedReelData.description,
+            likes: selectedReelData.likes,
+            comments: selectedReelData.comments_data.length,
+            shares: selectedReelData.shares,
+            isLiked: false,
+            isBookmarked: false,
+            categories: [PostCategories.ENTERTAINMENT],
+            isSponsored: false,
+            isPremium: selectedReelData.isPremium,
+            isVerified: selectedReelData.isVerified,
+            timestamp: selectedReelData.timestamp
           }}
         />
       )}
