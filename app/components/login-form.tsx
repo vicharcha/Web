@@ -23,15 +23,52 @@ export function LoginForm() {
 
     try {
       const formattedPhone = `+91${phoneNumber.replace(/^\+91/, '')}`
-      await fetch("/api/auth/otp", {
+      const response = await fetch("/api/auth/otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ phoneNumber: formattedPhone }),
       })
+      
+      const data = await response.json()
       setStep("otp")
-      toast.success("OTP sent successfully!")
+      
+      // Show OTP prominently for demo
+      if (data.demo && data.message) {
+        // Request notification permission
+        if (Notification.permission === "granted") {
+          new Notification("Demo OTP Code", {
+            body: `Your OTP is: ${data.otp}`,
+            icon: "/placeholder-logo.png"
+          });
+        } else if (Notification.permission !== "denied") {
+          Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+              new Notification("Demo OTP Code", {
+                body: `Your OTP is: ${data.otp}`,
+                icon: "/placeholder-logo.png"
+              });
+            }
+          });
+        }
+        
+        // Show prominent toast
+        toast.message(
+          <div className="flex flex-col items-center space-y-2">
+            <p className="font-semibold">Demo OTP Generated</p>
+            <p className="text-2xl font-mono bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded">
+              {data.otp}
+            </p>
+          </div>,
+          {
+            duration: 10000, // Show for 10 seconds
+            position: "top-center"
+          }
+        );
+      } else {
+        toast.success("OTP sent successfully!")
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to send OTP")
     } finally {
@@ -66,7 +103,8 @@ export function LoginForm() {
           setStep("username")
           toast.success("Phone number verified! Please choose a username.")
         } else if (data.user) {
-          await login(`+91${phoneNumber.replace(/^\+91/, '')}`, data.user.username)
+          await login(`+91${phoneNumber.replace(/^\+91/, '')}`, data.user.username || '')
+          await verifyOtp(otp)
           toast.success("Successfully logged in!")
         }
       }

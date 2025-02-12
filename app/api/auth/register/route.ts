@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     const existingUsername = await executeQuery(
       "SELECT id FROM social_network.users WHERE username = ? ALLOW FILTERING",
       [username]
-    )
+    ) || { rowLength: 0, rows: [] }
 
     if (existingUsername.rowLength > 0) {
       return NextResponse.json(
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     const pendingUser = await executeQuery(
       "SELECT id FROM social_network.pending_users WHERE phone_number = ? ALLOW FILTERING",
       [phoneNumber]
-    )
+    ) || { rowLength: 0, rows: [] }
 
     if (pendingUser.rowLength === 0) {
       return NextResponse.json(
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
     await executeQuery(
       `INSERT INTO social_network.users (
         id, username, phone_number, created_at, last_active, is_verified, phone_verified
-      ) VALUES (?, ?, ?, toTimestamp(now()), toTimestamp(now()), false, true)`,
+      ) VALUES (?, ?, ?, dateof(now()), dateof(now()), false, true)`,
       [userId, username, phoneNumber]
     )
 
@@ -78,9 +78,13 @@ export async function POST(req: NextRequest) {
     const userData = await executeQuery(
       "SELECT id, username, phone_number, is_verified FROM social_network.users WHERE id = ?",
       [userId]
-    )
+    ) || { rowLength: 0, rows: [{}] }
 
-    return NextResponse.json({ user: userData.rows[0] })
+    return NextResponse.json({ 
+      success: true,
+      user: userData.rows[0],
+      message: "Registration completed successfully" 
+    })
   } catch (error) {
     console.error("Registration error:", error)
     return NextResponse.json(

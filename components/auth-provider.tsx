@@ -110,12 +110,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('user', JSON.stringify(user))
       localStorage.removeItem('pendingAuth')
       
-      // For new users, redirect to verification page
-      if (!user.digiLockerVerified) {
-        router.push('/verify')
-      } else {
-        router.push('/')
-      }
+      // Always redirect to home for demo
+      router.push('/')
     } finally {
       setLoading(false)
     }

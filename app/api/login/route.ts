@@ -3,13 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 // Make route dynamic
 export const dynamic = 'force-dynamic';
 
-// Import from our mock db instead of Cassandra
-import { createUser, getUser } from '@/lib/db';
+import { findUserByPhone } from '@/lib/db';
 import type { User } from '@/lib/types';
 
 export async function POST(req: NextRequest) {
   try {
-    const { phoneNumber, name } = await req.json();
+    const { phoneNumber } = await req.json();
 
     if (!phoneNumber) {
       return NextResponse.json(
@@ -19,48 +18,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if user exists
-    let user = await getUser(phoneNumber);
+    const user = await findUserByPhone(phoneNumber);
 
-    if (!user) {
-      // Create new user if doesn't exist
-      const newUser: User = {
-        phoneNumber,
-        name: name || phoneNumber, // Use phone number as name if not provided
-        verificationStatus: 'unverified',
-        isPremium: false,
-        digiLockerVerified: false,
-        joinedDate: new Date().toISOString(),
-        lastActive: new Date().toISOString()
-      };
-
-      user = await createUser(newUser);
-    }
-
-    return NextResponse.json({
-      user,
-      token: 'demo-token' // Mock token for demo
-    });
-  } catch (error) {
-    console.error('Error during login:', error);
-    return NextResponse.json(
-      { error: 'Login failed' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(req: NextRequest) {
-  try {
-    const { phoneNumber, verificationStatus } = await req.json();
-
-    if (!phoneNumber || !verificationStatus) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
-
-    let user = await getUser(phoneNumber);
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -68,18 +27,12 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // Update user verification status
-    user = await createUser({
-      ...user,
-      verificationStatus,
-      lastActive: new Date().toISOString()
-    });
-
-    return NextResponse.json(user);
+    // For demo, just return the user
+    return NextResponse.json({ user });
   } catch (error) {
-    console.error('Error updating verification status:', error);
+    console.error('Error during login:', error);
     return NextResponse.json(
-      { error: 'Failed to update verification status' },
+      { error: 'Login failed' },
       { status: 500 }
     );
   }
@@ -97,7 +50,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const user = await getUser(phoneNumber);
+    const user = await findUserByPhone(phoneNumber);
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },

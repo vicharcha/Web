@@ -287,30 +287,78 @@ export async function initializeCassandra() {
   }
 }
 
-// Connect to Cassandra
+// Maximum number of connection retries
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000; // 2 seconds
+
+// Connect to Cassandra with retries
 export async function connectToCassandra() {
-  try {
-    await client.connect();
-    console.log('Connected to Cassandra');
-    await initializeCassandra();
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error('Failed to connect to Cassandra:', error.message);
-      if ('code' in error) {
-        console.error('Error code:', (error as any).code);
+  let retries = 0;
+  
+  while (retries < MAX_RETRIES) {
+    try {
+      // Try to execute a simple query to check connection
+      try {
+        await client.execute('SELECT now() FROM system.local');
+      } catch {
+        await client.connect();
+        console.log('Connected to Cassandra');
       }
+      
+      await initializeCassandra();
+      return;
+    } catch (error) {
+      retries++;
+      const isLastAttempt = retries === MAX_RETRIES;
+      
+      if (error instanceof Error) {
+        console.error(`Cassandra connection attempt ${retries} failed:`, error.message);
+        if ('code' in error) {
+          console.error('Error code:', (error as any).code);
+        }
+      }
+
+      if (isLastAttempt) {
+        console.error('Max connection retries reached');
+        throw error;
+      }
+
+      console.log(`Retrying in ${RETRY_DELAY/1000} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
     }
-    throw error;
   }
 }
 
-// Query helper functions
+// Query helper functions with retry logic
 export async function executeQuery(query: string, params: any[] = []) {
-  try {
-    return await client.execute(query, params, { prepare: true });
-  } catch (error) {
-    console.error('Error executing query:', error);
-    throw error;
+  let retries = 0;
+  
+  while (retries < MAX_RETRIES) {
+    try {
+      return await client.execute(query, params, { prepare: true });
+    } catch (error) {
+      retries++;
+      const isLastAttempt = retries === MAX_RETRIES;
+      
+      if (error instanceof Error) {
+        const isTableNotExist = error.message.includes('table') && error.message.includes('does not exist');
+        
+        // If table doesn't exist, try to reinitialize schema
+        if (isTableNotExist && !isLastAttempt) {
+          console.log('Table not found, attempting to reinitialize schema...');
+          await initializeCassandra();
+          continue;
+        }
+        
+        console.error(`Query attempt ${retries} failed:`, error.message);
+      }
+
+      if (isLastAttempt) {
+        throw error;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+    }
   }
 }
 
