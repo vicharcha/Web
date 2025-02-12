@@ -7,7 +7,7 @@ import type { User } from "@/lib/types"
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (phoneNumber: string) => Promise<void>
+  login: (phoneNumber: string, username: string) => Promise<void>
   verifyOtp: (otp: string) => Promise<void>
   logout: () => void
 }
@@ -64,15 +64,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const login = async (phoneNumber: string): Promise<void> => {
+  const login = async (phoneNumber: string, username: string): Promise<void> => {
     setLoading(true)
     try {
-      const response = await fetch("/api/login", {
+      const response = await fetch("/api/auth/otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ phoneNumber }),
+        body: JSON.stringify({ phoneNumber, username }),
       })
 
       if (!response.ok) {
@@ -92,24 +92,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const phoneNumber = localStorage.getItem('pendingAuth')
       if (!phoneNumber) throw new Error("No pending authentication")
 
-      const response = await fetch("/api/login", {
+      const response = await fetch("/api/auth/otp", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           phoneNumber,
-          verificationStatus: "verified",
+          otp
         }),
       })
 
       if (!response.ok) throw new Error("Verification failed")
 
-      const userData = await response.json()
-      setUser(userData)
-      localStorage.setItem('user', JSON.stringify(userData))
+      const { user } = await response.json()
+      setUser(user)
+      localStorage.setItem('user', JSON.stringify(user))
       localStorage.removeItem('pendingAuth')
-      router.push('/')
+      
+      // For new users, redirect to verification page
+      if (!user.digiLockerVerified) {
+        router.push('/verify')
+      } else {
+        router.push('/')
+      }
     } finally {
       setLoading(false)
     }

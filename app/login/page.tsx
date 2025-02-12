@@ -1,191 +1,78 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { toast } from "sonner"
 import { useAuth } from "@/components/auth-provider"
+import { LoginForm } from "@/app/components/login-form"
+import { motion } from "framer-motion"
 
 export default function LoginPage() {
   const router = useRouter()
-  const { user, loading, login, verifyOtp } = useAuth()
-  const [step, setStep] = useState("phone")
-  const [processingAction, setProcessingAction] = useState(false)
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [otp, setOtp] = useState("")
+  const { user, loading } = useAuth()
 
-  // Redirect if already logged in
   useEffect(() => {
     if (!loading && user) {
       router.push("/")
     }
   }, [user, loading, router])
 
-  const handlePhoneSubmit = async () => {
-    if (!phoneNumber || phoneNumber.length < 10) {
-      toast.error("Please enter a valid phone number")
-      return
-    }
-
-    setProcessingAction(true)
-    try {
-      await login(phoneNumber)
-      toast.success("OTP sent successfully")
-      setStep("otp")
-    } catch (error) {
-      toast.error("Failed to send OTP")
-      console.error(error)
-    } finally {
-      setProcessingAction(false)
-    }
-  }
-
-  const handleOtpSubmit = async () => {
-    if (!otp || otp.length < 6) {
-      toast.error("Please enter a valid OTP")
-      return
-    }
-
-    setProcessingAction(true)
-    try {
-      await verifyOtp(otp)
-      toast.success("Login successful")
-      // Router will handle redirect due to auth state change
-    } catch (error) {
-      toast.error("Failed to verify OTP")
-      console.error(error)
-      setProcessingAction(false) // Only reset if error, success will redirect
-    }
-  }
-
-  // Show loading state while checking auth
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+        <div className="animate-pulse flex flex-col items-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-purple-600"></div>
+          <div className="text-gray-500 dark:text-gray-400">Loading...</div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-2 bg-gradient-to-br from-pink-500/20 via-purple-500/20 to-violet-500/20">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Welcome to Vicharcha</CardTitle>
-          <CardDescription>
-            {step === "phone" 
-              ? "Enter your phone number to continue" 
-              : "Enter the OTP sent to your phone"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {step === "phone" ? (
-            <div className="space-y-4">
-              <Input
-                type="tel"
-                placeholder="Enter phone number"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                maxLength={10}
-                disabled={processingAction}
-              />
-              <Button
-                className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 text-white hover:opacity-90"
-                onClick={handlePhoneSubmit}
-                disabled={processingAction}
-              >
-                {processingAction ? "Sending OTP..." : "Send OTP"}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex justify-center gap-2">
-                {[...Array(6)].map((_, index) => (
-                  <Input
-                    key={index}
-                    type="text"
-                    maxLength={1}
-                    className="w-12 h-12 text-center text-2xl"
-                    value={otp[index] || ''}
-                    disabled={processingAction}
-                    onChange={(e) => {
-                      const newOtp = otp.split('')
-                      newOtp[index] = e.target.value
-                      setOtp(newOtp.join(''))
-                      
-                      // Auto-focus next input
-                      if (e.target.value && index < 5) {
-                        const nextInput = document.querySelector(
-                          `input[name="otp-${index + 1}"]`
-                        ) as HTMLInputElement
-                        if (nextInput) nextInput.focus()
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      // Handle backspace
-                      if (e.key === 'Backspace' && !otp[index] && index > 0) {
-                        const prevInput = document.querySelector(
-                          `input[name="otp-${index - 1}"]`
-                        ) as HTMLInputElement
-                        if (prevInput) prevInput.focus()
-                      }
-                    }}
-                    name={`otp-${index}`}
-                  />
-                ))}
-              </div>
-              <Button
-                className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 text-white hover:opacity-90"
-                onClick={handleOtpSubmit}
-                disabled={processingAction || otp.length !== 6}
-              >
-                {processingAction ? "Verifying..." : "Verify OTP"}
-              </Button>
-            </div>
-          )}
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          {step === "otp" && (
-            <>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setStep("phone")
-                  setOtp("")
-                }}
-                disabled={processingAction}
-              >
-                Change Phone Number
-              </Button>
-              <p className="text-sm text-muted-foreground text-center">
-                Didn't receive OTP?{" "}
-                <Button 
-                  variant="link" 
-                  className="p-0 h-auto"
-                  onClick={handlePhoneSubmit}
-                  disabled={processingAction}
-                >
-                  Resend
-                </Button>
-              </p>
-            </>
-          )}
-          <div className="text-xs text-muted-foreground text-center space-y-2">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+      </div>
+
+      <div className="container relative min-h-screen flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
+        <div className="w-full space-y-8">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-8"
+          >
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-2">
+              Vicharcha
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Connect with the world
+            </p>
+          </motion.div>
+
+          <LoginForm />
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400 space-y-2"
+          >
             <p>By continuing, you agree to our</p>
-            <div className="flex justify-center gap-2">
-              <Button variant="link" className="p-0 h-auto text-xs">
+            <div className="flex justify-center space-x-2">
+              <button className="text-blue-600 hover:text-blue-500 dark:text-blue-400">
                 Terms of Service
-              </Button>
+              </button>
               <span>and</span>
-              <Button variant="link" className="p-0 h-auto text-xs">
+              <button className="text-blue-600 hover:text-blue-500 dark:text-blue-400">
                 Privacy Policy
-              </Button>
+              </button>
             </div>
-          </div>
-        </CardFooter>
-      </Card>
+          </motion.div>
+        </div>
+      </div>
     </div>
   )
 }

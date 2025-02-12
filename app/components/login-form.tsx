@@ -7,78 +7,184 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
+import { motion } from "framer-motion"
 
 export function LoginForm() {
   const { login, verifyOtp } = useAuth()
   const [phoneNumber, setPhoneNumber] = useState("")
+  const [username, setUsername] = useState("")
   const [otp, setOtp] = useState("")
-  const [isOtpSent, setIsOtpSent] = useState(false)
+  const [step, setStep] = useState<"phone" | "otp" | "username">("phone")
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSendOTP = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setIsLoading(true)
+    e.preventDefault()
+    setIsLoading(true)
 
-  try {
-    const formattedPhone = phoneNumber.startsWith("+91") ? phoneNumber : `+91${phoneNumber}`
-    await login(formattedPhone)
-    setIsOtpSent(true)
-    toast.success("OTP sent successfully!")
-  } catch (error) {
-    toast.error(error instanceof Error ? error.message : "Failed to send OTP")
-  } finally {
-    setIsLoading(false)
+    try {
+      const formattedPhone = `+91${phoneNumber.replace(/^\+91/, '')}`
+      await fetch("/api/auth/otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phoneNumber: formattedPhone }),
+      })
+      setStep("otp")
+      toast.success("OTP sent successfully!")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send OTP")
+    } finally {
+      setIsLoading(false)
+    }
   }
-}
 
-const handleVerifyOTP = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setIsLoading(true)
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
 
-  try {
-    await verifyOtp(otp)
-    toast.success("Successfully logged in!")
-    // Router will handle redirect in auth provider
-  } catch (error) {
-    toast.error(error instanceof Error ? error.message : "Failed to verify OTP")
-  } finally {
-    setIsLoading(false)
+    try {
+      const response = await fetch("/api/auth/otp", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phoneNumber: `+91${phoneNumber.replace(/^\+91/, '')}`,
+          otp
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Invalid OTP")
+      }
+
+      if (data.success) {
+        if (data.requiresUsername) {
+          setStep("username")
+          toast.success("Phone number verified! Please choose a username.")
+        } else if (data.user) {
+          await login(`+91${phoneNumber.replace(/^\+91/, '')}`, data.user.username)
+          toast.success("Successfully logged in!")
+        }
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to verify OTP")
+    } finally {
+      setIsLoading(false)
+    }
   }
-}
+
+  const handleUsernameSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phoneNumber: `+91${phoneNumber.replace(/^\+91/, '')}`,
+          username
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        if (error.error === "Username already taken") {
+          toast.error("Username already taken. Please choose another one.")
+          return
+        }
+        throw new Error(error.error || "Registration failed")
+      }
+
+      const { user } = await response.json()
+      await login(`+91${phoneNumber.replace(/^\+91/, '')}`, username)
+      toast.success("Successfully registered!")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Registration failed")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Welcome to Vicharcha</CardTitle>
-        <CardDescription>
-          {isOtpSent
-            ? "Enter the OTP sent to your phone"
-            : "Enter your phone number to get started"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={isOtpSent ? handleVerifyOTP : handleSendOTP}>
-          {!isOtpSent ? (
-            <div className="space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="w-full max-w-md mx-auto backdrop-blur-lg bg-white/90 dark:bg-gray-900/90 shadow-xl">
+        <CardHeader className="space-y-3">
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            {step === "phone" && "Welcome to Vicharcha"}
+            {step === "otp" && "Verify Your Number"}
+            {step === "username" && "Create Your Account"}
+          </CardTitle>
+          <CardDescription className="text-gray-500 dark:text-gray-400">
+            {step === "phone" && "Enter your Indian mobile number to get started"}
+            {step === "otp" && "We've sent a 6-digit code to your phone"}
+            {step === "username" && "Choose a unique username for your profile"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {step === "phone" && (
+            <motion.form
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              onSubmit={handleSendOTP}
+              className="space-y-4"
+            >
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+91 your phone number"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  required
-                  pattern="^(\+91)?[6-9]\d{9}$"
-                  className="text-base"
-                />
+                <Label htmlFor="phone">Mobile Number</Label>
+                <div className="flex">
+                  <div className="inline-flex items-center px-4 border border-r-0 border-input rounded-l-md bg-muted">
+                    <span className="text-sm font-medium">+91</span>
+                  </div>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="Enter 10-digit number"
+                    value={phoneNumber}
+                    onChange={(e) => {
+                      const number = e.target.value.replace(/\D/g, '').slice(0, 10)
+                      setPhoneNumber(number)
+                    }}
+                    className="rounded-l-none text-lg tracking-wide"
+                    maxLength={10}
+                    required
+                  />
+                </div>
+                <p className="text-xs text-gray-500">Demo: Try 1234567890</p>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Sending OTP..." : "Send OTP"}
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                disabled={isLoading || phoneNumber.length !== 10}
+              >
+                {isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    <span>Sending...</span>
+                  </div>
+                ) : (
+                  "Send OTP"
+                )}
               </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
+            </motion.form>
+          )}
+
+          {step === "otp" && (
+            <motion.form
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              onSubmit={handleVerifyOTP}
+              className="space-y-4"
+            >
               <div className="space-y-2">
                 <Label htmlFor="otp">One-Time Password</Label>
                 <Input
@@ -86,33 +192,87 @@ const handleVerifyOTP = async (e: React.FormEvent) => {
                   type="text"
                   placeholder="Enter 6-digit OTP"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  required
-                  pattern="\d{6}"
+                  onChange={(e) => {
+                    const code = e.target.value.replace(/\D/g, '').slice(0, 6)
+                    setOtp(code)
+                  }}
+                  className="text-2xl tracking-[0.5em] text-center"
                   maxLength={6}
-                  className="text-lg tracking-widest text-center"
+                  required
                 />
+                <p className="text-xs text-gray-500">Demo: Any 6 digits work</p>
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Verifying..." : "Verify OTP"}
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                disabled={isLoading || otp.length !== 6}
+              >
+                {isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    <span>Verifying...</span>
+                  </div>
+                ) : (
+                  "Verify OTP"
+                )}
               </Button>
-            </div>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-gray-500"
+                onClick={() => {
+                  setStep("phone")
+                  setOtp("")
+                }}
+              >
+                Change Phone Number
+              </Button>
+            </motion.form>
           )}
-        </form>
-      </CardContent>
-      <CardFooter className="flex justify-center">
-        {isOtpSent && (
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setIsOtpSent(false)
-              setOtp("")
-            }}
-          >
-            Change Phone Number
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
+
+          {step === "username" && (
+            <motion.form
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              onSubmit={handleUsernameSubmit}
+              className="space-y-4"
+            >
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="Choose your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                  className="text-lg"
+                  required
+                  minLength={3}
+                  pattern="^[a-z0-9_]+$"
+                  title="Only lowercase letters, numbers, and underscores allowed"
+                />
+                <p className="text-xs text-gray-500">
+                  Letters, numbers, and underscores only
+                </p>
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                disabled={isLoading || username.length < 3}
+              >
+                {isLoading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    <span>Creating Account...</span>
+                  </div>
+                ) : (
+                  "Complete Setup"
+                )}
+              </Button>
+            </motion.form>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   )
 }
