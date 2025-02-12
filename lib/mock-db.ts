@@ -156,6 +156,12 @@ export const mockDB = {
       if (query.toLowerCase().includes('select')) {
         const userId = params[0];
         const verification = storage.otp_verification.get(userId);
+        
+        // In development mode, always return the latest OTP for the user
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Development mode: Latest OTP for verification:', verification?.otp);
+        }
+        
         return {
           rowLength: verification ? 1 : 0,
           rows: verification ? [verification] : []
@@ -205,6 +211,11 @@ export const mockDB = {
       }
     }
 
+    // For development mode, log the query that wasn't handled
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Unhandled mock DB query:', query);
+    }
+    
     // Default response for unhandled queries
     return {
       rowLength: 0,

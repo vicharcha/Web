@@ -36,24 +36,30 @@ export function LoginForm() {
       
       // Show OTP prominently for demo
       if (data.demo && data.message) {
-        // Request notification permission
-        if (Notification.permission === "granted") {
-          new Notification("Demo OTP Code", {
-            body: `Your OTP is: ${data.otp}`,
-            icon: "/placeholder-logo.png"
-          });
-        } else if (Notification.permission !== "denied") {
-          Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
+        try {
+          // Check if we're in a browser environment
+          if (typeof window !== 'undefined' && 'Notification' in window) {
+            // Request notification permission
+            if (Notification.permission === "granted") {
               new Notification("Demo OTP Code", {
                 body: `Your OTP is: ${data.otp}`,
                 icon: "/placeholder-logo.png"
               });
+            } else if (Notification.permission !== "denied") {
+              const permission = await Notification.requestPermission();
+              if (permission === "granted") {
+                new Notification("Demo OTP Code", {
+                  body: `Your OTP is: ${data.otp}`,
+                  icon: "/placeholder-logo.png"
+                });
+              }
             }
-          });
+          }
+        } catch (notificationError) {
+          console.log('Notification failed, falling back to toast only');
         }
         
-        // Show prominent toast
+        // Always show prominent toast (as fallback and additional visibility)
         toast.message(
           <div className="flex flex-col items-center space-y-2">
             <p className="font-semibold">Demo OTP Generated</p>
@@ -62,7 +68,7 @@ export function LoginForm() {
             </p>
           </div>,
           {
-            duration: 10000, // Show for 10 seconds
+            duration: 15000, // Show for 15 seconds for better visibility
             position: "top-center"
           }
         );

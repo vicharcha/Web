@@ -40,13 +40,25 @@ function isQueryResult(result: any): result is { rows: any[] } {
   return result && Array.isArray(result.rows);
 }
 
-// Always use mock DB in development, optionally in production
-const isDevelopment = process.env.NODE_ENV === 'development';
-const useMockDB = isDevelopment || process.env.USE_MOCK_DB === 'true';
+// Use mock DB in development or when explicitly configured
+const isDevelopment = process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development';
+const useMockDB = isDevelopment || process.env.USE_MOCK_DB === 'true' || process.env.NEXT_PUBLIC_USE_MOCK_DB === 'true';
+
+// Log the environment for debugging
+if (typeof window === 'undefined') {
+  console.log('Database Mode:', {
+    isDevelopment,
+    useMockDB,
+    NODE_ENV: process.env.NODE_ENV,
+    VERCEL_ENV: process.env.VERCEL_ENV
+  });
+}
 
 // Basic database operations
 export async function executeQuery(query: string, params: any[]) {
+  // Always use mock DB if configured
   if (useMockDB) {
+    console.log('Using mock database');
     return mockDB.query(query, params);
   }
 
