@@ -24,9 +24,16 @@ export interface MockPost {
   bookmarkedBy: Set<string>;
 }
 
+export interface MockPendingUser {
+  id: string;
+  phone_number: string;
+  created_at: Date;
+}
+
 // Mock in-memory storage
 const storage = {
   users: new Map<string, DBUser>(),
+  pending_users: new Map<string, MockPendingUser>(),
   otp_verification: new Map<string, MockOTPVerification>(),
   posts: new Map<string, MockPost>(),
   digilocker_auth: new Map<string, DigiLockerAuth>()
@@ -85,13 +92,55 @@ export const mockDB = {
   async query(query: string, params: any[]): Promise<DatabaseResult> {
     console.log('Mock DB Query:', { query, params });
 
+    // Handle pending users queries
+    if (query.toLowerCase().includes('pending_users')) {
+      // Handle pending user insert
+      if (query.toLowerCase().includes('insert')) {
+        const [id, phone_number, created_at] = params;
+        const pendingUser: MockPendingUser = {
+          id,
+          phone_number,
+          created_at: new Date(created_at)
+        };
+        storage.pending_users.set(id, pendingUser);
+        return createSingleRowResult(pendingUser);
+      }
+
+      // Handle pending user lookup by phone
+      if (query.toLowerCase().includes('phone_number')) {
+        const phoneNumber = params.find(p => typeof p === 'string' && p.startsWith('+'));
+        const pendingUser = Array.from(storage.pending_users.values())
+          .find(u => u.phone_number === phoneNumber);
+        return createSingleRowResult(pendingUser);
+      }
+
+      // Handle pending user delete
+      if (query.toLowerCase().includes('delete')) {
+        const userId = params[0];
+        const pendingUser = storage.pending_users.get(userId);
+        storage.pending_users.delete(userId);
+        return createSingleRowResult(pendingUser);
+      }
+
+      // Return all pending users for general select
+      return createDbResult(Array.from(storage.pending_users.values()));
+    }
+
     // Handle user queries
-    if (query.toLowerCase().includes('users')) {
+    if (query.toLowerCase().includes('users') && !query.toLowerCase().includes('pending_users')) {
       // Handle user lookup by phone
       if (query.toLowerCase().includes('phone_number')) {
         const phoneNumber = params.find(p => typeof p === 'string' && p.startsWith('+'));
         const user = Array.from(storage.users.values())
           .find(u => u.phone_number === phoneNumber);
+        return createSingleRowResult(user);
+      }
+
+      // Handle user lookup by username
+      if (query.toLowerCase().includes('username =')) {
+        const username = params[0];
+        const user = Array.from(storage.users.values())
+          .find(u => u.username === username);
         return createSingleRowResult(user);
       }
 

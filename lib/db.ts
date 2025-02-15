@@ -4,7 +4,7 @@ import { DBUser, DatabaseResult } from './types';
 
 // Environment configuration
 const isDevelopment = process.env.NODE_ENV === 'development' || process.env.VERCEL_ENV === 'development';
-const useMockDB = isDevelopment && (process.env.USE_MOCK_DB === 'true' || process.env.NEXT_PUBLIC_USE_MOCK_DB === 'true');
+const useMockDB = process.env.USE_MOCK_DB === 'true' || process.env.NEXT_PUBLIC_USE_MOCK_DB === 'true';
 
 // Log the environment for debugging
 if (typeof window === 'undefined') {

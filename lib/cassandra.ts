@@ -5,20 +5,22 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 const useMockDB = isDevelopment || process.env.USE_MOCK_DB === 'true';
 
 function getClientConfig() {
-  if (process.env.VERCEL_ENV === 'production') {
-    if (!process.env.CASSANDRA_USERNAME || !process.env.CASSANDRA_PASSWORD || !process.env.CASSANDRA_KEYSPACE) {
-      throw new Error('Missing required Cassandra configuration in production');
+  if (process.env.VERCEL_ENV === 'production' && process.env.USE_MOCK_DB !== 'true') {
+    if (!process.env.ASTRA_DB_ID || !process.env.ASTRA_DB_REGION || !process.env.ASTRA_DB_TOKEN || !process.env.ASTRA_DB_KEYSPACE || !process.env.ASTRA_SECURE_BUNDLE_URL) {
+      throw new Error('Missing required Astra DB configuration in production. Set USE_MOCK_DB=true to use mock database instead.');
     }
 
-    return {
-      contactPoints: JSON.parse(process.env.CASSANDRA_CONTACT_POINTS || '["localhost"]'),
-      localDataCenter: 'datacenter1',
-      credentials: {
-        username: process.env.CASSANDRA_USERNAME,
-        password: process.env.CASSANDRA_PASSWORD
+    const config: any = {
+      cloud: { secureConnectBundle: process.env.ASTRA_SECURE_BUNDLE_URL },
+      credentials: { 
+        username: 'token',
+        password: process.env.ASTRA_DB_TOKEN
       },
-      keyspace: process.env.CASSANDRA_KEYSPACE
+      keyspace: process.env.ASTRA_DB_KEYSPACE,
+      localDataCenter: process.env.ASTRA_DB_REGION
     };
+
+    return config;
   }
 
   return {
@@ -129,6 +131,20 @@ export async function executeBatch(queries: { query: string; params: any[] }[]):
 
 // Initialize schema
 async function initializeCassandra() {
+  // First create keyspace if it doesn't exist
+  const createKeyspace = `
+    CREATE KEYSPACE IF NOT EXISTS social_network 
+    WITH replication = {
+      'class': 'NetworkTopologyStrategy',
+      '${process.env.ASTRA_DB_REGION || 'datacenter1'}': 1
+    }`;
+
+  try {
+    await client.execute(createKeyspace);
+  } catch (error) {
+    console.log('Keyspace already exists or cannot be created, continuing...');
+  }
+
   const queries = [
     // Users table
     `CREATE TABLE IF NOT EXISTS social_network.users (
@@ -144,6 +160,13 @@ async function initializeCassandra() {
       created_at timestamp,
       last_active timestamp,
       settings map<text, text>
+    )`,
+
+    // Pending users table
+    `CREATE TABLE IF NOT EXISTS social_network.pending_users (
+      id uuid PRIMARY KEY,
+      phone_number text,
+      created_at timestamp
     )`,
 
     // OTP verification table
@@ -167,7 +190,8 @@ async function initializeCassandra() {
 
     // Create indexes for efficient querying
     `CREATE INDEX IF NOT EXISTS users_phone_idx ON social_network.users (phone_number)`,
-    `CREATE INDEX IF NOT EXISTS users_username_idx ON social_network.users (username)`
+    `CREATE INDEX IF NOT EXISTS users_username_idx ON social_network.users (username)`,
+    `CREATE INDEX IF NOT EXISTS pending_users_phone_idx ON social_network.pending_users (phone_number)`
   ];
 
   for (const query of queries) {
