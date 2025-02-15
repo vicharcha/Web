@@ -23,9 +23,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
 
-  // Check authentication status on mount
+  // Check authentication status on mount and handle mock state
   useEffect(() => {
-    checkAuth()
+    const initAuth = async () => {
+      try {
+        // Check local storage first
+        const storedUser = localStorage.getItem('user')
+        if (storedUser) {
+          const userData = JSON.parse(storedUser)
+          setUser(userData)
+          setLoading(false)
+          return
+        }
+
+        // If no stored user and we're in development, create a mock user
+        if (process.env.NODE_ENV === 'development') {
+          const mockUser = await mockAuthState({
+            phoneNumber: "1234567890",
+            name: "Test User"
+          })
+          setUser(mockUser)
+        }
+      } catch (error) {
+        console.error('Auth initialization failed:', error)
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    initAuth()
   }, [])
 
   // Protect routes
