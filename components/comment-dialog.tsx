@@ -43,42 +43,20 @@ export function CommentDialog({
   const { user } = useAuth()
   const [comments, setComments] = useState<Comment[]>([]) // Initialize with empty array
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-  const [error, setError] = useState<string | null>(null) // Error state for failed comment submissions
 
-  const handleAddComment = async () => {
+  const handleAddComment = () => {
     if (newComment.trim()) {
-      try {
-        const response = await fetch('/api/comments', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            postId: post.id,
-            userId: user?.id,
-            content: newComment,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to add comment');
-        }
-
-        const comment: Comment = {
-          id: comments.length + 1,
-          username: user?.name || "Anonymous",
-          content: newComment,
-          timestamp: new Date().toISOString(),
-          likes: 0,
-          isPremium: user?.isPremium,
-        }
-        setComments([...comments, comment])
-        onAddComment?.(newComment)
-        setNewComment("")
-        setError(null) // Clear error on successful submission
-      } catch (error) {
-        setError(error instanceof Error ? error.message : 'Failed to add comment');
+      const comment: Comment = {
+        id: comments.length + 1,
+        username: user?.name || "Anonymous",
+        content: newComment,
+        timestamp: new Date().toISOString(),
+        likes: 0,
+        isPremium: user?.isPremium,
       }
+      setComments([...comments, comment])
+      onAddComment?.(newComment)
+      setNewComment("")
     }
   }
 
@@ -229,11 +207,6 @@ export function CommentDialog({
           <Send className="h-5 w-5" />
         </Button>
       </div>
-      {error && (
-        <div className="text-red-500 text-sm mt-2">
-          {error}
-        </div>
-      )}
     </>
   )
 

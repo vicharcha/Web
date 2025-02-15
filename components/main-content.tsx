@@ -21,18 +21,15 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import { CreatePost } from "@/components/create-post"
+import { useAuth } from "@/components/auth-provider"
 import { ShareDialog } from "./share-dialog"
 import { CommentDialog } from "./comment-dialog"
 import { LikeButton } from "./like-button"
 import { ContentSections } from "./content-sections"
-import { StatusSection } from "./status-section"
 import type { FeedPost, Post } from "@/lib/types"
 
 export function MainContent() {
-  const user = {
-    name: "Demo User",
-    phoneNumber: "1234567890"
-  }
+  const { user } = useAuth()
   const [posts, setPosts] = useState<FeedPost[]>([])
   const [loading, setLoading] = useState(true)
   const [newComments, setNewComments] = useState<Record<string, string>>({})
@@ -49,15 +46,15 @@ export function MainContent() {
       const data: Post[] = await response.json()
       const feedPosts: FeedPost[] = data.map(post => ({
         ...post,
-        username: post.userId || "anonymous",
-        userImage: `/placeholder.svg?${post.userId || "anon"}`,
-        likes: Math.floor(Math.random() * 1000),
-        comments: Math.floor(Math.random() * 100),
-        shares: Math.floor(Math.random() * 50),
+        username: post.userId,
+        userImage: `/placeholder.svg?${post.userId}`,
+        likes: 0,
+        comments: 0,
+        shares: 0,
         isLiked: false,
         isBookmarked: false,
-        categories: [post.category || "general"],
-        timestamp: new Date(post.createdAt || Date.now()).toLocaleString(),
+        categories: [post.category],
+        timestamp: new Date(post.createdAt).toLocaleString(),
         isVerified: Math.random() > 0.5,
         isPremium: Math.random() > 0.7
       }))
@@ -80,7 +77,19 @@ export function MainContent() {
   }, [fetchPosts])
 
   const handleLike = async (postId: string) => {
+    if (!user) return;
+
     try {
+      await fetch('/api/social', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contentId: postId,
+          userId: user.phoneNumber,
+          type: 'like'
+        }),
+      })
+
       setPosts(posts.map(post => 
         post.id === postId 
           ? { ...post, likes: post.likes + 1, isLiked: true }
@@ -105,9 +114,20 @@ export function MainContent() {
   }
 
   const handleComment = async (postId: string, comment: string) => {
-    if (!comment.trim()) return;
+    if (!user || !comment.trim()) return;
 
     try {
+      await fetch('/api/social', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contentId: postId,
+          userId: user.phoneNumber,
+          type: 'comment',
+          content: comment
+        }),
+      })
+
       setPosts(posts.map(post => 
         post.id === postId 
           ? { ...post, comments: post.comments + 1 }
@@ -134,61 +154,38 @@ export function MainContent() {
 
   if (loading) {
     return (
-      <div className="space-y-8 md:space-y-10">
+      <div className="space-y-4 md:space-y-6">
         <Skeleton className="h-20 w-full rounded-xl" />
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="space-y-4 rounded-xl border p-4 md:p-6">
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-16" />
-              </div>
-            </div>
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-[300px] w-full rounded-lg" />
-            <div className="flex gap-4">
-              <Skeleton className="h-8 w-16" />
-              <Skeleton className="h-8 w-16" />
-              <Skeleton className="h-8 w-16" />
-            </div>
-          </div>
-        ))}
+        <Skeleton className="h-[400px] md:h-[600px] w-full rounded-xl" />
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="space-y-6">
-        {/* Move status section before create post */}
-        <div className="sticky top-0 z-20 -mx-4">
-          <StatusSection />
-          <div className="bg-background/95 backdrop-blur-md py-3 px-4">
-            <CreatePost onPostCreated={fetchPosts} />
-          </div>
+    <div className="w-full">
+      <div className="space-y-4 md:space-y-6">
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm py-3 -mx-2 px-2 md:-mx-4 md:px-4">
+          <CreatePost />
         </div>
 
-        <div className="bg-card rounded-xl p-4 md:p-6 shadow-sm">
-          <ContentSections />
-        </div>
+        <ContentSections />
 
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence>
           {posts.map((post) => (
             <motion.article
               key={post.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="relative rounded-xl border bg-card p-4 md:p-6 shadow-sm hover:shadow transition-all duration-200"
+              className={cn(
+                "relative rounded-xl border bg-card/50 backdrop-blur-sm",
+                isMobile ? "p-3" : "p-5"
+              )}
             >
-              <div className="flex flex-col space-y-4 md:space-y-5">
+              <div className="flex flex-col space-y-3 md:space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <Avatar className={cn(
-                      "ring-2 ring-offset-2 ring-background",
-                      isMobile ? "h-8 w-8" : "h-10 w-10"
-                    )}>
+                  <div className="flex items-center space-x-2 md:space-x-3">
+                    <Avatar className={cn(isMobile ? "h-8 w-8" : "h-10 w-10")}>
                       <AvatarImage src={post.userImage} />
                       <AvatarFallback>{post.username[0]}</AvatarFallback>
                     </Avatar>
@@ -207,11 +204,7 @@ export function MainContent() {
                       </p>
                     </div>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size={isMobile ? "sm" : "icon"}
-                    className="hover:bg-muted/80"
-                  >
+                  <Button variant="ghost" size={isMobile ? "sm" : "icon"}>
                     <MoreHorizontal className="h-5 w-5" />
                   </Button>
                 </div>
@@ -220,14 +213,14 @@ export function MainContent() {
 
                 {post.mediaUrls && post.mediaUrls.length > 0 && (
                   <div className={cn(
-                    "relative rounded-lg overflow-hidden shadow-sm",
+                    "relative rounded-lg overflow-hidden",
                     isMobile ? "aspect-square" : "aspect-video"
                   )}>
                     <Image
                       src={post.mediaUrls[0]}
                       alt="Post content"
                       fill
-                      className="object-cover hover:scale-105 transition-transform duration-300"
+                      className="object-cover"
                     />
                   </div>
                 )}
@@ -242,24 +235,24 @@ export function MainContent() {
                     variant="ghost" 
                     size={isMobile ? "sm" : "default"}
                     onClick={() => setCommentDialogPost(post)}
-                    className="text-sm md:text-base hover:bg-muted/80"
+                    className="text-sm md:text-base"
                   >
-                    <MessageCircle className="h-4 w-4 md:h-5 md:w-5 mr-1.5" />
+                    <MessageCircle className="h-4 w-4 md:h-5 md:w-5 mr-1" />
                     {post.comments > 0 && post.comments}
                   </Button>
                   <Button 
                     variant="ghost" 
                     size={isMobile ? "sm" : "default"}
                     onClick={() => setShareDialogPost(post)}
-                    className="text-sm md:text-base hover:bg-muted/80"
+                    className="text-sm md:text-base"
                   >
-                    <Share2 className="h-4 w-4 md:h-5 md:w-5 mr-1.5" />
+                    <Share2 className="h-4 w-4 md:h-5 md:w-5 mr-1" />
                     {post.shares > 0 && post.shares}
                   </Button>
                   <Button
                     variant="ghost"
                     size={isMobile ? "sm" : "default"}
-                    className="ml-auto hover:bg-muted/80"
+                    className="ml-auto"
                     onClick={() => {
                       setPosts(posts.map(p => 
                         p.id === post.id 
@@ -270,8 +263,8 @@ export function MainContent() {
                   >
                     <Bookmark 
                       className={cn(
-                        "h-4 w-4 md:h-5 md:w-5 transition-transform duration-200",
-                        post.isBookmarked && "fill-current scale-110"
+                        "h-4 w-4 md:h-5 md:w-5",
+                        post.isBookmarked && "fill-current"
                       )} 
                     />
                   </Button>
@@ -279,10 +272,10 @@ export function MainContent() {
 
                 <div className={cn(
                   "border-t",
-                  isMobile ? "pt-3" : "pt-4"
+                  isMobile ? "pt-2" : "pt-3"
                 )}>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-6 w-6 md:h-8 md:w-8 ring-2 ring-offset-2 ring-background">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6 md:h-8 md:w-8">
                       <AvatarImage src={`/placeholder.svg?${user?.phoneNumber}`} />
                       <AvatarFallback>{user?.name?.[0]}</AvatarFallback>
                     </Avatar>
@@ -293,7 +286,7 @@ export function MainContent() {
                         ...newComments, 
                         [post.id]: e.target.value 
                       })}
-                      className="flex-1 text-sm md:text-base h-8 md:h-10 bg-muted/50"
+                      className="flex-1 text-sm md:text-base h-8 md:h-10"
                     />
                     <Button 
                       size={isMobile ? "sm" : "default"}

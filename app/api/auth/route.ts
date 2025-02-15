@@ -63,8 +63,6 @@ export async function POST(req: NextRequest) {
         return handleDigiLockerAuth(data);
       case 'verify-token':
         return handleVerifyToken(req);
-      case 'comment':
-        return handleComment(data, req);
       default:
         return NextResponse.json(
           { error: 'Invalid action' },
@@ -254,45 +252,6 @@ async function handleVerifyToken(req: NextRequest) {
   }
 
   return NextResponse.json({ user: result.rows[0] });
-}
-
-async function handleComment(data: { postId: string; comment: string }, req: NextRequest) {
-  const token = cookies().get('token')?.value;
-
-  if (!token) {
-    return NextResponse.json(
-      { error: 'No token provided' },
-      { status: 401 }
-    );
-  }
-
-  const payload = await verifyToken(token);
-  if (!payload) {
-    return NextResponse.json(
-      { error: 'Invalid token' },
-      { status: 401 }
-    );
-  }
-
-  const { postId, comment } = data;
-
-  if (!postId || !comment) {
-    return NextResponse.json(
-      { error: 'Missing required fields' },
-      { status: 400 }
-    );
-  }
-
-  // Save comment to database
-  const commentId = uuidv4();
-  await executeQuery(
-    `INSERT INTO social_network.comments (
-      id, post_id, user_id, comment, created_at
-    ) VALUES (?, ?, ?, ?, toTimestamp(now()))`,
-    [commentId, postId, payload.userId, comment]
-  );
-
-  return NextResponse.json({ success: true, commentId });
 }
 
 // Mock function - Replace with actual DigiLocker API integration

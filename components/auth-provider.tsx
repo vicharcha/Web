@@ -1,208 +1,166 @@
 "use client"
 
-import type React from "react"
+import { createContext, useContext, useEffect, useState } from "react"
+import { useRouter, usePathname } from "next/navigation"
+import type { User } from "@/lib/types"
 
-import { createContext, useContext, useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-
-type VerificationStatus = "unverified" | "pending" | "verified"
-
-type User = {
-  phoneNumber: string
-  name: string
-  email?: string
-  verificationStatus: VerificationStatus
-  isPremium: boolean
-  digiLockerVerified: boolean
-  joinedDate: string
-  lastActive: string
-} | null
-
-type AuthContextType = {
-  user: User
-  login: (phoneNumber: string) => Promise<void>
+interface AuthContextType {
+  user: User | null
+  loading: boolean
+  login: (phoneNumber: string, username: string) => Promise<void>
+  verifyOtp: (otp: string) => Promise<void>
   logout: () => void
-  verifyOTP: (otp: string) => Promise<boolean>
-  setUserName: (name: string) => void
-  startDigiLockerVerification: () => Promise<void>
-  checkVerificationStatus: () => Promise<VerificationStatus>
-  upgradeToPremuim: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const validateIndianPhoneNumber = (phone: string) => {
-  const phoneRegex = /^[6-9]\d{9}$/
-  return phoneRegex.test(phone)
-}
+// Routes that don't require authentication
+const publicRoutes = ['/login', '/signup', '/forgot-password']
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User>(null)
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const pathname = usePathname()
 
+  // Check authentication status on mount
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem("user")
-      if (storedUser) {
-        setUser(JSON.parse(storedUser))
-      }
-    } catch (error) {
-      console.error("Error reading from localStorage:", error)
-      localStorage.removeItem("user")
-    }
+    checkAuth()
   }, [])
 
-  const login = async (phoneNumber: string) => {
-    if (!phoneNumber.startsWith("+91")) {
-      throw new Error("Only Indian phone numbers (+91) are allowed")
-    }
-
-    const cleanNumber = phoneNumber.replace("+91", "")
-    if (!validateIndianPhoneNumber(cleanNumber)) {
-      throw new Error("Invalid phone number format")
-    }
-
-    try {
-      const newUser = {
-        phoneNumber,
-        name: "",
-        verificationStatus: "unverified" as const,
-        isPremium: false,
-        digiLockerVerified: false,
-        joinedDate: new Date().toISOString(),
-        lastActive: new Date().toISOString(),
+  // Protect routes
+  useEffect(() => {
+    if (!loading) {
+      if (!user && !publicRoutes.includes(pathname)) {
+        router.push('/login')
+      } else if (user && publicRoutes.includes(pathname)) {
+        router.push('/')
       }
-      setUser(newUser)
-      localStorage.setItem("user", JSON.stringify(newUser))
-    } catch (error) {
-      console.error("Error during login:", error)
-      throw new Error("Login failed. Please try again.")
     }
-  }
+  }, [user, loading, pathname, router])
 
-  const startDigiLockerVerification = async () => {
-    if (!user) {
-      throw new Error("User must be logged in to start verification")
-    }
-
+  const checkAuth = async () => {
     try {
-      // Simulate DigiLocker API integration
-      const updatedUser = {
-        ...user,
-        verificationStatus: "pending" as const,
-        digiLockerVerified: false,
+      // Check local storage first
+      const storedUser = localStorage.getItem('user')
+      if (storedUser) {
+        const userData = JSON.parse(storedUser)
+        // Verify user still exists
+        const response = await fetch(`/api/login?phoneNumber=${userData.phoneNumber}`)
+        if (response.ok) {
+          const user = await response.json()
+          setUser(user)
+        } else {
+          // Clear invalid user data
+          localStorage.removeItem('user')
+          setUser(null)
+        }
       }
-      setUser(updatedUser)
-      localStorage.setItem("user", JSON.stringify(updatedUser))
-
-      // Redirect to DigiLocker OAuth page
-      window.location.href = "https://api.digitallocker.gov.in/public/oauth2/1/authorize"
     } catch (error) {
-      console.error("Error during DigiLocker verification:", error)
-      throw new Error("Verification process failed. Please try again.")
+      console.error('Auth check failed:', error)
+      setUser(null)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const checkVerificationStatus = async (): Promise<VerificationStatus> => {
-    if (!user) {
-      return "unverified"
-    }
-
+  const login = async (phoneNumber: string, username: string): Promise<void> => {
+    setLoading(true)
     try {
-      // Simulate checking DigiLocker verification status
-      if (user.digiLockerVerified) {
-        return "verified"
+      const response = await fetch("/api/auth/otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phoneNumber, username }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Login failed")
       }
-      return user.verificationStatus
+
+      // For demo, we'll use mock OTP flow
+      localStorage.setItem('pendingAuth', phoneNumber)
     } catch (error) {
-      console.error("Error checking verification status:", error)
-      throw new Error("Unable to check verification status")
+      console.error('Login error:', error)
+      throw error
+    } finally {
+      setLoading(false)
     }
   }
 
-  const verifyOTP = async (otp: string): Promise<boolean> => {
-    if (!otp || otp.length !== 6) {
-      throw new Error("Invalid OTP format")
-    }
-
+  const verifyOtp = async (otp: string): Promise<void> => {
+    setLoading(true)
     try {
-      // Simulate OTP verification
-      return true
+      const phoneNumber = localStorage.getItem('pendingAuth')
+      if (!phoneNumber) throw new Error("No pending verification found")
+
+      const response = await fetch("/api/auth/otp", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phoneNumber,
+          otp
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Verification failed")
+      }
+
+      const { user } = await response.json()
+      setUser(user)
+      localStorage.setItem('user', JSON.stringify(user))
+      localStorage.removeItem('pendingAuth')
+      
+      // Always redirect to home for demo
+      router.push('/')
     } catch (error) {
-      console.error("Error during OTP verification:", error)
-      throw new Error("OTP verification failed")
-    }
-  }
-
-  const setUserName = (name: string) => {
-    if (!user) {
-      throw new Error("User must be logged in to set name")
-    }
-
-    if (!name.trim()) {
-      throw new Error("Name cannot be empty")
-    }
-
-    try {
-      const updatedUser = { ...user, name }
-      setUser(updatedUser)
-      localStorage.setItem("user", JSON.stringify(updatedUser))
-    } catch (error) {
-      console.error("Error setting user name:", error)
-      throw new Error("Failed to update user name")
-    }
-  }
-
-  const upgradeToPremuim = async () => {
-    if (!user) {
-      throw new Error("User must be logged in to upgrade")
-    }
-
-    try {
-      const updatedUser = { ...user, isPremium: true }
-      setUser(updatedUser)
-      localStorage.setItem("user", JSON.stringify(updatedUser))
-    } catch (error) {
-      console.error("Error upgrading to premium:", error)
-      throw new Error("Failed to upgrade to premium")
+      console.error('OTP verification error:', error)
+      throw error
+    } finally {
+      setLoading(false)
     }
   }
 
   const logout = () => {
-    try {
-      setUser(null)
-      localStorage.removeItem("user")
-      router.push("/login")
-    } catch (error) {
-      console.error("Error during logout:", error)
-      setUser(null)
-      localStorage.removeItem("user")
-    }
+    setUser(null)
+    localStorage.removeItem('user')
+    router.push('/login')
   }
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        login,
-        logout,
-        verifyOTP,
-        setUserName,
-        startDigiLockerVerification,
-        checkVerificationStatus,
-        upgradeToPremuim,
-      }}
-    >
+    <AuthContext.Provider value={{ user, loading, login, verifyOtp, logout }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
 }
 
+// Mock auth state helper for testing
+export const mockAuthState = async (userData: Partial<User>) => {
+  const mockUser: User = {
+    id: "mock-user-id", // Add default id
+    phoneNumber: "1234567890",
+    name: "Test User",
+    verificationStatus: "verified",
+    isPremium: false,
+    digiLockerVerified: false,
+    joinedDate: new Date().toISOString(),
+    lastActive: new Date().toISOString(),
+    ...userData
+  }
+  localStorage.setItem('user', JSON.stringify(mockUser))
+  return mockUser
+}

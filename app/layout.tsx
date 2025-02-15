@@ -1,10 +1,11 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import { Toaster } from "@/app/components/toaster"
+import { Toaster } from "sonner"
 
 import "./globals.css"
 import { Sidebar } from "@/app/components/sidebar"
-import { ClientLayout } from "@/app/components/client-layout"
+import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/components/auth-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -46,28 +47,41 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "white" },
-    { media: "(prefers-color-scheme: dark)", color: "black" },
-  ],
 }
+
+export const themeColor = [
+  { media: "(prefers-color-scheme: light)", color: "white" },
+  { media: "(prefers-color-scheme: dark)", color: "black" },
+]
 
 interface RootLayoutProps {
   children: React.ReactNode
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-background font-sans antialiased">
-        <ClientLayout>
-          {children}
-          <Toaster />
-        </ClientLayout>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <div className="relative flex min-h-screen flex-col bg-background">
+              <div className="flex flex-1">
+                <Sidebar />
+                <main className="flex-1 overflow-y-auto">
+                  <div className="container mx-auto p-4 pt-16 pb-20 md:pt-4 md:pb-4">
+                    {children}
+                  </div>
+                </main>
+              </div>
+            </div>
+            <Toaster richColors closeButton position="top-right" />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

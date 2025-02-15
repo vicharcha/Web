@@ -167,23 +167,6 @@ export default function MessagesPage() {
     }
   }, [user, loading, router])
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const response = await fetch("/api/messages")
-        if (!response.ok) {
-          throw new Error("Failed to fetch messages")
-        }
-        const data = await response.json()
-        setMessages(data)
-      } catch (error) {
-        console.error("Error fetching messages:", error)
-      }
-    }
-
-    fetchMessages()
-  }, [])
-
   // Skip loading check for demo
   if (!user) {
     return (

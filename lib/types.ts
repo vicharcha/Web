@@ -31,35 +31,6 @@ export interface DigiLockerAuth {
   verified_at: Date;
 }
 
-export type FeedPost = {
-  id: string;
-  userId: string;
-  username: string;
-  userImage: string;
-  content: string;
-  category: string;
-  mediaUrls: string[];
-  createdAt: string;
-  updatedAt: string;
-  timestamp: string;
-  likes: number;
-  comments: number;
-  shares: number;
-  isLiked: boolean;
-  isBookmarked: boolean;
-  isVerified: boolean;
-  isPremium: boolean;
-  categories: string[];
-};
-
-export interface Comment {
-  id: string;
-  userId: string;
-  username: string;
-  text: string;
-  createdAt: string;
-}
-
 export type Post = {
   id: string;
   userId: string;
@@ -68,24 +39,32 @@ export type Post = {
   content: string;
   category: string;
   mediaUrls: string[];
+  tokens: number;
+  mentions: string[];
+  hashtags: string[];
+  emojis: string[];
+  likes: number;
+  comments: number;
+  shares: number;
   createdAt: string;
   updatedAt: string;
   timestamp?: string;
-  likes: number;
-  caption: string;
-  comments: Comment[];
+  isLiked?: boolean;
+  isBookmarked?: boolean;
+  isVerified?: boolean;
+  isPremium?: boolean;
+  ageRestricted?: boolean;
 };
 
-export interface Story {
-  id: string
-  username: string
-  userImage: string
-  media: string
-  type: "image" | "video"
-  timestamp: Date
-  views: number
-  isLive?: boolean
-}
+export type Story = {
+  id: string;
+  userId: string;
+  items: StoryItem[];
+  category: string;
+  createdAt: string;
+  expiresAt: string;
+  isAdult?: boolean;
+};
 
 export type StoryItem = {
   id: string;

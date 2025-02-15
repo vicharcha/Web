@@ -1,17 +1,17 @@
 "use client"
 
-import type React from "react"
-
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   Home,
   MessageSquare,
   Phone,
+  Users,
   Brain,
   AlertTriangle,
   CreditCard,
   ShoppingBag,
+  Film,
   X,
   Sun,
   Moon,
@@ -19,7 +19,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Bell,
+  Code,
   User,
+  Settings,
   LogOut,
   UserCog,
 } from "lucide-react"
@@ -38,13 +40,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useAuth } from "@/app/components/auth-provider"
+import { useAuth } from "@/components/auth-provider"
 
 const navItems = [
   { icon: Home, label: "Home", href: "/" },
   { icon: MessageSquare, label: "Messages", href: "/messages" },
+  { icon: Film, label: "Reels", href: "/reels" },
   { icon: Brain, label: "AI Assistant", href: "/ai-assistant" },
   { icon: Phone, label: "Calls", href: "/calls" },
+  { icon: Users, label: "Social", href: "/social" },
   { icon: ShoppingBag, label: "Shopping", href: "/shopping" },
   { icon: AlertTriangle, label: "Emergency", href: "/emergency" },
   { icon: CreditCard, label: "Payments", href: "/payments" },
@@ -88,7 +92,7 @@ function NavItem({ href, icon: Icon, label, isCollapsed, onClick, isActive }: Na
       className={cn(
         "flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition-colors",
         isActive ? "bg-accent text-accent-foreground" : "hover:bg-accent/50",
-        isCollapsed && "w-10 px-2 mx-auto justify-center",
+        isCollapsed && "w-10 px-2 mx-auto justify-center"
       )}
     >
       <Icon className="h-5 w-5 shrink-0" />
@@ -194,7 +198,7 @@ export function Sidebar() {
     return (
       <>
         {/* Mobile Top Bar */}
-        <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b bg-background/80 backdrop-blur-md z-40 flex items-center justify-between px-4">
+        <div className="md:hidden fixed top-14 left-0 right-0 h-12 border-b bg-background/80 backdrop-blur-md z-30 flex items-center justify-between px-4">
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
@@ -233,7 +237,7 @@ export function Sidebar() {
         </div>
 
         {/* Mobile Bottom Navigation */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 border-t bg-background/80 backdrop-blur-md z-40">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 border-t bg-background/80 backdrop-blur-md z-30">
           <div className="flex items-center justify-around h-full px-2">
             {navItems.slice(0, 4).map((item) => {
               const isActive = pathname === item.href
@@ -242,7 +246,7 @@ export function Sidebar() {
                   <div
                     className={cn(
                       "flex items-center justify-center w-10 h-10 rounded-xl transition-colors",
-                      isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50",
+                      isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent/50"
                     )}
                   >
                     <item.icon className="h-5 w-5" />
@@ -264,23 +268,27 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "hidden md:flex border-r flex-col py-4 transition-all duration-300 ease-in-out h-screen sticky top-0",
-        isCollapsed ? "w-[70px]" : "w-[280px]",
+        "hidden md:flex border-r flex-col transition-all duration-300 ease-in-out h-screen sticky top-0",
+        isCollapsed ? "w-[70px]" : "w-[280px]"
       )}
     >
-      <div className={cn("flex items-center px-4 mb-6", isCollapsed ? "justify-center" : "justify-between")}>
-        <SidebarLogo isCollapsed={isCollapsed} />
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleSidebar}
-          className={isCollapsed ? "absolute right-[-20px] top-6 bg-background border rounded-full" : ""}
-        >
-          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
+      <div className="h-14 border-b flex items-center px-4">
+        <div className="flex-1">
+          <SidebarLogo isCollapsed={isCollapsed} />
+        </div>
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className={isCollapsed ? "hover:bg-accent" : ""}
+          >
+            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
+        </div>
       </div>
 
-      <div className="flex-1 px-3">
+      <div className="flex-1 px-3 py-4">
         <div className="space-y-1">
           {navItems.map((item) => (
             <NavItem key={item.href} {...item} isCollapsed={isCollapsed} isActive={pathname === item.href} />
@@ -294,4 +302,3 @@ export function Sidebar() {
     </aside>
   )
 }
-

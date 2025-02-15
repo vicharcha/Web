@@ -49,20 +49,23 @@ export function Logo({ className, variant = "default", animated = false }: LogoP
   if (variant === "icon") {
     return (
       <LogoContent
-        className={cn("relative w-10 h-10 cursor-pointer group", className)}
+        className={cn(
+          "relative w-10 h-10 cursor-pointer group",
+          className
+        )}
         initial={animated ? "hidden" : undefined}
         animate={animated ? "visible" : undefined}
         variants={iconVariants}
       >
         {/* Glow effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-violet-600 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300" />
-
+        
         {/* Main logo background */}
         <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-purple-500 to-violet-600 rounded-xl transform rotate-45 group-hover:scale-105 transition-transform duration-300" />
-
+        
         {/* Inner shadow */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl transform rotate-45" />
-
+        
         {/* Logo text */}
         <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-xl transform -rotate-45 group-hover:scale-110 transition-transform duration-300">
           V
@@ -72,7 +75,13 @@ export function Logo({ className, variant = "default", animated = false }: LogoP
   }
 
   return (
-    <LogoContent className={cn("flex items-center gap-3", variant === "small" ? "text-lg" : "text-2xl", className)}>
+    <LogoContent
+      className={cn(
+        "flex items-center gap-3",
+        variant === "small" ? "text-lg" : "text-2xl",
+        className
+      )}
+    >
       {/* Icon */}
       <motion.div
         className="relative w-10 h-10 cursor-pointer group"
@@ -82,13 +91,13 @@ export function Logo({ className, variant = "default", animated = false }: LogoP
       >
         {/* Glow effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-violet-600 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300" />
-
+        
         {/* Main logo background */}
         <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-purple-500 to-violet-600 rounded-xl transform rotate-45 group-hover:scale-105 transition-transform duration-300" />
-
+        
         {/* Inner shadow */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl transform rotate-45" />
-
+        
         {/* Logo text */}
         <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-xl transform -rotate-45 group-hover:scale-110 transition-transform duration-300">
           V
@@ -97,7 +106,10 @@ export function Logo({ className, variant = "default", animated = false }: LogoP
 
       {/* Text */}
       <motion.span
-        className={cn("font-bold relative", variant === "small" ? "text-2xl" : "text-3xl")}
+        className={cn(
+          "font-bold relative",
+          variant === "small" ? "text-2xl" : "text-3xl"
+        )}
         initial={animated ? "hidden" : undefined}
         animate={animated ? "visible" : undefined}
         variants={textVariants}
