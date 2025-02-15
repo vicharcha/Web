@@ -1,295 +1,54 @@
 import { Client, types } from 'cassandra-driver';
+import { DatabaseResult } from './types';
 
-// Initialize client without keyspace
-export const client = new Client({
-  contactPoints: [process.env.CASSANDRA_HOST || 'localhost'],
-  localDataCenter: process.env.CASSANDRA_DC || 'datacenter1',
-  credentials: {
-    username: process.env.CASSANDRA_USER || 'cassandra',
-    password: process.env.CASSANDRA_PASSWORD || 'cassandra'
-  }
-});
+const isDevelopment = process.env.NODE_ENV === 'development';
+const useMockDB = isDevelopment || process.env.USE_MOCK_DB === 'true';
 
-export const PostCategories = {
-  GENERAL: 'general',
-  NEWS: 'news',
-  ENTERTAINMENT: 'entertainment',
-  SPORTS: 'sports',
-  TECHNOLOGY: 'technology',
-  ADULT: 'adult'
-} as const;
-
-export type PostCategory = typeof PostCategories[keyof typeof PostCategories];
-
-export interface Post {
-  id: types.Uuid;
-  userId: string;
-  content: string;
-  category: PostCategory;
-  ageRestricted: boolean;
-  mediaUrls: string[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Create keyspace and initialize schema
-export async function initializeCassandra() {
-  try {
-    // Create keyspace first (without using it)
-    await client.execute(`
-      CREATE KEYSPACE IF NOT EXISTS social_network 
-      WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}
-    `);
-
-    // Create a new client with the keyspace
-    const keyspaceClient = new Client({
-      contactPoints: [process.env.CASSANDRA_HOST || 'localhost'],
-      localDataCenter: process.env.CASSANDRA_DC || 'datacenter1',
-      credentials: {
-        username: process.env.CASSANDRA_USER || 'cassandra',
-        password: process.env.CASSANDRA_PASSWORD || 'cassandra'
-      },
-      keyspace: 'social_network'
-    });
-
-    // Connect to the keyspace
-    await keyspaceClient.connect();
-    console.log('Connected to social_network keyspace');
-  const queries = [
-    // Drop existing tables
-    `DROP TABLE IF EXISTS social_network.posts`,
-    `DROP TABLE IF EXISTS social_network.reels`,
-    `DROP TABLE IF EXISTS social_network.reel_metrics`,
-    `DROP TABLE IF EXISTS social_network.calls`,
-    `DROP TABLE IF EXISTS social_network.connections`,
-    `DROP TABLE IF EXISTS social_network.activities`,
-    `DROP TABLE IF EXISTS social_network.reactions`,
-    `DROP TABLE IF EXISTS social_network.users`,
-    `DROP TABLE IF EXISTS social_network.pending_users`,
-    `DROP TABLE IF EXISTS social_network.messages`,
-    `DROP TABLE IF EXISTS social_network.group_chats`,
-    `DROP TABLE IF EXISTS social_network.media_attachments`,
-    `DROP TABLE IF EXISTS social_network.digilocker_auth`,
-
-    // Keyspace creation
-    `CREATE KEYSPACE IF NOT EXISTS social_network 
-     WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}`,
-
-    // Users table
-    `CREATE TABLE IF NOT EXISTS social_network.users (
-      id uuid PRIMARY KEY,
-      username text,
-      email text,
-      password_hash text,
-      full_name text,
-      bio text,
-      avatar_url text,
-      digilocker_id text,
-      phone_number text,
-      created_at timestamp,
-      last_active timestamp,
-      settings map<text, text>,
-      is_verified boolean
-    )`,
-
-    // Messages table
-    `CREATE TABLE IF NOT EXISTS social_network.messages (
-      chat_id uuid,
-      message_id uuid,
-      sender_id uuid,
-      recipient_id uuid,
-      content text,
-      message_type text,
-      media_urls list<text>,
-      sticker_id text,
-      document_info map<text, text>,
-      sent_at timestamp,
-      delivered_at timestamp,
-      read_at timestamp,
-      is_edited boolean,
-      reactions map<uuid, text>,
-      PRIMARY KEY ((chat_id), sent_at, message_id)
-    ) WITH CLUSTERING ORDER BY (sent_at DESC)`,
-
-    // Group Chats table
-    `CREATE TABLE IF NOT EXISTS social_network.group_chats (
-      chat_id uuid PRIMARY KEY,
-      name text,
-      description text,
-      creator_id uuid,
-      created_at timestamp,
-      avatar_url text,
-      settings map<text, text>,
-      members list<uuid>,
-      admins list<uuid>
-    )`,
-
-    // Media Attachments table
-    `CREATE TABLE IF NOT EXISTS social_network.media_attachments (
-      id uuid PRIMARY KEY,
-      user_id uuid,
-      media_type text,
-      url text,
-      thumbnail_url text,
-      mime_type text,
-      file_size bigint,
-      dimensions map<text, int>,
-      duration int,
-      metadata map<text, text>,
-      created_at timestamp
-    )`,
-
-    // DigiLocker Integration table
-    `CREATE TABLE IF NOT EXISTS social_network.digilocker_auth (
-      user_id uuid PRIMARY KEY,
-      digilocker_id text,
-      access_token text,
-      refresh_token text,
-      token_expiry timestamp,
-      authorized_documents list<text>,
-      last_sync timestamp
-    )`,
-    
-    // Posts table
-    `CREATE TABLE IF NOT EXISTS social_network.posts (
-      id uuid PRIMARY KEY,
-      user_id text,
-      content text,
-      category text,
-      age_restricted boolean,
-      media_urls list<text>,
-      created_at timestamp,
-      updated_at timestamp
-    )`,
-    
-    // Pending Users table for OTP verification
-    `CREATE TABLE IF NOT EXISTS social_network.pending_users (
-      id uuid PRIMARY KEY,
-      phone_number text,
-      otp text,
-      otp_expiry timestamp,
-      verification_attempts int,
-      created_at timestamp
-    )`,
-
-    // Reels table - without counter columns
-    `CREATE TABLE IF NOT EXISTS social_network.reels (
-      id uuid PRIMARY KEY,
-      user_id text,
-      video_url text,
-      thumbnail_url text,
-      caption text,
-      duration int,
-      music_info text,
-      tags list<text>,
-      created_at timestamp,
-      is_premium boolean,
-      age_restricted boolean
-    )`,
-
-    // Reel metrics table - for counter columns
-    `CREATE TABLE IF NOT EXISTS social_network.reel_metrics (
-      reel_id uuid PRIMARY KEY,
-      views counter,
-      likes counter,
-      shares counter,
-      comments counter
-    )`,
-
-    // Call History table
-    `CREATE TABLE IF NOT EXISTS social_network.calls (
-      id uuid,
-      user_id text,
-      participant_id text,
-      start_time timestamp,
-      end_time timestamp,
-      duration int,
-      call_type text,
-      status text,
-      quality_metrics map<text, float>,
-      PRIMARY KEY (user_id, start_time)
-    ) WITH CLUSTERING ORDER BY (start_time DESC)`,
-
-    // Social Connections table
-    `CREATE TABLE IF NOT EXISTS social_network.connections (
-      user_id text,
-      connected_user_id text,
-      connection_type text,
-      created_at timestamp,
-      updated_at timestamp,
-      PRIMARY KEY (user_id, connected_user_id)
-    )`,
-
-    // OTP Verification table
-    `CREATE TABLE IF NOT EXISTS social_network.otp_verification (
-      user_id uuid PRIMARY KEY,
-      otp text,
-      created_at timestamp,
-      expires_at timestamp
-    )`,
-
-    // Social Activity table
-    `CREATE TABLE IF NOT EXISTS social_network.activities (
-      user_id text,
-      activity_id uuid,
-      activity_type text,
-      target_id text,
-      created_at timestamp,
-      content text,
-      media_urls list<text>,
-      PRIMARY KEY (user_id, created_at, activity_id)
-    ) WITH CLUSTERING ORDER BY (created_at DESC)`,
-
-    // User Reactions table
-    `CREATE TABLE IF NOT EXISTS social_network.reactions (
-      content_id uuid,
-      user_id text,
-      reaction_type text,
-      created_at timestamp,
-      PRIMARY KEY ((content_id), user_id)
-    )`,
-
-    // Create indexes for efficient querying
-    `CREATE INDEX IF NOT EXISTS users_username_idx ON social_network.users (username)`,
-    `CREATE INDEX IF NOT EXISTS users_email_idx ON social_network.users (email)`,
-    `CREATE INDEX IF NOT EXISTS users_phone_idx ON social_network.users (phone_number)`,
-    `CREATE INDEX IF NOT EXISTS pending_users_phone_idx ON social_network.pending_users (phone_number)`,
-    `CREATE INDEX IF NOT EXISTS users_digilocker_idx ON social_network.users (digilocker_id)`,
-    `CREATE INDEX IF NOT EXISTS messages_sender_idx ON social_network.messages (sender_id)`,
-    `CREATE INDEX IF NOT EXISTS messages_recipient_idx ON social_network.messages (recipient_id)`,
-    `CREATE INDEX IF NOT EXISTS media_user_idx ON social_network.media_attachments (user_id)`,
-    `CREATE INDEX IF NOT EXISTS posts_category_idx ON social_network.posts (category)`,
-    `CREATE INDEX IF NOT EXISTS posts_age_restricted_idx ON social_network.posts (age_restricted)`,
-    `CREATE INDEX IF NOT EXISTS reels_user_id_idx ON social_network.reels (user_id)`,
-    `CREATE INDEX IF NOT EXISTS activities_activity_type_idx ON social_network.activities (activity_type)`,
-    `CREATE INDEX IF NOT EXISTS connections_type_idx ON social_network.connections (connection_type)`,
-    `CREATE INDEX IF NOT EXISTS reactions_type_idx ON social_network.reactions (reaction_type)`
-  ];
-
-    // Execute each query in sequence
-    for (const query of queries) {
-      try {
-        await keyspaceClient.execute(query);
-      } catch (error) {
-        console.error('Error executing query:', query);
-        console.error('Error details:', error);
-        throw error;
-      }
+function getClientConfig() {
+  if (process.env.VERCEL_ENV === 'production') {
+    if (!process.env.CASSANDRA_USERNAME || !process.env.CASSANDRA_PASSWORD || !process.env.CASSANDRA_KEYSPACE) {
+      throw new Error('Missing required Cassandra configuration in production');
     }
 
-    // Update the main client to use the keyspace
-    await client.execute('USE social_network');
-    
-    console.log('Cassandra schema initialized successfully');
-  } catch (error) {
-    console.error('Error initializing Cassandra schema:', error);
-    throw error;
+    return {
+      contactPoints: JSON.parse(process.env.CASSANDRA_CONTACT_POINTS || '["localhost"]'),
+      localDataCenter: 'datacenter1',
+      credentials: {
+        username: process.env.CASSANDRA_USERNAME,
+        password: process.env.CASSANDRA_PASSWORD
+      },
+      keyspace: process.env.CASSANDRA_KEYSPACE
+    };
   }
+
+  return {
+    contactPoints: ['localhost'],
+    localDataCenter: 'datacenter1',
+    credentials: {
+      username: 'cassandra',
+      password: 'cassandra'
+    }
+  };
 }
+
+// Initialize client without keyspace for initial connection
+export const client = new Client(getClientConfig());
 
 // Maximum number of connection retries
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000; // 2 seconds
+
+// Helper function to standardize database results
+function createDatabaseResult(result: any): DatabaseResult {
+  if (!result) {
+    return { rowLength: 0, rows: [] };
+  }
+  
+  return {
+    rowLength: result.rowLength || result.rows?.length || 0,
+    rows: result.rows || []
+  };
+}
 
 // Connect to Cassandra with retries
 export async function connectToCassandra() {
@@ -297,26 +56,15 @@ export async function connectToCassandra() {
   
   while (retries < MAX_RETRIES) {
     try {
-      // Try to execute a simple query to check connection
-      try {
-        await client.execute('SELECT now() FROM system.local');
-      } catch {
-        await client.connect();
-        console.log('Connected to Cassandra');
-      }
-      
+      await client.connect();
+      console.log('Connected to Cassandra');
       await initializeCassandra();
       return;
     } catch (error) {
       retries++;
       const isLastAttempt = retries === MAX_RETRIES;
       
-      if (error instanceof Error) {
-        console.error(`Cassandra connection attempt ${retries} failed:`, error.message);
-        if ('code' in error) {
-          console.error('Error code:', (error as any).code);
-        }
-      }
+      console.error(`Cassandra connection attempt ${retries} failed:`, error);
 
       if (isLastAttempt) {
         console.error('Max connection retries reached');
@@ -330,12 +78,13 @@ export async function connectToCassandra() {
 }
 
 // Query helper functions with retry logic
-export async function executeQuery(query: string, params: any[] = []) {
+export async function executeQuery(query: string, params: any[] = []): Promise<DatabaseResult> {
   let retries = 0;
   
   while (retries < MAX_RETRIES) {
     try {
-      return await client.execute(query, params, { prepare: true });
+      const result = await client.execute(query, params, { prepare: true });
+      return createDatabaseResult(result);
     } catch (error) {
       retries++;
       const isLastAttempt = retries === MAX_RETRIES;
@@ -343,7 +92,6 @@ export async function executeQuery(query: string, params: any[] = []) {
       if (error instanceof Error) {
         const isTableNotExist = error.message.includes('table') && error.message.includes('does not exist');
         
-        // If table doesn't exist, try to reinitialize schema
         if (isTableNotExist && !isLastAttempt) {
           console.log('Table not found, attempting to reinitialize schema...');
           await initializeCassandra();
@@ -360,17 +108,79 @@ export async function executeQuery(query: string, params: any[] = []) {
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
     }
   }
+
+  // Default response if all retries fail
+  return { rowLength: 0, rows: [] };
 }
 
 // Batch query helper
-export async function executeBatch(queries: { query: string; params: any[] }[]) {
+export async function executeBatch(queries: { query: string; params: any[] }[]): Promise<DatabaseResult> {
   try {
-    return await client.batch(
+    await client.batch(
       queries.map(q => ({ query: q.query, params: q.params })),
       { prepare: true }
     );
+    return { rowLength: queries.length, rows: [] };
   } catch (error) {
     console.error('Error executing batch:', error);
     throw error;
   }
 }
+
+// Initialize schema
+async function initializeCassandra() {
+  const queries = [
+    // Users table
+    `CREATE TABLE IF NOT EXISTS social_network.users (
+      id uuid PRIMARY KEY,
+      username text,
+      phone_number text,
+      email text,
+      password_hash text,
+      is_verified boolean,
+      phone_verified boolean,
+      digilocker_verified boolean,
+      country_code text,
+      created_at timestamp,
+      last_active timestamp,
+      settings map<text, text>
+    )`,
+
+    // OTP verification table
+    `CREATE TABLE IF NOT EXISTS social_network.otp_verification (
+      user_id uuid PRIMARY KEY,
+      otp text,
+      created_at timestamp,
+      expires_at timestamp
+    )`,
+
+    // DigiLocker verification table
+    `CREATE TABLE IF NOT EXISTS social_network.digilocker_auth (
+      user_id uuid,
+      document_id text,
+      document_type text,
+      issuer text,
+      verification_status text,
+      verified_at timestamp,
+      PRIMARY KEY (user_id, document_id)
+    )`,
+
+    // Create indexes for efficient querying
+    `CREATE INDEX IF NOT EXISTS users_phone_idx ON social_network.users (phone_number)`,
+    `CREATE INDEX IF NOT EXISTS users_username_idx ON social_network.users (username)`
+  ];
+
+  for (const query of queries) {
+    try {
+      await client.execute(query);
+    } catch (error) {
+      console.error('Error executing schema query:', query);
+      console.error('Error details:', error);
+      throw error;
+    }
+  }
+
+  console.log('Cassandra schema initialized successfully');
+}
+
+export { types };

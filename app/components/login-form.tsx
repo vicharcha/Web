@@ -4,16 +4,19 @@ import { useState } from "react"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { CountrySelector } from "@/components/country-selector"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
+import { validatePhoneNumber, formatPhoneNumber } from "@/lib/country-codes"
 
 export function LoginForm() {
   const { login, verifyOtp } = useAuth()
   const [phoneNumber, setPhoneNumber] = useState("")
   const [username, setUsername] = useState("")
   const [otp, setOtp] = useState("")
+  const [countryCode, setCountryCode] = useState("+91")
   const [step, setStep] = useState<"phone" | "otp" | "username">("phone")
   const [isLoading, setIsLoading] = useState(false)
 
@@ -22,7 +25,7 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
-      const formattedPhone = `+91${phoneNumber.replace(/^\+91/, '')}`
+      const formattedPhone = formatPhoneNumber(phoneNumber, countryCode)
       const response = await fetch("/api/auth/otp", {
         method: "POST",
         headers: {
@@ -87,13 +90,14 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
+      const formattedPhone = formatPhoneNumber(phoneNumber, countryCode)
       const response = await fetch("/api/auth/otp", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phoneNumber: `+91${phoneNumber.replace(/^\+91/, '')}`,
+          phoneNumber: formattedPhone,
           otp
         }),
       })
@@ -109,7 +113,6 @@ export function LoginForm() {
           setStep("username")
           toast.success("Phone number verified! Please choose a username.")
         } else if (data.user) {
-          await login(`+91${phoneNumber.replace(/^\+91/, '')}`, data.user.username || '')
           await verifyOtp(otp)
           toast.success("Successfully logged in!")
         }
@@ -126,13 +129,14 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
+      const formattedPhone = formatPhoneNumber(phoneNumber, countryCode)
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phoneNumber: `+91${phoneNumber.replace(/^\+91/, '')}`,
+          phoneNumber: formattedPhone,
           username
         }),
       })
@@ -147,7 +151,7 @@ export function LoginForm() {
       }
 
       const { user } = await response.json()
-      await login(`+91${phoneNumber.replace(/^\+91/, '')}`, username)
+      await login(formattedPhone, username)
       toast.success("Successfully registered!")
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Registration failed")
@@ -170,7 +174,7 @@ export function LoginForm() {
             {step === "username" && "Create Your Account"}
           </CardTitle>
           <CardDescription className="text-gray-500 dark:text-gray-400">
-            {step === "phone" && "Enter your Indian mobile number to get started"}
+            {step === "phone" && "Enter your mobile number to get started"}
             {step === "otp" && "We've sent a 6-digit code to your phone"}
             {step === "username" && "Choose a unique username for your profile"}
           </CardDescription>
@@ -186,29 +190,29 @@ export function LoginForm() {
               <div className="space-y-2">
                 <Label htmlFor="phone">Mobile Number</Label>
                 <div className="flex">
-                  <div className="inline-flex items-center px-4 border border-r-0 border-input rounded-l-md bg-muted">
-                    <span className="text-sm font-medium">+91</span>
-                  </div>
+                  <CountrySelector
+                    selected={countryCode}
+                    onSelect={setCountryCode}
+                  />
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="Enter 10-digit number"
+                    placeholder="Enter your number"
                     value={phoneNumber}
                     onChange={(e) => {
-                      const number = e.target.value.replace(/\D/g, '').slice(0, 10)
+                      const number = e.target.value.replace(/\D/g, '')
                       setPhoneNumber(number)
                     }}
                     className="rounded-l-none text-lg tracking-wide"
-                    maxLength={10}
                     required
                   />
                 </div>
-                <p className="text-xs text-gray-500">Demo: Try 1234567890</p>
+                <p className="text-xs text-gray-500">Example: 1234567890</p>
               </div>
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                disabled={isLoading || phoneNumber.length !== 10}
+                disabled={isLoading || !validatePhoneNumber(phoneNumber, countryCode)}
               >
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
@@ -244,7 +248,7 @@ export function LoginForm() {
                   maxLength={6}
                   required
                 />
-                <p className="text-xs text-gray-500">Demo: Any 6 digits work</p>
+                <p className="text-xs text-gray-500">Enter the 6-digit code sent to your phone</p>
               </div>
               <Button
                 type="submit"

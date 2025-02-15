@@ -1,135 +1,139 @@
-// Shared types for client-side components
 export const PostCategories = {
-  GENERAL: 'general',
-  NEWS: 'news',
-  ENTERTAINMENT: 'entertainment',
-  SPORTS: 'sports',
-  TECHNOLOGY: 'technology',
-  ADULT: 'adult'
-} as const
+  GENERAL: "general",
+  NEWS: "news",
+  ENTERTAINMENT: "entertainment",
+  SPORTS: "sports",
+  TECHNOLOGY: "technology",
+  ADULT: "adult",
+} as const;
 
-export type PostCategory = typeof PostCategories[keyof typeof PostCategories]
-
-export interface Post {
-  id: string
-  userId: string
-  content: string
-  category: PostCategory
-  ageRestricted: boolean
-  mediaUrls: string[]
-  createdAt: Date
-  updatedAt: Date
+export interface DBUser {
+  id: string;
+  username: string;
+  phone_number: string;
+  email?: string;
+  password_hash?: string;
+  is_verified: boolean;
+  phone_verified: boolean;
+  digilocker_verified: boolean;
+  country_code: string;
+  created_at: Date;
+  last_active: Date;
+  settings?: Record<string, string>;
 }
 
-export interface User {
-  phoneNumber: string
-  name: string
-  email?: string
-  verificationStatus: 'unverified' | 'pending' | 'verified'
-  isPremium: boolean
-  digiLockerVerified: boolean
-  joinedDate: string
-  lastActive: string
+export interface DigiLockerAuth {
+  user_id: string;
+  document_id: string;
+  document_type: string;
+  issuer: string;
+  verification_status: 'verified' | 'pending' | 'failed';
+  verified_at: Date;
 }
 
-// Social features added to Post for the feed
-export interface FeedPostExtension {
-  username: string
-  userImage: string
-  likes: number
-  comments: number
-  shares: number
-  isLiked: boolean
-  isBookmarked: boolean
-  categories: string[]
-  timestamp: string
-  isSponsored?: boolean
-  isPremium?: boolean
-  isVerified?: boolean
+export type Post = {
+  id: string;
+  userId: string;
+  username: string;
+  userImage: string;
+  content: string;
+  category: string;
+  mediaUrls: string[];
+  tokens: number;
+  mentions: string[];
+  hashtags: string[];
+  emojis: string[];
+  likes: number;
+  comments: number;
+  shares: number;
+  createdAt: string;
+  updatedAt: string;
+  timestamp?: string;
+  isLiked?: boolean;
+  isBookmarked?: boolean;
+  isVerified?: boolean;
+  isPremium?: boolean;
+  ageRestricted?: boolean;
+};
+
+export type Story = {
+  id: string;
+  userId: string;
+  items: StoryItem[];
+  category: string;
+  createdAt: string;
+  expiresAt: string;
+  isAdult?: boolean;
+};
+
+export type StoryItem = {
+  id: string;
+  type: "image" | "video";
+  url: string;
+  duration?: number;
+};
+
+export type User = {
+  id: string;
+  phoneNumber: string;
+  username?: string;
+  name?: string;
+  email?: string;
+  verificationStatus: "unverified" | "verified";
+  isPremium: boolean;
+  digiLockerVerified: boolean;
+  joinedDate: string;
+  lastActive: string;
+  documents?: DigiLockerDocument[];
+};
+
+export interface DigiLockerDocument {
+  id: string;
+  type: string;
+  issuer: string;
+  name: string;
+  date: string;
+  verificationStatus: 'verified' | 'pending' | 'failed';
 }
 
-export type FeedPost = Post & FeedPostExtension
+export type ParticipantDetail = {
+  id: string;
+  name: string;
+  role?: string;
+  department?: string;
+};
 
-// Props type for the Post component
-export type PostProps = FeedPost
+export type UserStatus = 'online' | 'offline' | 'away';
 
-// Chat and Message types
-export interface Message {
-  id: string
-  chatId: string
-  senderId: string
-  content: string
-  mediaUrls?: string[]
-  createdAt: Date
-  status: 'sent' | 'delivered' | 'read'
+export type Message = {
+  id: string;
+  content: string;
+  senderId: string;
+  createdAt: string;
+  status: 'sent' | 'delivered' | 'read';
+};
+
+export type ChatWithDetails = {
+  id: string;
+  name: string;
+  avatar: string;
+  status: 'online' | 'offline';
+  participantDetails: ParticipantDetail[];
+  isGroup?: boolean;
+};
+
+export type ApiResponse<T = any> = {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+};
+
+export interface DatabaseResult {
+  rowLength: number;
+  rows: any[];
 }
 
-export type ChatStatus = 'online' | 'offline' | 'away'
-
-export type UserStatus = 'active' | 'busy' | 'away' | 'offline'
-
-export interface ParticipantDetails {
-  id: string
-  name: string
-  avatar: string
-  isPremium: boolean
-  lastSeen: string
-  status: ChatStatus
-  role?: 'user' | 'developer' | 'admin'
-  department?: string
-}
-
-// Base chat interface with common properties
-export interface BaseChat {
-  id: string
-  participants: string[]
-  createdAt: Date
-  updatedAt: Date
-  lastMessage?: Message
-  unreadCount: number
-  isTyping: boolean
-  name: string
-  avatar: string
-  status: ChatStatus
-}
-
-// Individual chat interface
-export interface IndividualChat extends BaseChat {
-  isGroup: false
-  participantDetails: ParticipantDetails[] // Array with the other participant's details
-}
-
-// Group chat interface
-export interface GroupChat extends BaseChat {
-  isGroup: true
-  description: string
-  owner: ParticipantDetails
-  admins: string[]
-  participantDetails: ParticipantDetails[] // Array of all group participants
-}
-
-// Union type for chat with details
-export type ChatWithDetails = IndividualChat | GroupChat
-
-// Type guard to check if chat is a group chat
-export function isGroupChat(chat: ChatWithDetails): chat is GroupChat {
-  return chat.isGroup === true
-}
-
-// Type guard to check if chat is an individual chat
-export function isIndividualChat(chat: ChatWithDetails): chat is IndividualChat {
-  return chat.isGroup === false
-}
-
-// Chat list item type (simplified version for list display)
-export interface ChatListItem {
-  id: string
-  name: string
-  avatar: string
-  lastMessage?: Message
-  unreadCount: number
-  isTyping: boolean
-  status: ChatStatus
-  isGroup: boolean
-  participantDetails: ParticipantDetails[]
+export function isGroupChat(chat: ChatWithDetails): boolean {
+  return Boolean(chat.isGroup);
 }

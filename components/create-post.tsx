@@ -8,25 +8,38 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/components/auth-provider"
 import { FileUpload } from "@/components/file-upload"
+import { useToast } from "@/components/ui/use-toast"
 import { motion, AnimatePresence } from "framer-motion"
-import { Image, Video, Music, Smile, AtSign, Hash, MapPin, X, Sparkles } from "lucide-react"
+import { Image, X, Sparkles, Loader2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { PostCategories } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
-export function CreatePost() {
+const TOKEN_LIMIT = 500;
+
+interface CreatePostProps {
+  onPostCreated: () => Promise<void>;
+}
+
+export function CreatePost({ onPostCreated }: CreatePostProps) {
   const { user } = useAuth()
+  const { toast } = useToast()
   const [content, setContent] = useState("")
   const [category, setCategory] = useState<string>(PostCategories.GENERAL)
   const [mediaUrls, setMediaUrls] = useState<string[]>([])
   const [isExpanded, setIsExpanded] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-  const [mentions, setMentions] = useState<string[]>([])
-  const [hashtags, setHashtags] = useState<string[]>([])
-  const [location, setLocation] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleExpandClick = () => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please login to create a post",
+      });
+      return;
+    }
     setIsExpanded(true)
     setTimeout(() => {
       textareaRef.current?.focus()
@@ -34,13 +47,49 @@ export function CreatePost() {
   }
 
   const handleFileSelect = (file: File) => {
+    if (mediaUrls.length >= 5) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Maximum 5 files allowed",
+      });
+      return;
+    }
     // In a real app, implement file upload to storage and get URL
-    // For now, we'll just use a placeholder URL
     const url = `/placeholder-${Date.now()}.jpg`
     setMediaUrls([...mediaUrls, url])
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please login to create a post",
+      });
+      return;
+    }
+
+    if (!content.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Post content cannot be empty",
+      });
+      return;
+    }
+
+    if (content.length > TOKEN_LIMIT) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Content exceeds ${TOKEN_LIMIT} token limit`,
+      });
+      return;
+    }
+
+    setIsLoading(true);
     try {
       const response = await fetch('/api/posts', {
         method: 'POST',
@@ -51,10 +100,10 @@ export function CreatePost() {
           content,
           category,
           mediaUrls,
-          userId: user?.phoneNumber, // Use phoneNumber as userId
-          mentions,
-          hashtags,
-          location
+          userId: user.phoneNumber,
+          username: user.name || "User",
+          userImage: user.image || "/placeholder-user.jpg",
+          tokens: content.length,
         }),
       })
 
@@ -62,19 +111,31 @@ export function CreatePost() {
         throw new Error('Failed to create post')
       }
 
+      toast({
+        title: "Success",
+        description: "Post created successfully",
+      });
+
       // Reset form
       setContent("")
       setCategory(PostCategories.GENERAL)
       setMediaUrls([])
-      setMentions([])
-      setHashtags([])
-      setLocation("")
       setIsExpanded(false)
+      await onPostCreated()
     } catch (error) {
       console.error('Error creating post:', error)
-      // In a real app, show error toast/notification
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create post",
+      });
+    } finally {
+      setIsLoading(false);
     }
   }
+
+  const remainingTokens = TOKEN_LIMIT - content.length;
+  const isOverLimit = remainingTokens < 0;
 
   return (
     <div className="relative">
@@ -86,14 +147,26 @@ export function CreatePost() {
             <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
           </Avatar>
           <div className="flex-1 space-y-4">
-            <Textarea
-              ref={textareaRef}
-              placeholder="What's on your mind?"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onClick={handleExpandClick}
-              className="min-h-[60px] bg-background/50 resize-none border-none focus-visible:ring-1"
-            />
+            <div className="relative">
+              <Textarea
+                ref={textareaRef}
+                placeholder="What's on your mind?"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onClick={handleExpandClick}
+                className={cn(
+                  "min-h-[60px] bg-background/50 resize-none border-none focus-visible:ring-1",
+                  isOverLimit && "border-red-500 focus-visible:ring-red-500"
+                )}
+                disabled={isLoading}
+              />
+              <span className={cn(
+                "absolute bottom-2 right-2 text-xs",
+                isOverLimit ? "text-red-500" : "text-muted-foreground"
+              )}>
+                {remainingTokens} tokens remaining
+              </span>
+            </div>
             
             <AnimatePresence>
               {isExpanded && (
@@ -104,7 +177,7 @@ export function CreatePost() {
                   transition={{ duration: 0.2 }}
                 >
                   <div className="space-y-4 mb-4">
-                    <Select value={category} onValueChange={setCategory}>
+                    <Select value={category} onValueChange={setCategory} disabled={isLoading}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
@@ -130,6 +203,7 @@ export function CreatePost() {
                             <button
                               onClick={() => setMediaUrls(mediaUrls.filter((_, i) => i !== index))}
                               className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              disabled={isLoading}
                             >
                               <X className="h-3 w-3" />
                             </button>
@@ -137,102 +211,52 @@ export function CreatePost() {
                         ))}
                       </div>
                     )}
-
-                    <div className="flex flex-wrap gap-2">
-                      {mentions.map((mention) => (
-                        <div
-                          key={mention}
-                          className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-sm"
-                        >
-                          <AtSign className="h-3 w-3" />
-                          {mention}
-                          <button
-                            onClick={() => setMentions(mentions.filter(m => m !== mention))}
-                            className="hover:text-destructive"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                      {hashtags.map((tag) => (
-                        <div
-                          key={tag}
-                          className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-sm"
-                        >
-                          <Hash className="h-3 w-3" />
-                          {tag}
-                          <button
-                            onClick={() => setHashtags(hashtags.filter(t => t !== tag))}
-                            className="hover:text-destructive"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                      {location && (
-                        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-sm">
-                          <MapPin className="h-3 w-3" />
-                          {location}
-                          <button
-                            onClick={() => setLocation("")}
-                            className="hover:text-destructive"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="flex gap-1">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                            <Image className="h-5 w-5" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Upload Media</DialogTitle>
-                          </DialogHeader>
-                          <FileUpload 
-                            onFileSelect={handleFileSelect}
-                            maxSize={100}
-                            allowedTypes={{ image: true, video: true }}
-                          />
-                        </DialogContent>
-                      </Dialog>
-
-                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                        <AtSign className="h-5 w-5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                        <Hash className="h-5 w-5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                        <MapPin className="h-5 w-5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                        <Smile className="h-5 w-5" />
-                      </Button>
-                    </div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-9 w-9 rounded-full"
+                          disabled={isLoading || mediaUrls.length >= 5}
+                        >
+                          <Image className="h-5 w-5" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Upload Media (Max 5 files)</DialogTitle>
+                        </DialogHeader>
+                        <FileUpload 
+                          onFileSelect={handleFileSelect}
+                          maxSize={100}
+                          allowedTypes={{ image: true, video: true }}
+                        />
+                      </DialogContent>
+                    </Dialog>
 
                     <div className="flex items-center gap-2">
                       <Button 
                         variant="ghost" 
                         size="sm"
                         onClick={() => setIsExpanded(false)}
+                        disabled={isLoading}
                       >
                         Cancel
                       </Button>
                       <Button 
                         onClick={handleSubmit} 
                         className="gap-2 bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 text-white hover:opacity-90"
-                        disabled={!content.trim()}
+                        disabled={!content.trim() || isOverLimit || isLoading}
                       >
-                        <Sparkles className="h-4 w-4" />
-                        Post
+                        {isLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-4 w-4" />
+                        )}
+                        {isLoading ? "Posting..." : "Post"}
                       </Button>
                     </div>
                   </div>

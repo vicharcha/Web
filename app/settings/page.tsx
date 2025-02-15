@@ -3,6 +3,7 @@
 import { useState, useEffect, type ReactNode } from "react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
+import { PrivacySettings } from "./components/privacy-settings"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -251,7 +252,23 @@ export default function SettingsPage() {
               </Card>
             </TabsContent>
 
-            {/* Rest of the tabs... */}
+            {/* Privacy Tab */}
+            <TabsContent value="privacy" className="mt-4 space-y-6">
+              <PrivacySettings />
+            </TabsContent>
+
+            {/* Help Tab */}
+            <TabsContent value="help" className="mt-4 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Help & Support</CardTitle>
+                  <CardDescription>Get help with your account and app usage.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>Contact support for assistance.</p>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             {isDevelopmentMode && (
               <Card className="mt-6 mb-6">

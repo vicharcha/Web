@@ -15,7 +15,13 @@ import { CommentDialog } from "./comment-dialog";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ShareDialog } from "./share-dialog";
-import { type FeedPost, type PostCategory, PostCategories } from "@/lib/types";
+import { type Post as PostType, PostCategories } from "@/lib/types";
+import { useAuth } from "@/components/auth-provider";
+
+interface PostProps extends PostType {
+  onLike?: () => void;
+  onBookmark?: () => void;
+}
 
 export function Post({
   id,
@@ -28,23 +34,55 @@ export function Post({
   shares,
   isLiked: initialIsLiked,
   isBookmarked: initialIsBookmarked,
-  categories,
-  isSponsored,
+  category,
   isPremium,
   isVerified,
-  timestamp = new Date().toISOString()
-}: FeedPost) {
+  timestamp = new Date().toISOString(),
+  onLike,
+  onBookmark
+}: PostProps) {
+  const { user } = useAuth();
   const [image, video] = mediaUrls || [];
-  const [isLiked, setIsLiked] = useState(initialIsLiked);
-  const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked);
   const [showComments, setShowComments] = useState(false);
   const [showShare, setShowShare] = useState(false);
-  const [localLikes, setLocalLikes] = useState(likes);
   const [localCommentCount, setLocalCommentCount] = useState(comments);
 
   const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLocalLikes(prev => isLiked ? prev - 1 : prev + 1);
+    if (!user) {
+      return; // Could show a login prompt here
+    }
+    if (onLike) {
+      onLike();
+    }
+  };
+
+  const handleBookmark = async () => {
+    if (!user) {
+      return; // Could show a login prompt here
+    }
+    if (onBookmark) {
+      onBookmark();
+    } else {
+      try {
+        const method = initialIsBookmarked ? 'DELETE' : 'POST';
+        const response = await fetch('/api/social/bookmark', {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            postId: id,
+            userId: user.phoneNumber
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to update bookmark');
+        }
+      } catch (error) {
+        console.error('Error updating bookmark:', error);
+      }
+    }
   };
 
   const handleAddComment = (comment: string) => {
@@ -72,22 +110,20 @@ export function Post({
                       <Check className="h-3 w-3 text-white" />
                     </div>
                   )}
-                  {isSponsored && (
+                  {isPremium && (
                     <Badge variant="outline" className="text-xs font-normal">
-                      Sponsored
+                      Premium
                     </Badge>
                   )}
                 </div>
                 <div className="flex gap-1 flex-wrap mt-1">
-                  {categories.map((category) => (
-                    <Badge 
-                      key={`${id}-${category}`} 
-                      variant="secondary" 
-                      className="text-[10px] px-2 py-0 hover:bg-secondary/80 transition-colors cursor-pointer"
-                    >
-                      {category}
-                    </Badge>
-                  ))}
+                  <Badge 
+                    key={`${id}-${category}`} 
+                    variant="secondary" 
+                    className="text-[10px] px-2 py-0 hover:bg-secondary/80 transition-colors cursor-pointer"
+                  >
+                    {category}
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -127,17 +163,17 @@ export function Post({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleLike}
-                aria-label={`Like post. ${localLikes} likes`}
+                aria-label={`Like post. ${likes} likes`}
                 className={cn(
                   "group flex items-center gap-2 transition-colors duration-200",
-                  isLiked ? "text-blue-500" : "text-muted-foreground hover:text-blue-500"
+                  initialIsLiked ? "text-blue-500" : "text-muted-foreground hover:text-blue-500"
                 )}
               >
                 <ThumbsUp className={cn(
                   "h-5 w-5 transition-all duration-200",
-                  isLiked ? "scale-110" : "group-hover:scale-110"
+                  initialIsLiked ? "scale-110" : "group-hover:scale-110"
                 )} />
-                <span className="text-sm font-medium">{localLikes}</span>
+                <span className="text-sm font-medium">{likes}</span>
               </motion.button>
               <motion.button 
                 whileHover={{ scale: 1.05 }}
@@ -163,16 +199,16 @@ export function Post({
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setIsBookmarked(!isBookmarked)}
-              aria-label={isBookmarked ? "Remove bookmark" : "Bookmark post"}
+              onClick={handleBookmark}
+              aria-label={initialIsBookmarked ? "Remove bookmark" : "Bookmark post"}
               className={cn(
                 "group transition-colors duration-200",
-                isBookmarked ? "text-primary" : "text-muted-foreground hover:text-primary"
+                initialIsBookmarked ? "text-primary" : "text-muted-foreground hover:text-primary"
               )}
             >
               <Bookmark className={cn(
                 "h-5 w-5 transition-all duration-200",
-                isBookmarked ? "scale-110 fill-current" : "group-hover:scale-110"
+                initialIsBookmarked ? "scale-110 fill-current" : "group-hover:scale-110"
               )} />
             </motion.button>
           </div>
@@ -188,23 +224,25 @@ export function Post({
           id,
           userId: id,
           content,
-          category: (categories[0] as PostCategory) || PostCategories.GENERAL,
+          category,
           ageRestricted: false,
           mediaUrls,
-          createdAt: new Date(timestamp),
-          updatedAt: new Date(timestamp),
-          username,
-          userImage,
-          likes: localLikes,
+          tokens: content.length,
+          mentions: [],
+          hashtags: [],
+          emojis: [],
+          likes,
           comments: localCommentCount,
           shares,
-          isLiked,
-          isBookmarked,
-          categories,
-          isSponsored,
-          isPremium,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+          timestamp,
+          isLiked: initialIsLiked,
+          isBookmarked: initialIsBookmarked,
           isVerified,
-          timestamp
+          isPremium,
+          username,
+          userImage
         }}
         onAddComment={handleAddComment}
       />
@@ -217,24 +255,25 @@ export function Post({
           id,
           userId: id,
           content,
-          category: (categories[0] as PostCategory) || PostCategories.GENERAL,
+          category,
           ageRestricted: false,
           mediaUrls,
-          createdAt: new Date(timestamp),
-          updatedAt: new Date(timestamp),
-          // FeedPostExtension properties
-          username,
-          userImage,
+          tokens: content.length,
+          mentions: [],
+          hashtags: [],
+          emojis: [],
           likes,
           comments: localCommentCount,
           shares,
-          isLiked,
-          isBookmarked,
-          categories,
-          isSponsored,
-          isPremium,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+          timestamp,
+          isLiked: initialIsLiked,
+          isBookmarked: initialIsBookmarked,
           isVerified,
-          timestamp
+          isPremium,
+          username,
+          userImage
         }}
       />
     </>

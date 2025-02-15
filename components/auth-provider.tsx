@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true)
     try {
       const phoneNumber = localStorage.getItem('pendingAuth')
-      if (!phoneNumber) throw new Error("No pending authentication")
+      if (!phoneNumber) throw new Error("No pending verification found")
 
       const response = await fetch("/api/auth/otp", {
         method: "PUT",
@@ -141,6 +141,7 @@ export function useAuth() {
 // Mock auth state helper for testing
 export const mockAuthState = async (userData: Partial<User>) => {
   const mockUser: User = {
+    id: "mock-user-id", // Add default id
     phoneNumber: "1234567890",
     name: "Test User",
     verificationStatus: "verified",

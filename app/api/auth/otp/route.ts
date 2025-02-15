@@ -5,11 +5,7 @@ import { types } from 'cassandra-driver'
 // Generate a 6-digit OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 
-// This would be implemented with a proper SMS service
-const mockSendOTP = async (phoneNumber: string, otp: string) => {
-  console.log(`Mock: Sending OTP ${otp} to ${phoneNumber}`)
-  return true
-}
+import { sendOTP } from '@/lib/sms-service'
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,13 +35,15 @@ export async function POST(req: NextRequest) {
     const otp = generateOTP()
     await createOTP(user.id, otp)
 
-    // For demo purposes, always show OTP
-    console.log("Generated OTP:", otp)
+    // Send OTP via SMS
+    const smsSent = await sendOTP(phoneNumber, otp)
+
+    const isDevelopment = process.env.NODE_ENV === 'development'
     return NextResponse.json({
       success: true,
-      message: "Demo mode: OTP generated",
-      demo: true,
-      otp: otp // Include OTP in response for demo
+      message: isDevelopment ? "Demo mode: OTP generated" : "OTP sent successfully",
+      demo: isDevelopment,
+      otp: isDevelopment ? otp : undefined // Only include OTP in development mode
     })
 
   } catch (error) {
@@ -77,10 +75,12 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    // Demo mode - accept any 6-digit OTP
-    if (!/^\d{6}$/.test(otp)) {
+    // Verify OTP
+    const isValid = await verifyOTP(user.id, otp)
+    
+    if (!isValid) {
       return NextResponse.json(
-        { error: "Please enter 6 digits" },
+        { error: "Invalid or expired OTP" },
         { status: 400 }
       )
     }

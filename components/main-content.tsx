@@ -25,6 +25,7 @@ import { useAuth } from "@/components/auth-provider"
 import { ShareDialog } from "./share-dialog"
 import { CommentDialog } from "./comment-dialog"
 import { LikeButton } from "./like-button"
+import { ContentSections } from "./content-sections"
 import type { FeedPost, Post } from "@/lib/types"
 
 export function MainContent() {
@@ -166,6 +167,8 @@ export function MainContent() {
         <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm py-3 -mx-2 px-2 md:-mx-4 md:px-4">
           <CreatePost />
         </div>
+
+        <ContentSections />
 
         <AnimatePresence>
           {posts.map((post) => (
