@@ -54,7 +54,6 @@ export function Stories() {
   const [isMuted, setIsMuted] = useState(false)
   const [soundLevel, setSoundLevel] = useState(0)
 
-  // Simulate sound level changes
   useEffect(() => {
     let interval: NodeJS.Timeout
     
@@ -115,7 +114,7 @@ export function Stories() {
           >
             <Button
               variant="outline"
-              className="w-20 h-32 flex flex-col items-center justify-center gap-2 border-dashed"
+              className="w-20 h-32 flex flex-col items-center justify-center gap-2 border-dashed hover:bg-accent/50"
             >
               <div className="relative">
                 <Avatar className="w-12 h-12 border-2 border-primary">
@@ -140,20 +139,20 @@ export function Stories() {
             >
               <Button
                 variant="ghost"
-                className="w-20 h-32 p-0 overflow-hidden relative"
+                className="w-20 h-32 p-0 overflow-hidden relative group"
                 onClick={() => handleStoryClick(story)}
               >
                 <div 
-                  className="absolute inset-0 bg-cover bg-center"
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
                   style={{ backgroundImage: `url(${story.storyImage})` }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
                 </div>
                 <div className="absolute inset-x-0 top-2 flex justify-center">
                   <div className={cn(
-                    "ring-2 ring-offset-2",
-                    story.isViewed ? "ring-muted" : "ring-primary",
-                    story.isPremium && "ring-gradient-to-r from-amber-500 to-orange-500"
+                    "p-0.5 rounded-full",
+                    story.isPremium ? "bg-gradient-to-r from-amber-500 to-orange-500" : "bg-transparent",
+                    story.isViewed ? "ring-2 ring-muted" : "ring-2 ring-primary"
                   )}>
                     <Avatar className="w-10 h-10 border-2 border-background">
                       <AvatarImage src={story.userImage} />
@@ -162,7 +161,7 @@ export function Stories() {
                   </div>
                 </div>
                 <div className="absolute inset-x-0 bottom-2 text-center">
-                  <p className="text-xs text-white font-medium truncate px-1">
+                  <p className="text-xs text-white font-medium truncate px-1 drop-shadow-md">
                     {story.username}
                   </p>
                 </div>
@@ -179,109 +178,123 @@ export function Stories() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black"
+            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm"
           >
             <div className="absolute inset-0 flex items-center justify-center">
-              {/* Story Image */}
-              <div className="relative w-full h-full md:w-[400px] md:h-[calc(100vh-4rem)]">
-                <img
-                  src={selectedStory.storyImage}
-                  alt={`${selectedStory.username}'s story`}
-                  className="w-full h-full object-cover"
-                />
-
+              <div className="relative w-full h-full max-w-2xl max-h-[90vh] aspect-[9/16]">
                 {/* Progress Bar */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-white/20">
-                  <motion.div
-                    className="h-full bg-white"
-                    initial={{ width: "0%" }}
-                    animate={isPlaying ? { width: "100%" } : { width: `${progress}%` }}
-                    transition={{
-                      duration: selectedStory.duration || 10,
-                      ease: "linear"
-                    }}
-                    onAnimationComplete={handleNext}
+                <div className="absolute top-4 left-4 right-4 z-10 flex gap-1">
+                  {sampleStories.map((story) => (
+                    <div 
+                      key={story.id}
+                      className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden"
+                    >
+                      {selectedStory.id === story.id && (
+                        <motion.div
+                          key={selectedStory.id}
+                          className="h-full bg-white"
+                          initial={{ width: "0%" }}
+                          animate={isPlaying ? { width: "100%" } : {}}
+                          transition={{
+                            duration: selectedStory.duration ? selectedStory.duration / 1000 : 10,
+                            ease: "linear"
+                          }}
+                          onAnimationComplete={handleNext}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Story Content */}
+                <div className="relative w-full h-full overflow-hidden rounded-xl">
+                  <img
+                    src={selectedStory.storyImage}
+                    alt={`${selectedStory.username}'s story`}
+                    className="w-full h-full object-cover"
                   />
                 </div>
 
-                {/* Story Controls */}
-                <div className="absolute bottom-6 left-4 right-4 flex items-center justify-between">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20"
-                    onClick={() => setIsPlaying(!isPlaying)}
-                  >
-                    {isPlaying ? (
-                      <Pause className="h-6 w-6" />
-                    ) : (
-                      <Play className="h-6 w-6" />
-                    )}
-                  </Button>
-                  
-                  <div className="flex items-center gap-2">
-                    <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden">
-                      <motion.div 
-                        className="h-full bg-white"
-                        initial={{ width: "0%" }}
-                        animate={{ width: `${soundLevel}%` }}
-                        transition={{ duration: 0.1 }}
-                      />
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-white hover:bg-white/20"
-                      onClick={() => setIsMuted(!isMuted)}
-                    >
-                      {isMuted ? (
-                        <VolumeX className="h-6 w-6" />
-                      ) : (
-                        <Volume2 className="h-6 w-6" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
                 {/* Header */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+                <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Avatar className="w-8 h-8 ring-2 ring-white">
-                      <AvatarImage src={selectedStory.userImage} />
-                      <AvatarFallback>{selectedStory.username[0]}</AvatarFallback>
-                    </Avatar>
-                    <span className="text-white font-medium">{selectedStory.username}</span>
+                    <div className={cn(
+                      "p-0.5 rounded-full",
+                      selectedStory.isPremium ? "bg-gradient-to-r from-amber-500 to-orange-500" : "ring-2 ring-white"
+                    )}>
+                      <Avatar className="w-8 h-8 border-2 border-background">
+                        <AvatarImage src={selectedStory.userImage} />
+                        <AvatarFallback>{selectedStory.username[0]}</AvatarFallback>
+                      </Avatar>
+                    </div>
+                    <span className="text-white font-medium drop-shadow-md">
+                      {selectedStory.username}
+                    </span>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-white hover:bg-white/20"
+                    className="text-white hover:bg-white/20 rounded-full"
                     onClick={handleClose}
                   >
                     <X className="h-5 w-5" />
                   </Button>
                 </div>
 
-                {/* Navigation */}
-                <div className="absolute inset-y-0 left-4 flex items-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20"
+                {/* Navigation Controls */}
+                <div className="absolute inset-0 flex">
+                  <div 
+                    className="flex-1 cursor-pointer" 
                     onClick={handlePrevious}
-                  >
-                    <ChevronLeft className="h-8 w-8" />
-                  </Button>
-                </div>
-                <div className="absolute inset-y-0 right-4 flex items-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/20"
+                    role="button"
+                    aria-label="Previous story"
+                  />
+                  <div 
+                    className="flex-1 cursor-pointer" 
                     onClick={handleNext}
-                  >
-                    <ChevronRight className="h-8 w-8" />
-                  </Button>
+                    role="button"
+                    aria-label="Next story"
+                  />
+                </div>
+
+                {/* Bottom Controls */}
+                <div className="absolute bottom-4 left-4 right-4 z-10 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-white hover:bg-white/20 rounded-full"
+                      onClick={() => setIsPlaying(!isPlaying)}
+                    >
+                      {isPlaying ? (
+                        <Pause className="h-6 w-6" />
+                      ) : (
+                        <Play className="h-6 w-6" />
+                      )}
+                    </Button>
+                    
+                    <div className="flex items-center gap-2 w-32">
+                      <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-white"
+                          animate={{ width: `${isMuted ? 0 : soundLevel}%` }}
+                          transition={{ duration: 0.1 }}
+                        />
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-white hover:bg-white/20 rounded-full"
+                        onClick={() => setIsMuted(!isMuted)}
+                      >
+                        {isMuted ? (
+                          <VolumeX className="h-6 w-6" />
+                        ) : (
+                          <Volume2 className="h-6 w-6" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
