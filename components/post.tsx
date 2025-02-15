@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { ShareDialog } from "./share-dialog";
 import { type Post as PostType, PostCategories } from "@/lib/types";
 import { useAuth } from "@/components/auth-provider";
+import { useToast } from "@/components/ui/use-toast";
 
 interface PostProps extends PostType {
   onLike?: () => void;
@@ -42,28 +43,57 @@ export function Post({
   onBookmark
 }: PostProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [image, video] = mediaUrls || [];
   const [showComments, setShowComments] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [localCommentCount, setLocalCommentCount] = useState(comments);
+  const [isLiking, setIsLiking] = useState(false);
+  const [isBookmarking, setIsBookmarking] = useState(false);
 
-  const handleLike = () => {
+  const handleLike = async () => {
     if (!user) {
-      return; // Could show a login prompt here
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please login to like posts",
+      });
+      return;
     }
-    if (onLike) {
-      onLike();
+    if (isLiking) return;
+    setIsLiking(true);
+    try {
+      if (onLike) {
+        await onLike();
+      } else {
+        // Add your like logic here
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to like post",
+      });
+    } finally {
+      setIsLiking(false);
     }
   };
 
   const handleBookmark = async () => {
     if (!user) {
-      return; // Could show a login prompt here
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please login to bookmark posts",
+      });
+      return;
     }
-    if (onBookmark) {
-      onBookmark();
-    } else {
-      try {
+    if (isBookmarking) return;
+    setIsBookmarking(true);
+    try {
+      if (onBookmark) {
+        await onBookmark();
+      } else {
         const method = initialIsBookmarked ? 'DELETE' : 'POST';
         const response = await fetch('/api/social/bookmark', {
           method,
@@ -79,9 +109,15 @@ export function Post({
         if (!response.ok) {
           throw new Error('Failed to update bookmark');
         }
-      } catch (error) {
-        console.error('Error updating bookmark:', error);
       }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to bookmark post",
+      });
+    } finally {
+      setIsBookmarking(false);
     }
   };
 
