@@ -1,14 +1,28 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createUser, findUserByPhone, createOTP, verifyOTP } from "@/lib/db"
 import { types } from 'cassandra-driver'
+import twilio from 'twilio'
+
+const accountSid = process.env.TWILIO_ACCOUNT_SID
+const authToken = process.env.TWILIO_AUTH_TOKEN
+const twilioClient = twilio(accountSid, authToken)
 
 // Generate a 6-digit OTP
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 
-// This would be implemented with a proper SMS service
-const mockSendOTP = async (phoneNumber: string, otp: string) => {
-  console.log(`Mock: Sending OTP ${otp} to ${phoneNumber}`)
-  return true
+// Send OTP using Twilio
+const sendOTP = async (phoneNumber: string, otp: string) => {
+  try {
+    await twilioClient.messages.create({
+      body: `Your OTP is ${otp}`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: phoneNumber
+    })
+    return true
+  } catch (error) {
+    console.error("Failed to send OTP via Twilio:", error)
+    return false
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -39,13 +53,18 @@ export async function POST(req: NextRequest) {
     const otp = generateOTP()
     await createOTP(user.id, otp)
 
-    // For demo purposes, always show OTP
-    console.log("Generated OTP:", otp)
+    // Send OTP via Twilio
+    const otpSent = await sendOTP(phoneNumber, otp)
+    if (!otpSent) {
+      return NextResponse.json(
+        { error: "Failed to send OTP" },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json({
       success: true,
-      message: "Demo mode: OTP generated",
-      demo: true,
-      otp: otp // Include OTP in response for demo
+      message: "OTP sent successfully"
     })
 
   } catch (error) {
@@ -77,10 +96,11 @@ export async function PUT(req: NextRequest) {
       )
     }
 
-    // Demo mode - accept any 6-digit OTP
-    if (!/^\d{6}$/.test(otp)) {
+    // Verify OTP
+    const isValidOTP = await verifyOTP(user.id, otp)
+    if (!isValidOTP) {
       return NextResponse.json(
-        { error: "Please enter 6 digits" },
+        { error: "Invalid OTP" },
         { status: 400 }
       )
     }
