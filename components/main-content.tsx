@@ -27,13 +27,22 @@ import { CommentDialog } from "./comment-dialog"
 import { LikeButton } from "./like-button"
 import { ContentSections } from "./content-sections"
 import type { Post } from "@/lib/types"
+import { useSettings } from "@/hooks/use-settings"
+import { PostCategories } from '@/lib/types'
+import { Stories } from "@/components/stories"
 
 type FeedPost = Post & {
   categories: string[];
 };
 
-export function MainContent() {
+interface MainContentProps {
+  category: string;
+  showStories?: boolean;
+}
+
+export function MainContent({ category, showStories = false }: MainContentProps) {
   const { user } = useAuth()
+  const { settings } = useSettings()
   const [posts, setPosts] = useState<FeedPost[]>([])
   const [loading, setLoading] = useState(true)
   const [newComments, setNewComments] = useState<Record<string, string>>({})
@@ -44,7 +53,7 @@ export function MainContent() {
 
   const fetchPosts = useCallback(async () => {
     try {
-      const response = await fetch('/api/posts')
+      const response = await fetch(`/api/posts?category=${category}`)
       if (!response.ok) throw new Error('Failed to fetch posts')
       
       const data: Post[] = await response.json()
@@ -74,7 +83,7 @@ export function MainContent() {
     } finally {
       setLoading(false)
     }
-  }, [toast])
+  }, [toast, category])
 
   useEffect(() => {
     fetchPosts()
@@ -165,13 +174,25 @@ export function MainContent() {
     )
   }
 
+  const filteredPosts = posts.filter(post => {
+    // Filter by selected category
+    if (post.category !== category) return false;
+    
+    // Filter adult content
+    if (post.category === PostCategories.ADULT) {
+      return settings?.isAdultContentEnabled;
+    }
+    return true;
+  });
+
   return (
     <div className="w-full">
       <div className="space-y-4 md:space-y-6">
-        <ContentSections />
-
+        {showStories && <Stories />}
+        <CreatePost onPostCreated={fetchPosts} initialCategory={category} />
+        
         <AnimatePresence>
-          {posts.map((post) => (
+          {filteredPosts.map((post) => (
             <motion.article
               key={post.id}
               initial={{ opacity: 0, y: 20 }}

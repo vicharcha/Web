@@ -1,11 +1,11 @@
-export const PostCategories = {
-  GENERAL: "general",
-  NEWS: "news",
-  ENTERTAINMENT: "entertainment",
-  SPORTS: "sports",
-  TECHNOLOGY: "technology",
-  ADULT: "adult",
-} as const;
+export enum PostCategories {
+  GENERAL = "general",
+  NEWS = "news",
+  ENTERTAINMENT = "entertainment",
+  SPORTS = "sports",
+  TECHNOLOGY = "technology",
+  ADULT = "adult" // Only shown in settings
+}
 
 export interface DBUser {
   id: string;
@@ -56,36 +56,34 @@ export type Post = {
   ageRestricted?: boolean;
 };
 
-export type Story = {
+export interface Story {
   id: string;
   userId: string;
-  items: StoryItem[];
-  category: string;
+  username: string;
+  userImage: string;
+  mediaUrl: string;
+  isViewed: boolean;
+  isPremium: boolean;
   createdAt: string;
   expiresAt: string;
-  isAdult?: boolean;
-};
-
-export type StoryItem = {
-  id: string;
-  type: "image" | "video";
-  url: string;
+  type: 'image' | 'video';
   duration?: number;
-};
+}
 
-export type User = {
+export interface User {
   id: string;
   phoneNumber: string;
   username?: string;
   name?: string;
   email?: string;
+  image?: string; // Add image property
   verificationStatus: "unverified" | "verified";
   isPremium: boolean;
   digiLockerVerified: boolean;
   joinedDate: string;
   lastActive: string;
   documents?: DigiLockerDocument[];
-};
+}
 
 export interface DigiLockerDocument {
   id: string;
@@ -136,4 +134,15 @@ export interface DatabaseResult {
 
 export function isGroupChat(chat: ChatWithDetails): boolean {
   return Boolean(chat.isGroup);
+}
+
+export interface UserSettings {
+  isAdultContentEnabled: boolean;
+  dateOfBirth?: string;
+  theme?: string;
+  notifications?: {
+    email: boolean;
+    push: boolean;
+    sms: boolean;
+  };
 }

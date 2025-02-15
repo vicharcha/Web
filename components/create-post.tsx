@@ -14,18 +14,21 @@ import { Image, X, Sparkles, Loader2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { PostCategories } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { useSettings } from "@/hooks/use-settings"
 
 const TOKEN_LIMIT = 500;
 
 interface CreatePostProps {
   onPostCreated: () => Promise<void>;
+  initialCategory?: string;
 }
 
-export function CreatePost({ onPostCreated }: CreatePostProps) {
+export function CreatePost({ onPostCreated, initialCategory }: CreatePostProps) {
   const { user } = useAuth()
+  const { settings } = useSettings()
   const { toast } = useToast()
   const [content, setContent] = useState("")
-  const [category, setCategory] = useState<string>(PostCategories.GENERAL)
+  const [category, setCategory] = useState<string>(initialCategory || PostCategories.NEWS)
   const [mediaUrls, setMediaUrls] = useState<string[]>([])
   const [isExpanded, setIsExpanded] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -177,17 +180,22 @@ export function CreatePost({ onPostCreated }: CreatePostProps) {
                   transition={{ duration: 0.2 }}
                 >
                   <div className="space-y-4 mb-4">
-                    <Select value={category} onValueChange={setCategory} disabled={isLoading}>
+                    <Select 
+                      value={category} 
+                      onValueChange={(value: string) => setCategory(value)} 
+                      disabled={isLoading}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(PostCategories).map(([key, value]) => (
-                          <SelectItem key={key} value={value}>
-                            {key.charAt(0) + key.slice(1).toLowerCase()}
-                            {value === PostCategories.ADULT && " (18+)"}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value={PostCategories.NEWS}>News</SelectItem>
+                        <SelectItem value={PostCategories.ENTERTAINMENT}>Entertainment</SelectItem>
+                        <SelectItem value={PostCategories.SPORTS}>Sports</SelectItem>
+                        <SelectItem value={PostCategories.TECHNOLOGY}>Technology</SelectItem>
+                        {settings?.isAdultContentEnabled && (
+                          <SelectItem value={PostCategories.ADULT}>Adult Content (18+)</SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
 
