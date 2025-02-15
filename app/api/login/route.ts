@@ -3,16 +3,16 @@ import { NextRequest, NextResponse } from 'next/server';
 // Make route dynamic
 export const dynamic = 'force-dynamic';
 
-import { findUserByPhone } from '@/lib/db';
+import { findUserByPhone, verifyOTP } from '@/lib/db';
 import type { User } from '@/lib/types';
 
 export async function POST(req: NextRequest) {
   try {
-    const { phoneNumber } = await req.json();
+    const { phoneNumber, otp } = await req.json();
 
-    if (!phoneNumber) {
+    if (!phoneNumber || !otp) {
       return NextResponse.json(
-        { error: 'Phone number is required' },
+        { error: 'Phone number and OTP are required' },
         { status: 400 }
       );
     }
@@ -24,6 +24,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
+      );
+    }
+
+    // Verify OTP
+    const isValidOTP = await verifyOTP(user.id, otp);
+    if (!isValidOTP) {
+      return NextResponse.json(
+        { error: 'Invalid OTP' },
+        { status: 400 }
       );
     }
 
