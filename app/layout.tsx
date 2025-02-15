@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Toaster } from "sonner"
+import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 import "./globals.css"
 import { Sidebar } from "@/app/components/sidebar"
@@ -81,6 +83,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
             </div>
             <Toaster richColors closeButton position="top-right" />
           </AuthProvider>
+          <Analytics />
+          <SpeedInsights />
         </ThemeProvider>
       </body>
     </html>
