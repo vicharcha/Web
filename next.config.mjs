@@ -7,6 +7,10 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    USE_MOCK_DB: 'true',
+    NEXT_PUBLIC_USE_MOCK_DB: 'true'
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
