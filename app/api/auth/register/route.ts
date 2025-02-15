@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server"
 import { executeQuery } from "@/lib/cassandra"
 import { v4 as uuidv4 } from "uuid"
 import { createOTP, verifyOTP } from "@/lib/db"
+import { connectToCassandra } from "@/lib/cassandra"
 
 export async function POST(req: NextRequest) {
   try {
+    await connectToCassandra()
+
     const { phoneNumber, username } = await req.json()
 
     if (!phoneNumber || !username) {
@@ -69,6 +72,14 @@ export async function POST(req: NextRequest) {
     })
   } catch (error) {
     console.error("Registration error:", error)
+
+    if (error.message.includes("Missing required Cassandra configuration")) {
+      return NextResponse.json(
+        { error: "Cassandra configuration is missing or incomplete" },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json(
       { error: "Failed to complete registration" },
       { status: 500 }
