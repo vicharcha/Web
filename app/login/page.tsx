@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { LoginForm } from "@/app/components/login-form"
@@ -9,12 +9,17 @@ import { motion } from "framer-motion"
 export default function LoginPage() {
   const router = useRouter()
   const { user, loading } = useAuth()
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!loading && user) {
       router.push("/")
     }
   }, [user, loading, router])
+
+  const handleLoginError = (errorMessage: string) => {
+    setError(errorMessage)
+  }
 
   if (loading) {
     return (
@@ -52,7 +57,18 @@ export default function LoginPage() {
             </p>
           </motion.div>
 
-          <LoginForm />
+          {error && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="text-center text-red-500"
+            >
+              {error}
+            </motion.div>
+          )}
+
+          <LoginForm onError={handleLoginError} />
 
           <motion.div
             initial={{ opacity: 0 }}
