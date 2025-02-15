@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { executeQuery } from "@/lib/cassandra"
 import { v4 as uuidv4 } from "uuid"
+import { createOTP, verifyOTP } from "@/lib/db"
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,26 +14,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Demo user handling
-    if (phoneNumber === "+911234567890") {
-      const demoUser = {
-        id: "demo-" + Date.now(),
-        username,
-        phone_number: phoneNumber,
-        is_verified: false,
-        phone_verified: true,
-        created_at: new Date(),
-        last_active: new Date()
-      }
-      
-      return NextResponse.json({ 
-        success: true,
-        user: demoUser,
-        message: "Demo user created successfully"
-      })
-    }
-
-    // For real users, check username availability
+    // Check if username is available
     const existingUsername = await executeQuery(
       "SELECT id FROM social_network.users WHERE username = ? ALLOW FILTERING",
       [username]

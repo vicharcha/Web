@@ -76,11 +76,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (!response.ok) {
-        throw new Error("Login failed")
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Login failed")
       }
 
       // For demo, we'll use mock OTP flow
       localStorage.setItem('pendingAuth', phoneNumber)
+    } catch (error) {
+      console.error('Login error:', error)
+      throw error
     } finally {
       setLoading(false)
     }
@@ -103,7 +107,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }),
       })
 
-      if (!response.ok) throw new Error("Verification failed")
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Verification failed")
+      }
 
       const { user } = await response.json()
       setUser(user)
@@ -112,6 +119,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Always redirect to home for demo
       router.push('/')
+    } catch (error) {
+      console.error('OTP verification error:', error)
+      throw error
     } finally {
       setLoading(false)
     }
