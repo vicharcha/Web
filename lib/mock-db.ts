@@ -191,11 +191,19 @@ export const mockDB = {
       }
     }
 
-    // Log unhandled queries in development
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('Unhandled mock DB query:', query);
+    // Handle posts queries
+    if (query.toLowerCase().includes('posts')) {
+      if (query.toLowerCase().includes('category')) {
+        const category = params[0];
+        const posts = Array.from(storage.posts.values())
+          .filter(post => post.category === category);
+        return createDbResult(posts);
+      }
+      
+      // Return all posts for general select
+      return createDbResult(Array.from(storage.posts.values()));
     }
-    
+
     // Default response for unhandled queries
     return createDbResult([]);
   }

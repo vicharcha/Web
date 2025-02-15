@@ -1,54 +1,35 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { useAuth } from '@/components/auth-provider';
 import { Sidebar } from './sidebar';
+import { LoginForm } from './login-form';
 
 export default function ClientLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const isAuthPage = pathname === '/login';
-
-  useEffect(() => {
-    // Check authentication status
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'verify-token' }),
-        });
-
-        setIsAuthenticated(response.ok);
-
-        // Redirect to login if not authenticated and not already on login page
-        if (!response.ok && !isAuthPage) {
-          window.location.href = '/login';
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        setIsAuthenticated(false);
-      }
-    };
-
-    checkAuth();
-  }, [pathname, isAuthPage]);
-
-  // Show nothing while checking auth
-  if (isAuthenticated === null) {
-    return null;
+  const { user, loading } = useAuth();
+  
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="loading-spinner" />
+      </div>
+    );
   }
 
-  // Show children directly for auth pages
-  if (isAuthPage) {
-    return <>{children}</>;
+  // Show login form if not authenticated
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <LoginForm />
+      </div>
+    );
   }
 
-  // Show layout with sidebar for authenticated pages
+  // Show layout with sidebar for authenticated users
   return (
     <div className="flex h-screen">
       <Sidebar />

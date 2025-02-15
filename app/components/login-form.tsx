@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useAuth } from "@/components/auth-provider"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CountrySelector } from "@/components/country-selector"
@@ -13,6 +14,7 @@ import { validatePhoneNumber, formatPhoneNumber } from "@/lib/country-codes"
 
 export function LoginForm() {
   const { login, verifyOtp } = useAuth()
+  const router = useRouter()
   const [phoneNumber, setPhoneNumber] = useState("")
   const [username, setUsername] = useState("")
   const [otp, setOtp] = useState("")
@@ -115,6 +117,7 @@ export function LoginForm() {
         } else if (data.user) {
           await verifyOtp(otp)
           toast.success("Successfully logged in!")
+          router.push("/")
         }
       }
     } catch (error) {
@@ -153,6 +156,7 @@ export function LoginForm() {
       const { user } = await response.json()
       await login(formattedPhone, username)
       toast.success("Successfully registered!")
+      router.push("/")
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Registration failed")
     } finally {

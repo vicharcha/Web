@@ -59,11 +59,7 @@ export function ContentSections() {
         <StoriesPage />
       </div>
 
-      <div className="px-4">
-        <CreatePost onPostCreated={fetchPosts} />
-      </div>
-
-      <Tabs defaultValue="General" className="w-full mt-6" onValueChange={setSelectedCategory}>
+      <Tabs defaultValue="General" className="w-full" onValueChange={setSelectedCategory}>
         <TabsList className="w-full justify-start">
           {categories.map((category) => (
             <TabsTrigger key={category} value={category}>
@@ -74,80 +70,8 @@ export function ContentSections() {
 
         {categories.map((category) => (
           <TabsContent key={category} value={category} className="mt-6">
-            <div className="space-y-6">
-              {loading ? (
-                // Loading skeleton
-                <div className="space-y-6">
-                  {[1, 2, 3].map((n) => (
-                    <div key={n} className="animate-pulse">
-                      <div className="h-[300px] bg-muted rounded-lg" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                posts
-                  .filter(post => {
-                    const postCat = post.category?.toLowerCase() || "general";
-                    const selectedCat = category.toLowerCase();
-                    return selectedCat === "general" ? 
-                      postCat === "general" || !postCat : 
-                      postCat === selectedCat;
-                  })
-                  .map(post => (
-                    <PostComponent
-                      key={post.id}
-                      post={post}
-                      onLike={async (postId) => {
-                        try {
-                          const response = await fetch('/api/social/like', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ postId, userId: user?.phoneNumber }),
-                          });
-                          if (!response.ok) throw new Error('Failed to like post');
-                          setPosts(posts.map(p => 
-                            p.id === postId 
-                              ? { ...p, likes: p.likes + 1, isLiked: true }
-                              : p
-                          ));
-                        } catch (error) {
-                          toast({
-                            variant: "destructive",
-                            title: "Error",
-                            description: "Failed to like post",
-                          });
-                        }
-                      }}
-                      onComment={async (postId) => {
-                        // Handle comment
-                      }}
-                      onShare={async (postId) => {
-                        // Handle share
-                      }}
-                      onSave={async (postId) => {
-                        try {
-                          const response = await fetch('/api/social/bookmark', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ postId, userId: user?.phoneNumber }),
-                          });
-                          if (!response.ok) throw new Error('Failed to bookmark post');
-                          setPosts(posts.map(p => 
-                            p.id === postId 
-                              ? { ...p, isBookmarked: !p.isBookmarked }
-                              : p
-                          ));
-                        } catch (error) {
-                          toast({
-                            variant: "destructive",
-                            title: "Error",
-                            description: "Failed to bookmark post",
-                          });
-                        }
-                      }}
-                    />
-                  ))
-              )}
+            <div className="mt-6">
+              <CreatePost onPostCreated={fetchPosts} />
             </div>
           </TabsContent>
         ))}

@@ -218,3 +218,52 @@ export interface Post {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface Reel {
+  id: string;
+  userId: string;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  caption?: string;
+  createdAt: Date;
+}
+
+export async function getReels(userId?: string): Promise<Reel[]> {
+  let query = 'SELECT * FROM social_network.reels';
+  const params: any[] = [];
+
+  if (userId) {
+    query += ' WHERE user_id = ?';
+    params.push(userId);
+  }
+
+  const result = await executeQuery(query, params);
+  return result.rows || [];
+}
+
+export async function createReel(
+  userId: string,
+  videoUrl: string,
+  thumbnailUrl?: string,
+  caption?: string
+): Promise<string> {
+  const id = types.Uuid.random().toString();
+  const now = new Date();
+  
+  const query = `
+    INSERT INTO social_network.reels 
+    (id, user_id, video_url, thumbnail_url, caption, created_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+  
+  await executeQuery(query, [
+    id,
+    userId,
+    videoUrl,
+    thumbnailUrl || null,
+    caption || null,
+    now
+  ]);
+  
+  return id;
+}

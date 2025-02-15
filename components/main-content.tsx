@@ -26,7 +26,11 @@ import { ShareDialog } from "./share-dialog"
 import { CommentDialog } from "./comment-dialog"
 import { LikeButton } from "./like-button"
 import { ContentSections } from "./content-sections"
-import type { FeedPost, Post } from "@/lib/types"
+import type { Post } from "@/lib/types"
+
+type FeedPost = Post & {
+  categories: string[];
+};
 
 export function MainContent() {
   const { user } = useAuth()
@@ -164,10 +168,6 @@ export function MainContent() {
   return (
     <div className="w-full">
       <div className="space-y-4 md:space-y-6">
-        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm py-3 -mx-2 px-2 md:-mx-4 md:px-4">
-          <CreatePost />
-        </div>
-
         <ContentSections />
 
         <AnimatePresence>
@@ -277,7 +277,7 @@ export function MainContent() {
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6 md:h-8 md:w-8">
                       <AvatarImage src={`/placeholder.svg?${user?.phoneNumber}`} />
-                      <AvatarFallback>{user?.name?.[0]}</AvatarFallback>
+                      <AvatarFallback>{user?.phoneNumber?.[0]}</AvatarFallback>
                     </Avatar>
                     <Input
                       placeholder="Add a comment..."

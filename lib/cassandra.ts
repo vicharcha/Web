@@ -183,4 +183,19 @@ async function initializeCassandra() {
   console.log('Cassandra schema initialized successfully');
 }
 
+export enum PostCategories {
+  GENERAL = 'general',
+  NEWS = 'news',
+  ENTERTAINMENT = 'entertainment',
+  SPORTS = 'sports',
+  TECHNOLOGY = 'technology',
+  LIFESTYLE = 'lifestyle',
+  EDUCATION = 'education',
+  HEALTH = 'health',
+  BUSINESS = 'business',
+  OTHER = 'other'
+}
+
+export type PostCategory = keyof typeof PostCategories;
+
 export { types };

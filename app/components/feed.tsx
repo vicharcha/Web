@@ -17,12 +17,8 @@ export default function Feed() {
   const [newPost, setNewPost] = useState('');
 
 useEffect(() => {
-  // Fetch posts from an API or local storage
-  const fetchedPosts = [
-    { id: '1', user: 'User1', content: 'Hello World!', likes: 5, comments: ['Nice post!'] },
-    { id: '2', user: 'User2', content: 'Another post', likes: 3, comments: ['Cool!'] },
-  ];
-  setInternalPosts(fetchedPosts);
+  // Start with an empty feed
+  setInternalPosts([]);
 }, []);
 
 const handleCreatePost = () => {
@@ -30,7 +26,7 @@ const handleCreatePost = () => {
 
   const newPostObj = {
     id: (internalPosts.length + 1).toString(),
-    user: user?.name || 'Anonymous',
+    user: user?.phoneNumber || 'Anonymous',
     content: newPost,
     likes: 0,
     comments: [],
