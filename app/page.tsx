@@ -1,8 +1,10 @@
 "use client"
 
-import { MainContent } from "@/components/main-content"
+import Feed from "@/components/feed"
 import { useResponsive } from "@/hooks/use-responsive"
 import { cn } from "@/lib/utils"
+import { StatusBar } from "@/components/status-bar"
+import { CreatePost } from "@/components/create-post"
 
 export default function HomePage() {
   return (
@@ -10,7 +12,9 @@ export default function HomePage() {
       <div className="flex-1 flex flex-col">
         <div className="flex-1 flex relative">
           <div className="w-full md:max-w-4xl mx-auto">
-            <MainContent />
+            <StatusBar />
+            <CreatePost />
+            <Feed />
           </div>
         </div>
       </div>
