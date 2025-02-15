@@ -10,29 +10,6 @@ body {
   .text-balance {
     text-wrap: balance;
   }
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-}
-
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient 2s linear infinite;
-}
-
-.animate-gradient-fast {
-  animation-duration: 1s;
-}
-
-@keyframes gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
 }
 
 @layer base {
