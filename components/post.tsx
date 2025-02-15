@@ -15,10 +15,10 @@ import { CommentDialog } from "./comment-dialog";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ShareDialog } from "./share-dialog";
-import { type Post as PostType, PostCategories } from "@/lib/types";
+import { type FeedPost, PostCategories } from "@/lib/types";
 import { useAuth } from "@/components/auth-provider";
 
-interface PostProps extends PostType {
+interface PostProps extends FeedPost {
   onLike?: () => void;
   onBookmark?: () => void;
 }
@@ -85,7 +85,7 @@ export function Post({
     }
   };
 
-  const handleAddComment = (comment: string) => {
+  const handleAddComment = (comment: string): void => {
     setLocalCommentCount(prev => prev + 1);
   };
 
@@ -225,12 +225,7 @@ export function Post({
           userId: id,
           content,
           category,
-          ageRestricted: false,
           mediaUrls,
-          tokens: content.length,
-          mentions: [],
-          hashtags: [],
-          emojis: [],
           likes,
           comments: localCommentCount,
           shares,
@@ -242,7 +237,8 @@ export function Post({
           isVerified,
           isPremium,
           username,
-          userImage
+          userImage,
+          categories: [category]
         }}
         onAddComment={handleAddComment}
       />
@@ -256,12 +252,7 @@ export function Post({
           userId: id,
           content,
           category,
-          ageRestricted: false,
           mediaUrls,
-          tokens: content.length,
-          mentions: [],
-          hashtags: [],
-          emojis: [],
           likes,
           comments: localCommentCount,
           shares,
@@ -273,7 +264,8 @@ export function Post({
           isVerified,
           isPremium,
           username,
-          userImage
+          userImage,
+          categories: [category]
         }}
       />
     </>

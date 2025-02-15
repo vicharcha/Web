@@ -4,19 +4,16 @@ import { MainContent } from "@/components/main-content"
 import { useResponsive } from "@/hooks/use-responsive"
 import { cn } from "@/lib/utils"
 
-export default function Home() {
-  const { isMobile } = useResponsive()
-
+export default function HomePage() {
   return (
-    <div className="flex-1 w-full">
-      <div className="w-full mx-auto pt-4 md:pt-6">
-        <div className={cn(
-          "w-full mx-auto",
-          isMobile ? "px-2" : "px-6 max-w-3xl"
-        )}>
-          <MainContent />
+    <main className="flex min-h-screen bg-background">
+      <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex relative">
+          <div className="w-full md:max-w-4xl mx-auto">
+            <MainContent />
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

@@ -76,6 +76,28 @@
 }
 
 /* Animation utilities */
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  animation: gradient 4s ease infinite;
+  background-size: 200% 200%;
+}
+
+.animate-gradient-fast {
+  animation: gradient 2s ease infinite;
+  background-size: 200% 200%;
+}
+
 @keyframes blob {
   0% {
     transform: translate(0px, 0px) scale(1);
@@ -103,20 +125,20 @@
   animation-delay: 4s;
 }
 
-/* OTP input styles */
+/* Form element styles */
 .otp-input {
-  @apply w-12 h-12 text-2xl text-center border rounded-lg focus:ring-2 focus:ring-blue-500 transition-all;
+  @apply w-12 h-12 text-2xl text-center border rounded-lg focus:ring-2 focus:ring-primary/50 transition-all;
 }
 
-/* Gradient text utilities */
+/* Text utilities */
 .gradient-text {
   @apply text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600;
 }
 
-/* Custom scrollbar */
+/* Scrollbar styles */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -124,24 +146,66 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-400 dark:bg-gray-600 rounded-full;
+  @apply bg-muted hover:bg-muted-foreground/50 rounded-full transition-colors;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500 dark:bg-gray-500;
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted)) transparent;
 }
 
-/* Loading spinner */
+/* Loading and interaction utilities */
 .loading-spinner {
   @apply animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent;
 }
 
-/* Card hover effect */
 .hover-card {
   @apply transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg;
 }
 
-/* Custom focus styles */
 .focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400;
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/50 dark:focus:ring-primary/50;
+}
+
+/* Glass effect utilities */
+.glass-effect {
+  @apply bg-background/60 backdrop-blur-md border shadow-sm transition-all duration-200;
+}
+
+.glass-effect-strong {
+  @apply bg-background/80 backdrop-blur-lg border shadow-md transition-all duration-200;
+}
+
+/* Toaster styles */
+.toaster-override {
+  --toaster-background: hsl(var(--background));
+  --toaster-border: hsl(var(--border));
+  --toaster-text: hsl(var(--foreground));
+  @apply font-sans;
+}
+
+.toaster-override [data-sonner-toast] {
+  @apply glass-effect rounded-lg !important;
+}
+
+/* Transition utilities */
+.smooth-transition {
+  @apply transition-all duration-200;
+}
+
+.hover-lift {
+  @apply transition-transform duration-200 hover:-translate-y-0.5;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .glass-effect,
+  .glass-effect-strong {
+    @apply backdrop-blur-sm;
+  }
+  
+  .hover-lift {
+    @apply hover:transform-none;
+  }
 }

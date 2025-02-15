@@ -40,7 +40,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useAuth } from "@/components/auth-provider"
 
 const navItems = [
   { icon: Home, label: "Home", href: "/" },
@@ -55,8 +54,7 @@ const navItems = [
 ]
 
 const profileMenuItems = [
-  { icon: User, label: "Profile", href: "/profile" },
-  { icon: UserCog, label: "Account Settings", href: "/settings" },
+  { icon: Settings, label: "Settings", href: "/settings" },
 ]
 
 function SidebarLogo({ isCollapsed }: { isCollapsed?: boolean }) {
@@ -107,19 +105,12 @@ interface UserMenuProps {
   onClose?: () => void
 }
 
-function UserMenu({ isCollapsed, user, onClose }: UserMenuProps) {
+function UserMenu({ isCollapsed, onClose }: UserMenuProps) {
   const router = useRouter()
-  const { logout } = useAuth()
   const { setTheme, theme } = useTheme()
 
   const handleMenuItemClick = (href: string) => {
     router.push(href)
-    onClose?.()
-  }
-
-  const handleLogout = async () => {
-    await logout()
-    router.push("/login")
     onClose?.()
   }
 
@@ -128,19 +119,18 @@ function UserMenu({ isCollapsed, user, onClose }: UserMenuProps) {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className={cn("w-full", isCollapsed ? "justify-center" : "justify-start gap-3")}>
           <Avatar className="h-8 w-8 shrink-0">
-            <AvatarImage src={`/placeholder.svg?text=${user?.name?.[0] || "U"}`} alt={user?.name || "User"} />
-            <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
+            <AvatarImage src="/placeholder.svg" alt="User" />
+            <AvatarFallback>U</AvatarFallback>
           </Avatar>
           {!isCollapsed && (
             <div className="flex-1 text-left">
-              <p className="text-sm font-medium truncate">{user?.name || "Guest"}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email || "Not logged in"}</p>
+              <p className="text-sm font-medium truncate">User</p>
             </div>
           )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={isCollapsed ? "center" : "end"} className="w-[200px]">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuLabel>Settings</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {profileMenuItems.map((item) => (
           <DropdownMenuItem key={item.href} onClick={() => handleMenuItemClick(item.href)}>
@@ -152,10 +142,6 @@ function UserMenu({ isCollapsed, user, onClose }: UserMenuProps) {
         <DropdownMenuItem onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
           {theme === "light" ? <Moon className="mr-2 h-4 w-4" /> : <Sun className="mr-2 h-4 w-4" />}
           <span>Change Theme</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -190,7 +176,6 @@ export function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const isMobile = useMediaQuery("(max-width: 768px)")
   const pathname = usePathname()
-  const { user } = useAuth()
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed)
 
@@ -223,7 +208,7 @@ export function Sidebar() {
                 ))}
               </div>
               <div className="border-t p-4">
-                <UserMenu user={user} onClose={() => setIsMobileMenuOpen(false)} />
+                <UserMenu onClose={() => setIsMobileMenuOpen(false)} />
               </div>
             </SheetContent>
           </Sheet>
@@ -232,7 +217,7 @@ export function Sidebar() {
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
             </Button>
-            <UserMenu user={user} />
+            <UserMenu />
           </div>
         </div>
 
@@ -297,7 +282,7 @@ export function Sidebar() {
       </div>
 
       <div className="mt-auto p-4 border-t">
-        <UserMenu isCollapsed={isCollapsed} user={user} />
+        <UserMenu isCollapsed={isCollapsed} />
       </div>
     </aside>
   )
