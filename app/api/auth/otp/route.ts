@@ -24,18 +24,3 @@ const sendOTP = async (phoneNumber: string, otp: string) => {
     return false
   }
 }
->>>>>>> fef9c5affd7ce57265c786283b220c5f9a3f44b2
-import { NextRequest, NextResponse } from "next/server"
-import { createUser, findUserByPhone, createOTP, verifyOTP } from "@/lib/db"
-import { types } from 'cassandra-driver'
-import twilio from 'twilio'
-
-const accountSid = process.env.TWILIO_ACCOUNT_SID
-const authToken = process.env.TWILIO_AUTH_TOKEN
-const twilioClient = twilio(accountSid, authToken)
-
-// Generate a 6-digit OTP
-const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
-
-import { sendOTP } from '@/lib/sms-service'
->>>>>>> HEAD
