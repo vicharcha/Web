@@ -52,6 +52,14 @@ export type FeedPost = {
   categories: string[];
 };
 
+export interface Comment {
+  id: string;
+  userId: string;
+  username: string;
+  text: string;
+  createdAt: string;
+}
+
 export type Post = {
   id: string;
   userId: string;
@@ -63,6 +71,9 @@ export type Post = {
   createdAt: string;
   updatedAt: string;
   timestamp?: string;
+  likes: number;
+  caption: string;
+  comments: Comment[];
 };
 
 export interface Story {

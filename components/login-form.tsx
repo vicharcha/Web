@@ -1,159 +1,123 @@
 "use client"
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/components/auth-provider'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { CheckCircle2, AlertCircle } from 'lucide-react'
+import type React from "react"
 
-export default function LoginForm() {
-  const [phoneNumber, setPhoneNumber] = useState('+91')
-  const [otp, setOtp] = useState('')
-  const [step, setStep] = useState<'phone' | 'otp' | 'name' | 'verification'>('phone')
-  const [name, setName] = useState('')
-  const [error, setError] = useState('')
-  const { login, verifyOTP, setUserName, startDigiLockerVerification, checkVerificationStatus } = useAuth()
-  const router = useRouter()
+import { useState } from "react"
+import { useAuth } from "@/app/components/auth-provider" // Updated import path
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { toast } from "sonner"
 
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
+export function LoginForm() {
+  const { login, verifyOTP } = useAuth()
+  const [phoneNumber, setPhoneNumber] = useState("")
+  const [otp, setOtp] = useState("")
+  const [isOtpSent, setIsOtpSent] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
+    setIsLoading(true)
+
     try {
-      await login(phoneNumber)
-      setStep('otp')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Invalid phone number')
+      const formattedPhone = phoneNumber.startsWith("+91") ? phoneNumber : `+91${phoneNumber}`
+      await login(formattedPhone)
+      setIsOtpSent(true)
+      toast.success("OTP sent successfully!")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send OTP")
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleOtpSubmit = async (e: React.FormEvent) => {
+  const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault()
-    const isValid = await verifyOTP(otp)
-    if (isValid) {
-      setStep('name')
-    } else {
-      setError('Invalid OTP')
-    }
-  }
+    setIsLoading(true)
 
-  const handleNameSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setUserName(name)
-    setStep('verification')
-  }
-
-  const handleVerificationSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
     try {
-      await startDigiLockerVerification()
-      const status = await checkVerificationStatus()
-      if (status === 'pending') {
-        router.push('/')
+      const isVerified = await verifyOTP(otp)
+      if (isVerified) {
+        toast.success("Successfully logged in!")
+        // Router will handle redirect in auth provider
       } else {
-        setError('Verification failed')
+        toast.error("Invalid OTP")
       }
-    } catch (err) {
-      setError('Verification failed')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to verify OTP")
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background p-4">
-      <Card className="w-full max-w-[400px]">
-        <CardHeader>
-          <CardTitle>Welcome to Vicharcha</CardTitle>
-          <CardDescription>
-            {step === 'phone' && "Enter your Indian mobile number"}
-            {step === 'otp' && "Enter the OTP sent to your phone"}
-            {step === 'name' && "What's your name?"}
-            {step === 'verification' && "Verify your identity"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {step === 'phone' && (
-            <form onSubmit={handlePhoneSubmit}>
-              <Input
-                type="tel"
-                placeholder="+91 99999 99999"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="mb-4"
-              />
-              <Button type="submit" className="w-full">Send OTP</Button>
-            </form>
-          )}
-
-          {step === 'otp' && (
-            <form onSubmit={handleOtpSubmit}>
-              <Input
-                type="text"
-                placeholder="Enter 6-digit OTP"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                className="mb-4"
-                maxLength={6}
-              />
-              <Button type="submit" className="w-full">Verify OTP</Button>
-            </form>
-          )}
-
-          {step === 'name' && (
-            <form onSubmit={handleNameSubmit}>
-              <Input
-                type="text"
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="mb-4"
-              />
-              <Button type="submit" className="w-full">Continue</Button>
-            </form>
-          )}
-
-          {step === 'verification' && (
-            <form onSubmit={handleVerificationSubmit}>
-              <div className="space-y-4">
-                <div className="bg-muted p-4 rounded-lg">
-                  <h3 className="font-semibold mb-2">Why verify with DigiLocker?</h3>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Get verified badge
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Access premium features
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      Enhanced trust in the community
-                    </li>
-                  </ul>
-                </div>
-                <Button type="submit" className="w-full">
-                  Verify with DigiLocker
-                </Button>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Welcome to Vicharcha</CardTitle>
+        <CardDescription>
+          {isOtpSent ? "Enter the OTP sent to your phone" : "Enter your phone number to get started"}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={isOtpSent ? handleVerifyOTP : handleSendOTP}>
+          {!isOtpSent ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+91 your phone number"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  required
+                  pattern="^(\+91)?[6-9]\d{9}$"
+                  className="text-base"
+                />
               </div>
-            </form>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Sending OTP..." : "Send OTP"}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="otp">One-Time Password</Label>
+                <Input
+                  id="otp"
+                  type="text"
+                  placeholder="Enter 6-digit OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  required
+                  pattern="\d{6}"
+                  maxLength={6}
+                  className="text-lg tracking-widest text-center"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Verifying..." : "Verify OTP"}
+              </Button>
+            </div>
           )}
-        </CardContent>
-        <CardFooter className="flex flex-col gap-2">
-          <p className="text-xs text-muted-foreground text-center">
-            By continuing, you agree to our Terms of Service and Privacy Policy
-          </p>
-        </CardFooter>
-      </Card>
-    </div>
+        </form>
+      </CardContent>
+      <CardFooter className="flex justify-center">
+        {isOtpSent && (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setIsOtpSent(false)
+              setOtp("")
+            }}
+          >
+            Change Phone Number
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
   )
 }
 

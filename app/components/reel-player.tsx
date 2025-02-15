@@ -1,125 +1,132 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Progress } from "@/components/ui/progress"
+import { Button } from "./ui/button"
+import { Card, CardContent } from "./ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
+import { Progress } from "./ui/progress"
 import { motion, AnimatePresence } from "framer-motion"
 import { MessageCircle, Heart, Bookmark, MoreHorizontal, Volume2, VolumeX, Send, Music2, Share2, Loader2, ChevronLeft, ChevronRight, Check } from 'lucide-react'
-import { formatNumber } from "@/lib/utils"
-import { ShareDialog } from "@/components/share-dialog"
-import { CommentDialog } from "@/components/comment-dialog"
+import { cn } from "../lib/utils"
+import { ShareDialog } from "./share-dialog"
+import { CommentDialog } from "./comment-dialog"
 
-interface ReelPlayerProps {
-  id: number
-  username: string
-  userImage: string
-  videoUrl: string
-  title: string
-  likes: number
-  comments: number
-  shares: number
-  description: string
-  songTitle?: string
-  songArtist?: string
-  isVerified?: boolean
-  onCommentClick?: () => void
-  onShareClick?: () => void
+interface Comment {
+  id: number;
+  username: string;
+  content: string;
+  timestamp: string;
+  likes: number;
+  isPremium?: boolean;
 }
 
-export function ReelPlayer({ 
+interface ReelPlayerProps {
+  id: number;
+  username: string;
+  userImage: string;
+  videoUrl: string;
+  title: string;
+  description: string;
+  likes: number;
+  comments: number;
+  shares: number;
+  isVerified: boolean;
+  songTitle?: string;
+  songArtist?: string;
+  onCommentClick?: () => void;
+  onShareClick?: () => void;
+}
+
+export function ReelPlayer({
   id,
-  username, 
-  userImage, 
-  videoUrl, 
-  title, 
-  likes, 
+  username,
+  userImage,
+  videoUrl,
+  title,
+  description,
+  likes,
   comments,
   shares,
-  description,
+  isVerified,
   songTitle = "Original Sound",
   songArtist,
-  isVerified = false,
   onCommentClick,
   onShareClick
 }: ReelPlayerProps) {
-  const [isLiked, setIsLiked] = useState(false)
-  const [isSaved, setIsSaved] = useState(false)
-  const [isMuted, setIsMuted] = useState(true)
-  const [isPlaying, setIsPlaying] = useState(true)
-  const [progress, setProgress] = useState(0)
-  const [volume, setVolume] = useState(1)
-  const [isAudioPlaying, setIsAudioPlaying] = useState(true)
-  const [showAudioControls, setShowAudioControls] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [showHeart, setShowHeart] = useState(false)
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false)
-  const [showShareDialog, setShowShareDialog] = useState(false)
-  const [showCommentDialog, setShowCommentDialog] = useState(false)
-  const [localComments, setLocalComments] = useState<any[]>([])
-  const [isDescExpanded, setIsDescExpanded] = useState(false)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const lastTapTime = useRef(0)
+  const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showHeart, setShowHeart] = useState(false);
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showCommentDialog, setShowCommentDialog] = useState(false);
+  const [localComments, setLocalComments] = useState<Comment[]>([]);
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const lastTapTime = useRef(0);
 
   useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
+    const video = videoRef.current;
+    if (!video) return;
 
     const handleTimeUpdate = () => {
-      const progress = (video.currentTime / video.duration) * 100
-      setProgress(progress)
-    }
+      const progress = (video.currentTime / video.duration) * 100;
+      setProgress(progress);
+    };
 
-    const handleLoadStart = () => setIsLoading(true)
+    const handleLoadStart = () => setIsLoading(true);
     const handleCanPlay = () => {
-      setIsLoading(false)
-      if (isPlaying) video.play()
-    }
+      setIsLoading(false);
+      if (isPlaying) video.play();
+    };
 
-    video.addEventListener('timeupdate', handleTimeUpdate)
-    video.addEventListener('loadstart', handleLoadStart)
-    video.addEventListener('canplay', handleCanPlay)
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('loadstart', handleLoadStart);
+    video.addEventListener('canplay', handleCanPlay);
 
     return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate)
-      video.removeEventListener('loadstart', handleLoadStart)
-      video.removeEventListener('canplay', handleCanPlay)
-    }
-  }, [isPlaying])
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('loadstart', handleLoadStart);
+      video.removeEventListener('canplay', handleCanPlay);
+    };
+  }, [isPlaying]);
 
   const togglePlay = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('button') || 
         (e.target as HTMLElement).closest('.interactive')) {
-      return
+      return;
     }
 
-    const currentTime = new Date().getTime()
-    const tapLength = currentTime - lastTapTime.current
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTapTime.current;
     
     if (tapLength < 300) {
-      handleLike()
+      handleLike();
     } else {
       if (videoRef.current) {
         if (isPlaying) {
-          videoRef.current.pause()
+          videoRef.current.pause();
         } else {
-          videoRef.current.play()
+          videoRef.current.play();
         }
-        setIsPlaying(!isPlaying)
+        setIsPlaying(!isPlaying);
       }
     }
     
-    lastTapTime.current = currentTime
-  }
+    lastTapTime.current = currentTime;
+  };
 
   const handleLike = () => {
     if (!isLiked) {
-      setIsLiked(true)
-      setShowHeart(true)
-      setTimeout(() => setShowHeart(false), 1000)
+      setIsLiked(true);
+      setShowHeart(true);
+      setTimeout(() => setShowHeart(false), 1000);
     }
-  }
+  };
 
   const handleNewComment = (comment: string) => {
     const newComment = {
@@ -131,7 +138,7 @@ export function ReelPlayer({
       isPremium: false
     };
     setLocalComments([...localComments, newComment]);
-  }
+  };
 
   return (
     <Card className="relative overflow-hidden bg-black w-[380px] h-[670px] mx-auto rounded-xl shadow-2xl">
@@ -195,15 +202,22 @@ export function ReelPlayer({
 
         {/* Top Controls */}
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-full bg-black/20 backdrop-blur-sm hover:bg-black/40"
+          {/* Audio Info - Moved to left */}
+          <motion.div 
+            className="flex items-center gap-3 bg-black/40 backdrop-blur-sm rounded-full p-2 hover:bg-black/60 cursor-pointer flex-1 mr-4"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            <ChevronLeft className="h-5 w-5 text-white" />
-          </Button>
+            <div className="h-8 w-8 bg-white/10 rounded-full flex items-center justify-center animate-spin">
+              <Music2 className="h-5 w-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-sm font-medium truncate">{songTitle}</p>
+              <p className="text-white/70 text-xs truncate">{songArtist || username}</p>
+            </div>
+          </motion.div>
 
-          {/* Audio Controls */}
+          {/* Volume Controls */}
           <div 
             className="relative"
             onMouseEnter={() => setShowVolumeSlider(true)}
@@ -233,10 +247,10 @@ export function ReelPlayer({
                     step="0.1"
                     value={volume}
                     onChange={(e) => {
-                      const newVolume = parseFloat(e.target.value)
-                      setVolume(newVolume)
-                      if (videoRef.current) videoRef.current.volume = newVolume
-                      setIsMuted(newVolume === 0)
+                      const newVolume = parseFloat(e.target.value);
+                      setVolume(newVolume);
+                      if (videoRef.current) videoRef.current.volume = newVolume;
+                      setIsMuted(newVolume === 0);
                     }}
                     className="h-24 -rotate-90 accent-white/90"
                   />
@@ -251,31 +265,19 @@ export function ReelPlayer({
           {[
             {
               icon: <Heart className={`h-7 w-7 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white'}`} />,
-              label: formatNumber(likes + (isLiked ? 1 : 0)),
+              label: likes + (isLiked ? 1 : 0),
               onClick: () => setIsLiked(!isLiked),
               class: isLiked ? 'animate-bounce' : ''
             },
             {
               icon: <MessageCircle className="h-7 w-7 text-white" />,
-              label: formatNumber(comments + localComments.length),
-              onClick: () => {
-                if (onCommentClick) {
-                  onCommentClick();
-                } else {
-                  setShowCommentDialog(true);
-                }
-              }
+              label: comments + localComments.length,
+              onClick: () => onCommentClick ? onCommentClick() : setShowCommentDialog(true)
             },
             {
               icon: <Share2 className="h-7 w-7 text-white" />,
-              label: formatNumber(shares),
-              onClick: () => {
-                if (onShareClick) {
-                  onShareClick();
-                } else {
-                  setShowShareDialog(true);
-                }
-              }
+              label: shares,
+              onClick: () => onShareClick ? onShareClick() : setShowShareDialog(true)
             },
             {
               icon: <Bookmark className={`h-7 w-7 ${isSaved ? 'fill-white text-white' : 'text-white'}`} />,
@@ -305,58 +307,40 @@ export function ReelPlayer({
           ))}
         </div>
 
-          {/* Left Info */}
-          <div className="absolute bottom-24 left-4 space-y-4 w-72">
-            {/* Audio Info */}
-            <motion.div 
-              className="flex items-center gap-3 bg-black/40 backdrop-blur-sm rounded-full p-2 hover:bg-black/60 cursor-pointer"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="h-8 w-8 bg-white/10 rounded-full flex items-center justify-center animate-spin">
-                <Music2 className="h-5 w-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="text-white text-sm font-medium truncate">{songTitle}</p>
-                <p className="text-white/70 text-xs truncate">{songArtist || username}</p>
-              </div>
-            </motion.div>
+        {/* Bottom Info - User and Description */}
+        <div className="absolute bottom-4 left-4 right-16 space-y-4">
+          {/* Description */}
+          <div 
+            className={`text-white text-sm bg-black/40 backdrop-blur-sm rounded-lg p-2 interactive ${!isDescExpanded ? 'line-clamp-2' : ''}`}
+            onClick={() => setIsDescExpanded(!isDescExpanded)}
+          >
+            {description}
           </div>
 
-          {/* Bottom Info */}
-          <div className="absolute bottom-4 left-4 right-16 space-y-4">
-            {/* User Info */}
-            <div className="flex items-center gap-3 bg-black/40 backdrop-blur-sm rounded-full p-2">
-              <Avatar className="h-10 w-10 ring-2 ring-white/20">
-                <AvatarImage src={userImage} alt={username} />
-                <AvatarFallback>{username[0]}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-white font-semibold">{username}</span>
-                  {isVerified && (
-                    <div className="h-4 w-4 bg-blue-500 rounded-full flex items-center justify-center">
-                      <Check className="h-3 w-3 text-white" />
-                    </div>
-                  )}
-                </div>
+          {/* User Info - Moved to bottom */}
+          <div className="flex items-center gap-3 bg-black/40 backdrop-blur-sm rounded-full p-2">
+            <Avatar className="h-10 w-10 ring-2 ring-white/20">
+              <AvatarImage src={userImage} alt={username} />
+              <AvatarFallback>{username[0]}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-white font-semibold">{username}</span>
+                {isVerified && (
+                  <div className="h-4 w-4 bg-blue-500 rounded-full flex items-center justify-center">
+                    <Check className="h-3 w-3 text-white" />
+                  </div>
+                )}
               </div>
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                className="bg-white text-black hover:bg-white/90 transition-colors"
-              >
-                Follow
-              </Button>
             </div>
-
-            {/* Description */}
-            <div 
-              className={`text-white text-sm bg-black/40 backdrop-blur-sm rounded-lg p-2 interactive ${!isDescExpanded ? 'line-clamp-2' : ''}`}
-              onClick={() => setIsDescExpanded(!isDescExpanded)}
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="bg-white text-black hover:bg-white/90 transition-colors"
             >
-              {description}
-            </div>
+              Follow
+            </Button>
+          </div>
         </div>
 
         {/* Progress Bar */}
@@ -393,7 +377,7 @@ export function ReelPlayer({
           caption: description,
           timestamp: new Date().toISOString(),
           likes: likes,
-          views: formatNumber(likes * 2),
+          views: `${Math.floor(likes * 2)}`,
           comments: localComments
         }}
         onAddComment={handleNewComment}

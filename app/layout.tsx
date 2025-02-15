@@ -1,11 +1,10 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import { Toaster } from "sonner"
+import { Toaster } from "@/app/components/toaster"
 
 import "./globals.css"
 import { Sidebar } from "@/app/components/sidebar"
-import { ThemeProvider } from "@/components/theme-provider"
-import { AuthProvider } from "@/components/auth-provider"
+import { ClientLayout } from "@/app/components/client-layout"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -65,22 +64,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AuthProvider>
-            <div className="relative flex min-h-screen">
-              <Sidebar />
-              <div className="flex-1 flex flex-col">
-                {children}
-              </div>
-            </div>
-            <Toaster />
-          </AuthProvider>
-        </ThemeProvider>
+        <ClientLayout>
+          {children}
+          <Toaster />
+        </ClientLayout>
       </body>
     </html>
   )
