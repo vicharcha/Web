@@ -1,61 +1,58 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useAuth } from "@/components/auth-provider"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { CountrySelector } from "@/components/country-selector"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { toast } from "sonner"
-import { motion } from "framer-motion"
-import { validatePhoneNumber, formatPhoneNumber } from "@/lib/country-codes"
+import { useState } from "react";
+import { useAuth } from "@/components/auth-provider";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { CountrySelector } from "@/components/country-selector";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
+import { validatePhoneNumber, formatPhoneNumber } from "@/lib/country-codes";
 
-export function LoginForm() {
-  const { login, verifyOtp } = useAuth()
-  const router = useRouter()
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [username, setUsername] = useState("")
-  const [otp, setOtp] = useState("")
-  const [countryCode, setCountryCode] = useState("+91")
-  const [step, setStep] = useState<"phone" | "otp" | "username">("phone")
-  const [isLoading, setIsLoading] = useState(false)
+export function LoginForm(): JSX.Element {
+  const { login, verifyOtp } = useAuth();
+  const router = useRouter();
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [username, setUsername] = useState("");
+  const [otp, setOtp] = useState("");
+  const [countryCode, setCountryCode] = useState("+91");
+  const [step, setStep] = useState<"phone" | "otp" | "username">("phone");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSendOTP = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      const formattedPhone = formatPhoneNumber(phoneNumber, countryCode)
+      const formattedPhone = formatPhoneNumber(phoneNumber, countryCode);
       const response = await fetch("/api/auth/otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ phoneNumber: formattedPhone }),
-      })
-      
-      const data = await response.json()
-      setStep("otp")
-      
-      // Show OTP prominently for demo
+      });
+
+      const data = await response.json();
+      setStep("otp");
+
       if (data.demo && data.message) {
         try {
-          // Check if we're in a browser environment
           if (typeof window !== 'undefined' && 'Notification' in window) {
-            // Request notification permission
             if (Notification.permission === "granted") {
               new Notification("Demo OTP Code", {
                 body: `Your OTP is: ${data.otp}`,
-                icon: "/placeholder-logo.png"
+                icon: "/placeholder-logo.png",
               });
             } else if (Notification.permission !== "denied") {
               const permission = await Notification.requestPermission();
               if (permission === "granted") {
                 new Notification("Demo OTP Code", {
                   body: `Your OTP is: ${data.otp}`,
-                  icon: "/placeholder-logo.png"
+                  icon: "/placeholder-logo.png",
                 });
               }
             }
@@ -63,8 +60,7 @@ export function LoginForm() {
         } catch (notificationError) {
           console.log('Notification failed, falling back to toast only');
         }
-        
-        // Always show prominent toast (as fallback and additional visibility)
+
         toast.message(
           <div className="flex flex-col items-center space-y-2">
             <p className="font-semibold">Demo OTP Generated</p>
@@ -73,26 +69,26 @@ export function LoginForm() {
             </p>
           </div>,
           {
-            duration: 15000, // Show for 15 seconds for better visibility
-            position: "top-center"
+            duration: 15000,
+            position: "top-center",
           }
         );
       } else {
-        toast.success("OTP sent successfully!")
+        toast.success("OTP sent successfully!");
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to send OTP")
+      toast.error(error instanceof Error ? error.message : "Failed to send OTP");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      const formattedPhone = formatPhoneNumber(phoneNumber, countryCode)
+      const formattedPhone = formatPhoneNumber(phoneNumber, countryCode);
       const response = await fetch("/api/auth/otp", {
         method: "PUT",
         headers: {
@@ -100,39 +96,38 @@ export function LoginForm() {
         },
         body: JSON.stringify({
           phoneNumber: formattedPhone,
-          otp
+          otp,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Invalid OTP")
+        throw new Error(data.error || "Invalid OTP");
       }
 
-      if (data.success) {
-        if (data.requiresUsername) {
-          setStep("username")
-          toast.success("Phone number verified! Please choose a username.")
-        } else if (data.user) {
-          await verifyOtp(otp)
-          toast.success("Successfully logged in!")
-          router.push("/")
-        }
+      await verifyOtp(otp);
+
+      if (data.requiresUsername) {
+        setStep("username");
+        toast.success("Phone number verified! Please choose a username.");
+      } else {
+        toast.success("Successfully logged in!");
+        router.push("/");
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to verify OTP")
+      toast.error(error instanceof Error ? error.message : "Failed to verify OTP");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleUsernameSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      const formattedPhone = formatPhoneNumber(phoneNumber, countryCode)
+      const formattedPhone = formatPhoneNumber(phoneNumber, countryCode);
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -140,29 +135,29 @@ export function LoginForm() {
         },
         body: JSON.stringify({
           phoneNumber: formattedPhone,
-          username
+          username,
         }),
-      })
+      });
 
       if (!response.ok) {
-        const error = await response.json()
+        const error = await response.json();
         if (error.error === "Username already taken") {
-          toast.error("Username already taken. Please choose another one.")
-          return
+          toast.error("Username already taken. Please choose another one.");
+          return;
         }
-        throw new Error(error.error || "Registration failed")
+        throw new Error(error.error || "Registration failed");
       }
 
-      const { user } = await response.json()
-      await login(formattedPhone, username)
-      toast.success("Successfully registered!")
-      router.push("/")
+      const { user } = await response.json();
+      await login(formattedPhone, username);
+      toast.success("Successfully registered!");
+      router.push("/");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Registration failed")
+      toast.error(error instanceof Error ? error.message : "Registration failed");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <motion.div
@@ -204,8 +199,8 @@ export function LoginForm() {
                     placeholder="Enter your number"
                     value={phoneNumber}
                     onChange={(e) => {
-                      const number = e.target.value.replace(/\D/g, '')
-                      setPhoneNumber(number)
+                      const number = e.target.value.replace(/\D/g, '');
+                      setPhoneNumber(number);
                     }}
                     className="rounded-l-none text-lg tracking-wide"
                     required
@@ -245,8 +240,8 @@ export function LoginForm() {
                   placeholder="Enter 6-digit OTP"
                   value={otp}
                   onChange={(e) => {
-                    const code = e.target.value.replace(/\D/g, '').slice(0, 6)
-                    setOtp(code)
+                    const code = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setOtp(code);
                   }}
                   className="text-2xl tracking-[0.5em] text-center"
                   maxLength={6}
@@ -273,8 +268,8 @@ export function LoginForm() {
                 variant="ghost"
                 className="w-full text-gray-500"
                 onClick={() => {
-                  setStep("phone")
-                  setOtp("")
+                  setStep("phone");
+                  setOtp("");
                 }}
               >
                 Change Phone Number
@@ -326,5 +321,5 @@ export function LoginForm() {
         </CardContent>
       </Card>
     </motion.div>
-  )
+  );
 }

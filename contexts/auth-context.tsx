@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 interface User {
   id?: string;
   phoneNumber: string;
+  username?: string;
   otp?: string;
 }
 
@@ -12,9 +13,10 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phoneNumber: string, otp: string) => Promise<void>;
+  login: (phoneNumber: string, username?: string) => Promise<void>;
   logout: () => void;
   requestOtp: (phoneNumber: string) => Promise<void>;
+  verifyOtp: (otp: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -65,20 +67,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function login(phoneNumber: string, otp: string) {
+  async function login(phoneNumber: string, username?: string) {
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber, otp })
-      });
-
-      if (!response.ok) {
-        throw new Error('Invalid OTP');
-      }
-
-      const data = await response.json();
-      setUser({ ...data.user, phoneNumber });
+      setUser({ phoneNumber, username });
+      return Promise.resolve();
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -90,6 +82,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Add any additional cleanup
   }
 
+  async function verifyOtp(otp: string) {
+    try {
+      const response = await fetch('/api/auth/otp', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          phoneNumber: user?.phoneNumber || '',
+          otp 
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Invalid OTP');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setUser({ phoneNumber: user?.phoneNumber || '' });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("OTP verification failed:", error);
+      throw error;
+    }
+  }
+
   const value = {
     user,
     isAuthenticated: !!user,
@@ -97,6 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     requestOtp,
+    verifyOtp,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
