@@ -51,8 +51,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
+// Configure route segment for file uploads
+export const dynamic = 'force-dynamic'
+export const maxDuration = 60
