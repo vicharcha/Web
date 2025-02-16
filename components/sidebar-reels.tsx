@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { ChevronUp, ChevronDown } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { ReelPlayer } from "@/components/reel-player"
 import { CommentDialog } from "@/components/comment-dialog"
@@ -167,7 +167,7 @@ export function SidebarReels() {
 
   return (
     <div className="relative h-[calc(100vh-6rem)]">
-      {/* Navigation Controls - Fixed on the right side */}
+      {/* Navigation Controls - Fixed on sides */}
       {!isMobile && (
         <div className="fixed right-8 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-4">
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
@@ -204,21 +204,24 @@ export function SidebarReels() {
         </div>
       )}
 
-      {/* Reels Container with stable scrollbar */}
-      <div
+      {/* Reels Container */}
+      <div 
         ref={scrollContainerRef}
-        className="h-full overflow-y-scroll snap-y snap-mandatory"
-        style={{
+        className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-none"
+        style={{ 
           scrollSnapType: "y mandatory",
-          // Keep scrollbar visible & stable
-          scrollbarGutter: "stable",
-          scrollbarWidth: "auto",
-          msOverflowStyle: "auto"
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none'
         }}
       >
+        <style jsx global>{`
+          .scrollbar-none::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
         {reels.map((reel, index) => (
-          <motion.div
-            key={reel.id}
+          <motion.div 
+            key={index}
             className="h-full snap-start snap-always"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -304,5 +307,5 @@ export function SidebarReels() {
         />
       )}
     </div>
-  )
-}
+  );
+} 

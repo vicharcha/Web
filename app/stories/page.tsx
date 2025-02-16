@@ -133,7 +133,7 @@ export default function StoriesPage() {
           <ScrollArea className="w-full whitespace-nowrap pb-4 -mx-2 px-2">
             <div 
               ref={scrollContainerRef}
-              className="flex gap-4 items-start min-h-[120px]"
+              className="flex gap-4 items-start min-h-[120px] px-4"
             >
               {loading ? (
                 <>
@@ -146,17 +146,12 @@ export default function StoriesPage() {
                 <>
                   <CreateStory onStoryCreated={fetchStories} />
                   {stories.map((story, index) => (
-                    <motion.div
+                    <StoryCircle
                       key={story.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                    >
-                      <StoryCircle
-                        story={story}
-                        onPress={() => handleStoryPress(index)}
-                      />
-                    </motion.div>
+                      story={story}
+                      onPress={() => handleStoryPress(index)}
+                      animate
+                    />
                   ))}
                 </>
               )}
@@ -166,7 +161,7 @@ export default function StoriesPage() {
         </div>
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {selectedStoryIndex !== null && (
           <StoryViewer
             stories={stories}
