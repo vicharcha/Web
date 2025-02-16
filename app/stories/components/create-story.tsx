@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
-export function CreateStory() {
+export function CreateStory({ onStoryCreated }: { onStoryCreated: () => void }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
@@ -78,6 +78,7 @@ export function CreateStory() {
       });
       setIsOpen(false);
       setFiles([]);
+      onStoryCreated(); // Refresh stories list after creating a new story
     } catch (error) {
       console.error('Error creating story:', error);
       toast({
