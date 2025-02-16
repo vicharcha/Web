@@ -11,44 +11,49 @@ export default function EmergencyPage() {
     {
       title: "Medical Services",
       icon: Ambulance,
-      color: "text-blue-500",
-      bgColor: "bg-blue-50",
+      color: "text-blue-500 dark:text-blue-400",
+      bgColor: "bg-blue-100 dark:bg-blue-900/20",
     },
     {
       title: "Fire Services",
       icon: Flame,
-      color: "text-red-500",
-      bgColor: "bg-red-50",
+      color: "text-red-500 dark:text-red-400",
+      bgColor: "bg-red-100 dark:bg-red-900/20",
     },
     {
       title: "Police Services",
       icon: Police,
-      color: "text-yellow-500",
-      bgColor: "bg-yellow-50",
+      color: "text-yellow-500 dark:text-yellow-400",
+      bgColor: "bg-yellow-100 dark:bg-yellow-900/20",
     },
   ]
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {/* Header Section */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-8 w-8 text-red-500" />
-          <h1 className="text-3xl font-bold">Emergency Response Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Emergency Response Dashboard
+          </h1>
         </div>
-        <Badge variant="outline" className="px-4 py-2">
+        <Badge variant="outline" className="px-4 py-2 text-gray-800 dark:text-gray-300 border-gray-300 dark:border-gray-600">
           Coming Soon
         </Badge>
       </div>
 
-      <Card className="border-2 border-dashed">
+      {/* Main Card */}
+      <Card className="border-2 border-dashed border-gray-300 dark:border-gray-600">
         <CardHeader>
-          <CardTitle className="flex items-center justify-center gap-2">
-            <Clock className="h-6 w-6 text-primary" />
+          <CardTitle className="flex items-center justify-center gap-2 text-gray-900 dark:text-white">
+            <Clock className="h-6 w-6 text-primary dark:text-gray-400" />
             Emergency Services Platform Under Development
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center space-y-6">
+            {/* Service Buttons */}
             <div className="grid gap-4 md:grid-cols-3">
               {services.map((service) => (
                 <div 
@@ -56,15 +61,18 @@ export default function EmergencyPage() {
                   className={`${service.bgColor} rounded-lg p-4 flex items-center justify-center gap-2 opacity-50`}
                 >
                   <service.icon className={`h-6 w-6 ${service.color}`} />
-                  <span className="font-medium">{service.title}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{service.title}</span>
                 </div>
               ))}
             </div>
             
+            {/* Information Section */}
             <div className="max-w-lg mx-auto space-y-4">
-              <p className="text-lg text-muted-foreground">
+              <p className="text-lg text-gray-700 dark:text-gray-300">
                 We're building a comprehensive emergency response system to serve you better.
               </p>
+
+              {/* Animated Alert */}
               <div className="py-6">
                 <div className="relative mx-auto w-24 h-24">
                   <div className="animate-ping absolute w-full h-full rounded-full bg-red-500/20"></div>
@@ -73,14 +81,19 @@ export default function EmergencyPage() {
                   </div>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground">
+
+              {/* Emergency Numbers */}
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 For emergencies, please continue to use your local emergency services numbers:
                 <br />
-                Police: 100 | Fire: 101 | Ambulance: 102
+                <span className="font-medium text-gray-900 dark:text-white">
+                  Police: 100 | Fire: 101 | Ambulance: 102
+                </span>
               </p>
             </div>
 
-            <Button className="w-full max-w-md mx-auto" disabled>
+            {/* Disabled Button */}
+            <Button className="w-full max-w-md mx-auto bg-gray-300 dark:bg-gray-700 text-gray-800 dark:text-gray-300" disabled>
               Platform Coming Soon
             </Button>
           </div>
@@ -89,4 +102,3 @@ export default function EmergencyPage() {
     </div>
   )
 }
-

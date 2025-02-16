@@ -22,7 +22,12 @@ import {
   Clock,
   Star,
   Users,
-  Filter
+  Filter,
+  Newspaper,
+  Film,
+  Trophy,
+  Cpu,
+  Landmark
 } from "lucide-react"
 import Image from "next/image"
 import { CreatePost } from "@/components/create-post"
@@ -37,12 +42,14 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { Post } from "@/lib/types"
 import { useSettings } from "@/hooks/use-settings"
 import { PostCategories } from '@/lib/types'
-import { Stories } from "@/app/stories/components/stories"
+import { Stories } from "@/app/home/stories/components/stories"
+import { TranslatedText, useTranslation } from "@/contexts/translation-context"
 
 type FeedPost = Post & {
   categories: string[];
@@ -57,29 +64,44 @@ interface MainContentProps {
 }
 
 type SortOption = 'latest' | 'trending' | 'top' | 'following';
-type FilterOption = 'all' | 'verified' | 'premium' | 'following' | 'interests';
+type FilterOption = 'all' | 'verified' | 'premium' | 'following' | 'interests' | 'news' | 'entertainment' | 'sports' | 'technology' | 'politics';
+
+const categoryIcons = {
+  news: <Newspaper className="h-4 w-4" />,
+  entertainment: <Film className="h-4 w-4" />,
+  sports: <Trophy className="h-4 w-4" />,
+  technology: <Cpu className="h-4 w-4" />,
+  politics: <Landmark className="h-4 w-4" />,
+  verified: <Verified className="h-4 w-4" />,
+  premium: <Sparkles className="h-4 w-4" />,
+  following: <Users className="h-4 w-4" />,
+  interests: <Star className="h-4 w-4" />,
+};
 
 export function MainContent({ category, showStories = false }: MainContentProps) {
   const { user } = useAuth()
   const { settings } = useSettings()
+  const { translate } = useTranslation()
   const [posts, setPosts] = useState<FeedPost[]>([])
   const [loading, setLoading] = useState(true)
   const [newComments, setNewComments] = useState<Record<string, string>>({})
   const { toast } = useToast()
   const [shareDialogPost, setShareDialogPost] = useState<FeedPost | null>(null)
 
-  const handleComment = useCallback((postId: string, comment: string) => {
+  const handleComment = useCallback(async (postId: string, comment: string) => {
     setPosts(posts => posts.map(post =>
       post.id === postId
         ? { ...post, comments: post.comments + 1 }
         : post
     ))
     setNewComments(comments => ({ ...comments, [postId]: '' }))
+    const title = await translate("Comment added")
+    const desc = await translate("Your comment has been posted successfully.")
     toast({
-      title: "Comment added",
-      description: "Your comment has been posted successfully.",
+      title,
+      description: desc,
     })
-  }, [toast])
+  }, [toast, translate])
   const [commentDialogPost, setCommentDialogPost] = useState<FeedPost | null>(null)
   const { isMobile } = useResponsive()
   const [sortBy, setSortBy] = useState<SortOption>('latest')
@@ -99,7 +121,7 @@ export function MainContent({ category, showStories = false }: MainContentProps)
   useEffect(() => {
     if (user) {
       // Mock data - replace with actual API calls
-      setSelectedInterests(['technology', 'sports', 'music'])
+      setSelectedInterests(['technology', 'sports', 'news'])
       setFollowedUsers(['user1', 'user2', 'user3'])
     }
   }, [user])
@@ -120,7 +142,7 @@ export function MainContent({ category, showStories = false }: MainContentProps)
         isLiked: false,
         isBookmarked: false,
         categories: [post.category],
-        interests: ['technology', 'sports', 'music'].slice(0, Math.floor(Math.random() * 3) + 1),
+        interests: ['technology', 'sports', 'news'].slice(0, Math.floor(Math.random() * 3) + 1),
         timestamp: new Date(post.createdAt).toLocaleString(),
         isVerified: Math.random() > 0.5,
         isPremium: Math.random() > 0.7,
@@ -131,10 +153,12 @@ export function MainContent({ category, showStories = false }: MainContentProps)
       setPosts(feedPosts)
     } catch (error) {
       console.error("Error fetching posts:", error)
+      const title = await translate("Error")
+      const desc = await translate("Could not load posts. Please try again.")
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Could not load posts. Please try again.",
+        title,
+        description: desc,
       })
     } finally {
       setLoading(false)
@@ -149,8 +173,27 @@ export function MainContent({ category, showStories = false }: MainContentProps)
     let filtered = [...posts];
 
     // Category filter
-    if (category !== 'all') {
-      filtered = filtered.filter(post => post.category === category);
+    if (filterBy !== 'all') {
+      if (['news', 'entertainment', 'sports', 'technology', 'politics'].includes(filterBy)) {
+        filtered = filtered.filter(post => post.categories.includes(filterBy));
+      } else {
+        switch (filterBy) {
+          case 'verified':
+            filtered = filtered.filter(post => post.isVerified);
+            break;
+          case 'premium':
+            filtered = filtered.filter(post => post.isPremium);
+            break;
+          case 'following':
+            filtered = filtered.filter(post => followedUsers.includes(post.userId));
+            break;
+          case 'interests':
+            filtered = filtered.filter(post => 
+              post.interests?.some(interest => selectedInterests.includes(interest))
+            );
+            break;
+        }
+      }
     }
 
     // Adult content filter
@@ -160,24 +203,6 @@ export function MainContent({ category, showStories = false }: MainContentProps)
       }
       return true;
     });
-
-    // Additional filters
-    switch (filterBy) {
-      case 'verified':
-        filtered = filtered.filter(post => post.isVerified);
-        break;
-      case 'premium':
-        filtered = filtered.filter(post => post.isPremium);
-        break;
-      case 'following':
-        filtered = filtered.filter(post => followedUsers.includes(post.userId));
-        break;
-      case 'interests':
-        filtered = filtered.filter(post => 
-          post.interests?.some(interest => selectedInterests.includes(interest))
-        );
-        break;
-    }
 
     // Sorting
     switch (sortBy) {
@@ -200,7 +225,7 @@ export function MainContent({ category, showStories = false }: MainContentProps)
     }
 
     return filtered;
-  }, [posts, category, settings?.isAdultContentEnabled, filterBy, sortBy, followedUsers, selectedInterests]);
+  }, [posts, filterBy, settings?.isAdultContentEnabled, followedUsers, selectedInterests, sortBy]);
 
   if (loading) {
     return (
@@ -216,7 +241,11 @@ export function MainContent({ category, showStories = false }: MainContentProps)
   return (
     <div className="w-full">
       <div className="space-y-4 md:space-y-6">
-        {showStories && <Stories />}
+        {showStories && (
+          <div className="w-full max-w-5xl mx-auto">
+            <Stories />
+          </div>
+        )}
         <CreatePost onPostCreated={fetchPosts} initialCategory={category} />
         
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -224,19 +253,19 @@ export function MainContent({ category, showStories = false }: MainContentProps)
             <TabsList>
               <TabsTrigger value="latest" className="gap-2">
                 <Clock className="h-4 w-4" />
-                Latest
+                <TranslatedText text="Latest" />
               </TabsTrigger>
               <TabsTrigger value="trending" className="gap-2">
                 <TrendingUp className="h-4 w-4" />
-                Trending
+                <TranslatedText text="Trending" />
               </TabsTrigger>
               <TabsTrigger value="top" className="gap-2">
                 <Star className="h-4 w-4" />
-                Top
+                <TranslatedText text="Top" />
               </TabsTrigger>
               <TabsTrigger value="following" className="gap-2">
                 <Users className="h-4 w-4" />
-                Following
+                <TranslatedText text="Following" />
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -245,25 +274,56 @@ export function MainContent({ category, showStories = false }: MainContentProps)
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2">
                 <Filter className="h-4 w-4" />
-                Filter
+                <TranslatedText text="Filter" />
+                {filterBy !== 'all' && (
+                  <Badge variant="secondary" className="ml-2 h-5">
+                    <TranslatedText text={filterBy} />
+                  </Badge>
+                )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuGroup>
                 <DropdownMenuItem onClick={() => setFilterBy('all')}>
-                  All Posts
+                  <TranslatedText text="All Posts" />
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilterBy('verified')}>
-                  Verified Users
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setFilterBy('news')} className="gap-2">
+                  {categoryIcons.news}
+                  <TranslatedText text="News" />
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilterBy('premium')}>
-                  Premium Content
+                <DropdownMenuItem onClick={() => setFilterBy('entertainment')} className="gap-2">
+                  {categoryIcons.entertainment}
+                  <TranslatedText text="Entertainment" />
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilterBy('following')}>
-                  Following
+                <DropdownMenuItem onClick={() => setFilterBy('sports')} className="gap-2">
+                  {categoryIcons.sports}
+                  <TranslatedText text="Sports" />
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilterBy('interests')}>
-                  My Interests
+                <DropdownMenuItem onClick={() => setFilterBy('technology')} className="gap-2">
+                  {categoryIcons.technology}
+                  <TranslatedText text="Technology" />
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy('politics')} className="gap-2">
+                  {categoryIcons.politics}
+                  <TranslatedText text="Politics" />
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setFilterBy('verified')} className="gap-2">
+                  {categoryIcons.verified}
+                  <TranslatedText text="Verified Users" />
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy('premium')} className="gap-2">
+                  {categoryIcons.premium}
+                  <TranslatedText text="Premium Content" />
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy('following')} className="gap-2">
+                  {categoryIcons.following}
+                  <TranslatedText text="Following" />
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy('interests')} className="gap-2">
+                  {categoryIcons.interests}
+                  <TranslatedText text="My Interests" />
                 </DropdownMenuItem>
               </DropdownMenuGroup>
             </DropdownMenuContent>
@@ -319,7 +379,9 @@ export function MainContent({ category, showStories = false }: MainContentProps)
                   </Button>
                 </div>
 
-                <p className="text-sm md:text-base leading-relaxed">{post.content}</p>
+                <p className="text-sm md:text-base leading-relaxed">
+                  <TranslatedText text={post.content} />
+                </p>
 
                 {post.mediaUrls && post.mediaUrls.length > 0 && (
                   <div className={cn(
@@ -404,7 +466,7 @@ export function MainContent({ category, showStories = false }: MainContentProps)
                       onClick={() => handleComment(post.id, newComments[post.id] || '')}
                       className="text-sm md:text-base"
                     >
-                      Post
+                      <TranslatedText text="Post" />
                     </Button>
                   </div>
                 </div>

@@ -22,27 +22,39 @@ import {
   Clock,
   Star,
   Users,
-  Filter
+  Filter,
+  Newspaper,
+  Film,
+  Trophy,
+  Cpu,
+  Gavel,
+  Home
 } from "lucide-react"
 import Image from "next/image"
 import { CreatePost } from "@/components/create-post"
 import { useAuth } from "@/components/auth-provider"
-import { ShareDialog } from "./share-dialog"
-import { CommentDialog } from "./comment-dialog"
-import { LikeButton } from "./like-button"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ShareDialog } from "@/components/share-dialog"
+import { CommentDialog } from "@/components/comment-dialog"
+import { LikeButton } from "@/components/like-button"
 import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { Post } from "@/lib/types"
 import { useSettings } from "@/hooks/use-settings"
 import { PostCategories } from '@/lib/types'
 import { Stories } from "@/app/home/stories/components/stories"
+import { TranslatedText, useTranslation } from "@/contexts/translation-context"
+
+interface MainContentProps {
+  category: string;
+  showStories?: boolean;
+}
 
 type FeedPost = Post & {
   categories: string[];
@@ -51,35 +63,30 @@ type FeedPost = Post & {
   trending?: boolean;
 };
 
-interface MainContentProps {
-  category: string;
-  showStories?: boolean;
-}
-
 type SortOption = 'latest' | 'trending' | 'top' | 'following';
-type FilterOption = 'all' | 'verified' | 'premium' | 'following' | 'interests';
+type FilterOption = 'all' | 'verified' | 'premium' | 'following' | 'interests' | 'news' | 'entertainment' | 'sports' | 'technology' | 'politics';
+
+const categoryIcons = {
+  news: <Newspaper className="h-4 w-4" />,
+  entertainment: <Film className="h-4 w-4" />,
+  sports: <Trophy className="h-4 w-4" />,
+  technology: <Cpu className="h-4 w-4" />,
+  politics: <Gavel className="h-4 w-4" />,
+  verified: <Verified className="h-4 w-4" />,
+  premium: <Sparkles className="h-4 w-4" />,
+  following: <Users className="h-4 w-4" />,
+  interests: <Star className="h-4 w-4" />,
+};
 
 export function MainContent({ category, showStories = false }: MainContentProps) {
   const { user } = useAuth()
   const { settings } = useSettings()
+  const { translate } = useTranslation()
   const [posts, setPosts] = useState<FeedPost[]>([])
   const [loading, setLoading] = useState(true)
   const [newComments, setNewComments] = useState<Record<string, string>>({})
   const { toast } = useToast()
   const [shareDialogPost, setShareDialogPost] = useState<FeedPost | null>(null)
-
-  const handleComment = useCallback((postId: string, comment: string) => {
-    setPosts(posts => posts.map(post =>
-      post.id === postId
-        ? { ...post, comments: post.comments + 1 }
-        : post
-    ))
-    setNewComments(comments => ({ ...comments, [postId]: '' }))
-    toast({
-      title: "Comment added",
-      description: "Your comment has been posted successfully.",
-    })
-  }, [toast])
   const [commentDialogPost, setCommentDialogPost] = useState<FeedPost | null>(null)
   const { isMobile } = useResponsive()
   const [sortBy, setSortBy] = useState<SortOption>('latest')
@@ -95,14 +102,27 @@ export function MainContent({ category, showStories = false }: MainContentProps)
     ))
   }, [])
 
-  // Fetch user's interests and followed users
   useEffect(() => {
     if (user) {
-      // Mock data - replace with actual API calls
-      setSelectedInterests(['technology', 'sports', 'music'])
+      setSelectedInterests(['technology', 'sports', 'news'])
       setFollowedUsers(['user1', 'user2', 'user3'])
     }
   }, [user])
+
+  const handleComment = useCallback(async (postId: string, comment: string) => {
+    setPosts(posts => posts.map(post =>
+      post.id === postId
+        ? { ...post, comments: post.comments + 1 }
+        : post
+    ))
+    setNewComments(comments => ({ ...comments, [postId]: '' }))
+    const title = await translate("Comment added")
+    const desc = await translate("Your comment has been posted successfully.")
+    toast({
+      title,
+      description: desc,
+    })
+  }, [toast, translate])
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -120,7 +140,7 @@ export function MainContent({ category, showStories = false }: MainContentProps)
         isLiked: false,
         isBookmarked: false,
         categories: [post.category],
-        interests: ['technology', 'sports', 'music'].slice(0, Math.floor(Math.random() * 3) + 1),
+        interests: ['technology', 'sports', 'news'].slice(0, Math.floor(Math.random() * 3) + 1),
         timestamp: new Date(post.createdAt).toLocaleString(),
         isVerified: Math.random() > 0.5,
         isPremium: Math.random() > 0.7,
@@ -131,15 +151,17 @@ export function MainContent({ category, showStories = false }: MainContentProps)
       setPosts(feedPosts)
     } catch (error) {
       console.error("Error fetching posts:", error)
+      const title = await translate("Error")
+      const desc = await translate("Could not load posts. Please try again.")
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Could not load posts. Please try again.",
+        title,
+        description: desc,
       })
     } finally {
       setLoading(false)
     }
-  }, [toast, category])
+  }, [toast, category, translate])
 
   useEffect(() => {
     fetchPosts()
@@ -148,9 +170,27 @@ export function MainContent({ category, showStories = false }: MainContentProps)
   const getFilteredPosts = useCallback(() => {
     let filtered = [...posts];
 
-    // Category filter
-    if (category !== 'all') {
-      filtered = filtered.filter(post => post.category === category);
+    if (filterBy !== 'all') {
+      if (['news', 'entertainment', 'sports', 'technology', 'politics'].includes(filterBy)) {
+        filtered = filtered.filter(post => post.categories.includes(filterBy));
+      } else {
+        switch (filterBy) {
+          case 'verified':
+            filtered = filtered.filter(post => post.isVerified);
+            break;
+          case 'premium':
+            filtered = filtered.filter(post => post.isPremium);
+            break;
+          case 'following':
+            filtered = filtered.filter(post => followedUsers.includes(post.userId));
+            break;
+          case 'interests':
+            filtered = filtered.filter(post => 
+              post.interests?.some(interest => selectedInterests.includes(interest))
+            );
+            break;
+        }
+      }
     }
 
     // Adult content filter
@@ -160,24 +200,6 @@ export function MainContent({ category, showStories = false }: MainContentProps)
       }
       return true;
     });
-
-    // Additional filters
-    switch (filterBy) {
-      case 'verified':
-        filtered = filtered.filter(post => post.isVerified);
-        break;
-      case 'premium':
-        filtered = filtered.filter(post => post.isPremium);
-        break;
-      case 'following':
-        filtered = filtered.filter(post => followedUsers.includes(post.userId));
-        break;
-      case 'interests':
-        filtered = filtered.filter(post => 
-          post.interests?.some(interest => selectedInterests.includes(interest))
-        );
-        break;
-    }
 
     // Sorting
     switch (sortBy) {
@@ -200,7 +222,7 @@ export function MainContent({ category, showStories = false }: MainContentProps)
     }
 
     return filtered;
-  }, [posts, category, settings?.isAdultContentEnabled, filterBy, sortBy, followedUsers, selectedInterests]);
+  }, [posts, filterBy, settings?.isAdultContentEnabled, followedUsers, selectedInterests, sortBy]);
 
   if (loading) {
     return (
@@ -216,55 +238,48 @@ export function MainContent({ category, showStories = false }: MainContentProps)
   return (
     <div className="w-full">
       <div className="space-y-4 md:space-y-6">
-        {showStories && <Stories />}
+        {showStories && (
+          <div className="w-full max-w-5xl mx-auto">
+            <Stories />
+          </div>
+        )}
         <CreatePost onPostCreated={fetchPosts} initialCategory={category} />
         
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <Tabs value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-            <TabsList>
-              <TabsTrigger value="latest" className="gap-2">
-                <Clock className="h-4 w-4" />
-                Latest
-              </TabsTrigger>
-              <TabsTrigger value="trending" className="gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Trending
-              </TabsTrigger>
-              <TabsTrigger value="top" className="gap-2">
-                <Star className="h-4 w-4" />
-                Top
-              </TabsTrigger>
-              <TabsTrigger value="following" className="gap-2">
-                <Users className="h-4 w-4" />
-                Following
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* Sort Options */}
+          <Button variant="outline" className="gap-2">
+            <Filter className="h-4 w-4" />
+            <TranslatedText text="Filter" />
+            {filterBy !== 'all' && (
+              <Badge variant="secondary" className="ml-2 h-5">
+                <TranslatedText text={filterBy} />
+              </Badge>
+            )}
+          </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2">
-                <Filter className="h-4 w-4" />
-                Filter
+                {categoryIcons[filterBy as keyof typeof categoryIcons] || <Filter className="h-4 w-4" />}
+                <TranslatedText text="Filter" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuGroup>
                 <DropdownMenuItem onClick={() => setFilterBy('all')}>
-                  All Posts
+                  <TranslatedText text="All Posts" />
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilterBy('verified')}>
-                  Verified Users
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilterBy('premium')}>
-                  Premium Content
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilterBy('following')}>
-                  Following
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilterBy('interests')}>
-                  My Interests
-                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {Object.entries(categoryIcons).map(([key, icon]) => (
+                  <DropdownMenuItem
+                    key={key}
+                    onClick={() => setFilterBy(key as FilterOption)}
+                    className="gap-2"
+                  >
+                    {icon}
+                    <TranslatedText text={key.charAt(0).toUpperCase() + key.slice(1)} />
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -319,7 +334,9 @@ export function MainContent({ category, showStories = false }: MainContentProps)
                   </Button>
                 </div>
 
-                <p className="text-sm md:text-base leading-relaxed">{post.content}</p>
+                <p className="text-sm md:text-base leading-relaxed">
+                  <TranslatedText text={post.content} />
+                </p>
 
                 {post.mediaUrls && post.mediaUrls.length > 0 && (
                   <div className={cn(
@@ -404,7 +421,7 @@ export function MainContent({ category, showStories = false }: MainContentProps)
                       onClick={() => handleComment(post.id, newComments[post.id] || '')}
                       className="text-sm md:text-base"
                     >
-                      Post
+                      <TranslatedText text="Post" />
                     </Button>
                   </div>
                 </div>
@@ -431,5 +448,5 @@ export function MainContent({ category, showStories = false }: MainContentProps)
         )}
       </div>
     </div>
-  )
+  );
 }
