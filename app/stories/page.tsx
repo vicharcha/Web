@@ -9,32 +9,23 @@ import { StoryViewer } from "@/app/stories/components/story-viewer";
 import { CreateStory } from "./components/create-story";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface StoryItem {
-  id: string;
-  url: string;
-  type: "image" | "video";
-  duration?: number;
-}
-
-interface Story {
-  id: string;
-  userId: string;
-  username: string;
-  userImage: string;
-  items: StoryItem[];
-  category: string;
-  tokens: number;
-  downloadable: boolean;
-  isAdult: boolean;
-  seen?: boolean;
-  createdAt: Date;
-}
+import { Story } from "@/lib/types";
 
 const transformStoryData = (story: any): Story => ({
-  ...story,
-  createdAt: new Date(story.createdAt),
-  seen: story.seen || false,
-  isNew: false // Add isNew property based on creation time if needed
+  id: story.id,
+  userId: story.userId,
+  username: story.username,
+  userImage: story.userImage || '/placeholder-user.jpg',
+  type: story.type,
+  mediaUrl: story.mediaUrl,
+  duration: story.duration,
+  isViewed: story.isViewed || false,
+  isPremium: story.isPremium || false,
+  category: story.category || 'general',
+  downloadable: story.downloadable || true,
+  isAdult: story.isAdult || false,
+  createdAt: story.createdAt,
+  expiresAt: story.expiresAt
 });
 
 export default function StoriesPage() {
@@ -61,10 +52,9 @@ export default function StoriesPage() {
       }
 
       const { stories: storyData } = await response.json();
-      const transformedStories = Object.values(storyData)
-        .flat()
+      const transformedStories = storyData
         .map(transformStoryData)
-        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        .sort((a: Story, b: Story) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setStories(transformedStories);
     } catch (error) {
       console.error('Error fetching stories:', error);

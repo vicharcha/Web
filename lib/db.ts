@@ -296,10 +296,7 @@ export async function getStories(userId?: string): Promise<Story[]> {
   }
 
   const result = await executeQuery(query, params);
-  return (result.rows || []).map(row => ({
-    ...row,
-    items: JSON.parse(row.items)
-  }));
+  return result.rows || [];
 }
 
 export interface Reel {

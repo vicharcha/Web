@@ -1,5 +1,5 @@
 import { types } from 'cassandra-driver';
-import { DBUser, DatabaseResult, DigiLockerAuth, Story, StoryItem } from './types';
+import { DBUser, DatabaseResult, DigiLockerAuth, Story } from './types';
 
 export interface MockOTPVerification {
   user_id: string;
@@ -44,7 +44,8 @@ const storage = {
 // Create consistent user IDs for demo data
 const demoUserIds = {
   user1: 'demo_user_1',
-  user2: 'demo_user_2'
+  user2: 'demo_user_2',
+  testUser: 'test_user'
 };
 
 const demoUsers: DBUser[] = [
@@ -73,46 +74,90 @@ const demoUsers: DBUser[] = [
     country_code: '+91',
     created_at: new Date(),
     last_active: new Date()
+  },
+  {
+    id: demoUserIds.testUser,
+    username: 'test_user',
+    phone_number: '+911234567892',
+    email: 'test@example.com',
+    password_hash: 'test123',
+    is_verified: true,
+    phone_verified: true,
+    digilocker_verified: false,
+    country_code: '+91',
+    created_at: new Date(),
+    last_active: new Date()
   }
 ];
 
-// Initialize demo stories
 const demoStories: Story[] = [
   {
     id: '1',
     userId: demoUserIds.user1,
-    items: JSON.stringify([{"id":"1","url":"/videos/DO IT yourself.mp4","type":"video","duration":15}]),
-    createdAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+    username: 'demo_user1',
+    userImage: '/placeholder-user.jpg',
+    type: 'video',
+    mediaUrl: '/videos/DO IT yourself.mp4',
+    duration: 15,
+    isViewed: false,
+    isPremium: false,
     category: 'general',
     downloadable: true,
-    isAdult: false
+    isAdult: false,
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
   },
   {
     id: '2',
     userId: demoUserIds.user2,
-    items: JSON.stringify([{"id":"1","url":"/placeholder.jpg","type":"image","duration":5}]),
-    createdAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    username: 'demo_user2',
+    userImage: '/placeholder-user.jpg',
+    type: 'image',
+    mediaUrl: '/placeholder.jpg',
+    isViewed: false,
+    isPremium: false,
     category: 'general',
     downloadable: true,
-    isAdult: false
-  },
-  {
-    id: '3',
-    userId: demoUserIds.user1,
-    items: JSON.stringify([{"id":"1","url":"/placeholder.svg","type":"image","duration":5}]),
-    createdAt: new Date(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    category: 'general',
-    downloadable: true,
-    isAdult: false
+    isAdult: false,
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
   }
 ];
 
-// Add demo users and stories to storage
+// Add test user story with demo video
+const testUserStory: Story = {
+  id: '3',
+  userId: demoUserIds.testUser,
+  username: 'test_user',
+  userImage: '/placeholder-user.jpg',
+  type: 'video',
+  mediaUrl: '/videos/DO IT yourself.mp4',
+  duration: 15,
+  isViewed: false,
+  isPremium: false,
+  category: 'general',
+  downloadable: true,
+  isAdult: false,
+  createdAt: new Date().toISOString(),
+  expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+};
+
+// Add demo users to storage
 demoUsers.forEach(user => storage.users.set(user.id, user));
-demoStories.forEach(story => storage.stories.set(story.id, story));
+
+// Filter out duplicate stories by checking mediaUrl
+const isDuplicateStory = (stories: Story[], story: Story) => 
+  stories.some(existingStory => existingStory.mediaUrl === story.mediaUrl);
+
+const uniqueStories = demoStories.filter((story, index) => 
+  !isDuplicateStory(demoStories.slice(0, index), story)
+);
+
+if (!isDuplicateStory(uniqueStories, testUserStory)) {
+  uniqueStories.push(testUserStory);
+}
+
+uniqueStories.forEach(story => storage.stories.set(story.id, story));
 
 // Helper function to create a standardized database response
 function createDbResult<T>(data: T[]): DatabaseResult {
@@ -304,7 +349,6 @@ export const mockDB = {
         new Date(story.expiresAt) > currentTime
       );
       
-      // Return stories without parsing items since the Story interface expects a string
       return createDbResult(activeStories);
     }
 

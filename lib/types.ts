@@ -57,16 +57,33 @@ export type Post = {
   ageRestricted?: boolean;
 };
 
-// Database Story Model
+export interface ClientStory {
+  id: number;
+  username: string;
+  userImage: string;
+  storyImage: string;
+  isViewed: boolean;
+  isPremium: boolean;
+  duration: number;
+  type: 'image' | 'video';
+}
+
 export interface Story {
   id: string;
   userId: string;
-  items: string; // JSON string of StoryItems
-  createdAt: Date;
-  expiresAt: Date;
-  category: string;
-  downloadable: boolean;
-  isAdult: boolean;
+  createdAt: string;
+  expiresAt: string;
+  type: 'image' | 'video';
+  mediaUrl: string;
+  duration?: number;
+  username?: string;
+  userImage?: string;
+  isViewed?: boolean;
+  isPremium?: boolean;
+  items?: StoryItem[];
+  category?: string;
+  downloadable?: boolean;
+  isAdult?: boolean;
 }
 
 export interface StoryItem {
@@ -76,25 +93,13 @@ export interface StoryItem {
   duration?: number;
 }
 
-// Client Story Model
-export interface ClientStory {
-  id: number;
-  username: string;
-  userImage: string;
-  storyImage: string;
-  isViewed: boolean;
-  isPremium: boolean; // Required since we default it to false
-  duration: number; // Required since we default it to 5
-  type: 'video' | 'image'; // Required since we always set it
-}
-
 export interface User {
   id: string;
   phoneNumber: string;
   username?: string;
   name?: string;
   email?: string;
-  image?: string;
+  image?: string; // Add image property
   verificationStatus: "unverified" | "verified";
   isPremium: boolean;
   digiLockerVerified: boolean;
@@ -117,7 +122,6 @@ export type ParticipantDetail = {
   name: string;
   role?: string;
   department?: string;
-  isPremium?: boolean;
 };
 
 export type UserStatus = 'online' | 'offline' | 'away';
@@ -126,8 +130,7 @@ export type Message = {
   id: string;
   content: string;
   senderId: string;
-  chatId: string;
-  createdAt: string;  // ISO string format
+  createdAt: string;
   status: 'sent' | 'delivered' | 'read';
 };
 
@@ -138,15 +141,6 @@ export type ChatWithDetails = {
   status: 'online' | 'offline';
   participantDetails: ParticipantDetail[];
   isGroup?: boolean;
-  unreadCount: number;
-  isTyping: boolean;
-  lastMessage?: Message;
-  updatedAt: string;
-};
-
-export type IndividualChat = ChatWithDetails & {
-  isGroup: false;
-  participantDetails: [ParticipantDetail];
 };
 
 export type ApiResponse<T = any> = {

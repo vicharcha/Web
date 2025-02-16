@@ -93,30 +93,17 @@ export function Stories() {
         const data = await response.json() as APIResponse
         const transformedStories: ClientStory[] = data.stories
           .map((story) => {
-            try {
-              const items: StoryItem[] = JSON.parse(story.items)
-              const firstItem = items[0]
-              if (!firstItem) return null
-
-              const type = firstItem.type === 'video' || firstItem.type === 'image' 
-                ? firstItem.type 
-                : 'image'
-
-              const clientStory: ClientStory = {
-                id: Number(story.id),
-                username: story.username,
-                userImage: story.userImage || '/placeholder-user.jpg',
-                storyImage: firstItem.url.startsWith('http') ? firstItem.url : firstItem.url,
-                isViewed: false,
-                isPremium: false,
-                duration: firstItem.duration ?? 5,
-                type
-              }
-              return clientStory
-            } catch (error) {
-              console.error('Error parsing story:', error)
-              return null
+            const clientStory: ClientStory = {
+              id: Number(story.id),
+              username: story.username,
+              userImage: story.userImage || '/placeholder-user.jpg',
+              storyImage: story.mediaUrl,
+              isViewed: story.isViewed || false,
+              isPremium: story.isPremium || false,
+              duration: story.duration || 5,
+              type: story.type
             }
+            return clientStory
           })
           .filter((story): story is ClientStory => story !== null)
     

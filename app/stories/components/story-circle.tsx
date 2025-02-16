@@ -4,18 +4,10 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { motion } from "framer-motion";
+import { Story } from "@/lib/types";
 
 interface StoryCircleProps {
-  story: {
-    id: string;
-    userId: string;
-    username: string;
-    userImage: string;
-    items: Array<{ id: string; url: string; type: "image" | "video" }>;
-    createdAt: Date;
-    seen?: boolean;
-    isNew?: boolean;
-  };
+  story: Story;
   onPress: () => void;
   loading?: boolean;
 }
@@ -49,8 +41,8 @@ export function StoryCircle({ story, onPress, loading }: StoryCircleProps) {
           className={cn(
             "p-[2px] rounded-full",
             loading ? "bg-muted animate-pulse" :
-            story.seen ? "bg-gray-300" : 
-            story.isNew ? "bg-gradient-to-tr from-green-400 to-blue-500" :
+            story.isViewed ? "bg-gray-300" : 
+            story.isPremium ? "bg-gradient-to-tr from-green-400 to-blue-500" :
             "bg-gradient-to-tr from-yellow-400 to-fuchsia-600",
             isHovering && "scale-105 transition-transform"
           )}
@@ -58,16 +50,11 @@ export function StoryCircle({ story, onPress, loading }: StoryCircleProps) {
           <div className="p-[2px] bg-background rounded-full">
             <Avatar className="h-14 w-14 border-2 border-background relative">
               <AvatarImage 
-                src={story.userImage} 
-                alt={story.username}
+                src={story.userImage || '/placeholder-user.jpg'} 
+                alt={story.username || 'User'}
                 className="object-cover"
               />
             </Avatar>
-            {story.items.length > 1 && (
-              <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium">
-                {story.items.length}
-              </div>
-            )}
           </div>
         </div>
         {loading && (
@@ -77,7 +64,7 @@ export function StoryCircle({ story, onPress, loading }: StoryCircleProps) {
         )}
       </div>
       <div className="flex flex-col items-center gap-0.5">
-        <span className="text-xs truncate w-16 text-center">{story.username}</span>
+        <span className="text-xs truncate w-16 text-center">{story.username || 'User'}</span>
         <span className="text-[10px] text-muted-foreground">{getTimeElapsed()}</span>
       </div>
     </motion.button>

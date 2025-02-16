@@ -6,22 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Download, Pause, Play } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-
-interface StoryItem {
-  id: string;
-  url: string;
-  type: "image" | "video";
-  duration?: number;
-}
-
-interface Story {
-  id: string;
-  userId: string;
-  userImage: string;
-  username: string;
-  items: StoryItem[];
-  downloadable: boolean;
-}
+import { Story } from "@/lib/types";
 
 interface StoryViewerProps {
   stories: Story[];
@@ -30,18 +15,16 @@ interface StoryViewerProps {
 }
 
 export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewerProps) {
-  const [currentStoryIndex, setCurrentStoryIndex] = useState(initialStoryIndex);
-  const [currentItemIndex, setCurrentItemIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(initialStoryIndex);
   const [progress, setProgress] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
 
-  const currentStory = stories[currentStoryIndex];
-  const currentItem = currentStory?.items[currentItemIndex];
+  const currentStory = stories[currentIndex];
 
-  // Reset video and progress when item changes
+  // Reset video and progress when story changes
   useEffect(() => {
     setProgress(0);
     setIsPlaying(true);
@@ -49,25 +32,27 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(console.error);
     }
-  }, [currentItem]);
+  }, [currentIndex]);
 
   useEffect(() => {
-    if (!currentItem) return;
+    if (!currentStory) return;
 
     let timer: NodeJS.Timeout;
     
-    if (currentItem.type === 'image') {
+    if (currentStory.type === 'image') {
       const duration = 5000; // 5 seconds for images
       const interval = 100; // Update progress every 100ms
       const steps = duration / interval;
       let currentStep = 0;
 
       timer = setInterval(() => {
-        currentStep++;
-        setProgress((currentStep / steps) * 100);
+        if (isPlaying) {
+          currentStep++;
+          setProgress((currentStep / steps) * 100);
 
-        if (currentStep >= steps) {
-          handleNext();
+          if (currentStep >= steps) {
+            handleNext();
+          }
         }
       }, interval);
     }
@@ -75,7 +60,7 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [currentItem, isPlaying]);
+  }, [currentStory, isPlaying]);
 
   const handleVideoTimeUpdate = () => {
     if (videoRef.current) {
@@ -91,24 +76,22 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
 
   const handleVideoError = (error: any) => {
     console.error('Video error:', error);
-    // Optionally show an error message to the user
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Failed to play video"
+    });
   };
 
   const handlePrevious = () => {
-    if (currentItemIndex > 0) {
-      setCurrentItemIndex(prev => prev - 1);
-    } else if (currentStoryIndex > 0) {
-      setCurrentStoryIndex(prev => prev - 1);
-      setCurrentItemIndex(stories[currentStoryIndex - 1].items.length - 1);
+    if (currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
     }
   };
 
   const handleNext = () => {
-    if (currentItemIndex < currentStory.items.length - 1) {
-      setCurrentItemIndex(prev => prev + 1);
-    } else if (currentStoryIndex < stories.length - 1) {
-      setCurrentStoryIndex(prev => prev + 1);
-      setCurrentItemIndex(0);
+    if (currentIndex < stories.length - 1) {
+      setCurrentIndex(prev => prev + 1);
     } else {
       onClose();
     }
@@ -127,39 +110,44 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-md h-[80vh] p-0">
-        <div className="relative h-full flex items-center justify-center bg-black">
-          {/* Progress bars */}
+      <DialogContent className="max-w-[400px] h-[calc(100vh-64px)] p-0 aspect-[9/16] mx-auto">
+        <div className="relative w-full h-full flex items-center justify-center bg-black overflow-hidden">
+          {/* Progress bar */}
           <div className="absolute top-4 left-4 right-4 flex gap-1 z-10">
-            {currentStory.items.map((item, index) => (
-              <div key={item.id} className="h-0.5 flex-1 bg-gray-600">
+            {stories.map((story, index) => (
+              <div key={story.id} className="h-0.5 flex-1 bg-gray-600">
                 <div 
                   className="h-full bg-white transition-all duration-100"
                   style={{ 
-                    width: index === currentItemIndex ? `${progress}%` : 
-                           index < currentItemIndex ? '100%' : '0%' 
+                    width: index === currentIndex ? `${progress}%` : 
+                           index < currentIndex ? '100%' : '0%' 
                   }}
                 />
               </div>
             ))}
           </div>
 
-          {/* User info */}
-          <div className="absolute top-8 left-4 flex items-center gap-2 z-10">
-            <img
-              src={currentStory.userImage}
-              alt={currentStory.username}
-              className="w-8 h-8 rounded-full object-cover"
-            />
-            <span className="text-white font-semibold">{currentStory.username}</span>
+          {/* User info with timestamp */}
+          <div className="absolute top-8 left-4 right-4 flex items-center justify-between z-10">
+            <div className="flex items-center gap-2">
+              <img
+                src={currentStory.userImage || '/placeholder-user.jpg'}
+                alt={currentStory.username || 'User'}
+                className="w-8 h-8 rounded-full object-cover border border-white/20"
+              />
+              <div className="flex flex-col">
+                <span className="text-white text-sm font-semibold">{currentStory.username || 'User'}</span>
+                <span className="text-white/70 text-xs">{new Date(currentStory.createdAt).toLocaleTimeString()}</span>
+              </div>
+            </div>
           </div>
 
           {/* Media content */}
           <div className="w-full h-full flex items-center justify-center" onClick={togglePlayPause}>
-            {currentItem.type === 'video' ? (
+            {currentStory.type === 'video' ? (
               <video
                 ref={videoRef}
-                src={currentItem.url}
+                src={currentStory.mediaUrl}
                 className="max-h-full w-full object-contain"
                 playsInline
                 onTimeUpdate={handleVideoTimeUpdate}
@@ -168,7 +156,7 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
               />
             ) : (
               <img
-                src={currentItem.url}
+                src={currentStory.mediaUrl}
                 alt=""
                 className="max-h-full w-full object-contain"
               />
@@ -185,86 +173,84 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
                 e.stopPropagation();
                 handlePrevious();
               }}
-              disabled={currentStoryIndex === 0 && currentItemIndex === 0}
+              disabled={currentIndex === 0}
             >
               <ChevronLeft className="h-8 w-8" />
             </Button>
-            <Button
-            variant="ghost"
-            size="icon"
-            className="text-white hover:bg-black/20"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNext();
-            }}
-          >
-            <ChevronRight className="h-8 w-8" />
-          </Button>
-        </div>
-
-        {/* Play/Pause and Download buttons */}
-        <div className="absolute bottom-4 right-4 flex gap-2 z-10">
-          {currentItem.type === 'video' && (
             <Button
               variant="ghost"
               size="icon"
               className="text-white hover:bg-black/20"
               onClick={(e) => {
                 e.stopPropagation();
-                togglePlayPause();
+                handleNext();
               }}
+              disabled={currentIndex === stories.length - 1}
             >
-              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+              <ChevronRight className="h-8 w-8" />
             </Button>
-          )}
-          {currentStory.downloadable && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-black/20"
-              onClick={async (e) => {
-                e.stopPropagation();
-                if (isDownloading) return;
-                
-                setIsDownloading(true);
-                try {
-                  const response = await fetch(`/api/stories/download?storyId=${currentStory.id}`);
-                  if (!response.ok) throw new Error('Failed to get download URLs');
+          </div>
+
+          {/* Play/Pause and Download buttons */}
+          <div className="absolute bottom-4 right-4 flex gap-2 z-10">
+            {currentStory.type === 'video' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-black/20"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePlayPause();
+                }}
+              >
+                {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+              </Button>
+            )}
+            {currentStory.downloadable && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-black/20"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  if (isDownloading) return;
                   
-                  const data = await response.json();
-                  if (!data.success) throw new Error(data.error);
-                  
-                  // Create a hidden link for each file and click it
-                  for (const download of data.downloads) {
+                  setIsDownloading(true);
+                  try {
+                    const response = await fetch(`/api/stories/download?storyId=${currentStory.id}`);
+                    if (!response.ok) throw new Error('Failed to get download URL');
+                    
+                    const data = await response.json();
+                    if (!data.success) throw new Error(data.error);
+                    
                     const link = document.createElement('a');
-                    link.href = download.url;
-                    link.download = download.filename;
+                    link.href = currentStory.mediaUrl;
+                    link.download = `story-${currentStory.id}.${currentStory.type === 'video' ? 'mp4' : 'jpg'}`;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
+                    
+                    toast({
+                      title: "Success",
+                      description: "Download started successfully"
+                    });
+                  } catch (error) {
+                    console.error('Download error:', error);
+                    toast({
+                      variant: "destructive",
+                      title: "Error",
+                      description: "Failed to download story"
+                    });
+                  } finally {
+                    setIsDownloading(false);
                   }
-                  
-                  toast({
-                    title: "Success",
-                    description: "Downloads started successfully"
-                  });
-                } catch (error) {
-                  console.error('Download error:', error);
-                  toast({
-                    variant: "destructive",
-                    title: "Error",
-                    description: "Failed to download story"
-                  });
-                } finally {
-                  setIsDownloading(false);
-                }
-              }}
-              disabled={isDownloading}
-            >
-              <Download className={cn("h-6 w-6", isDownloading && "animate-pulse")} />
-            </Button>
-          )}
-        </div>
+                }}
+                disabled={isDownloading}
+              >
+                <Download className={cn("h-6 w-6", isDownloading && "animate-pulse")} />
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
