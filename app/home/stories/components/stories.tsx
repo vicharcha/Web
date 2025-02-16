@@ -11,49 +11,15 @@ import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/contexts/translation-context"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Story, ClientStory, StoryItem } from '@/lib/types'
 
-interface Story {
-  id: number
-  username: string
-  userImage: string
-  storyImage: string
-  isViewed: boolean
-  isPremium?: boolean
-  duration?: number
-  type?: string
-}
-
-interface APIStory {
-  id: string
-  userId: string
-  username: string
-  userImage: string
-  items: {
-    id: string
-    url: string
-    type: string
-    duration?: number
-  }[]
-  category: string
-  tokens: number
-  downloadable: boolean
-  isAdult: boolean
+interface APIResponse {
+  success: boolean
+  stories: Record<string, Story[]>
 }
 
 export function Stories() {
-  const [stories, setStories] = useState<Story[]>([
-    // Test video story
-    {
-      id: 0,
-      username: "Test User",
-      userImage: "/placeholder-user.jpg",
-      storyImage: "/videos/DO_IT_yourself.mp4",
-      isViewed: false,
-      isPremium: true,
-      duration: 10,
-      type: "video"
-    }
-  ])
+  const [stories, setStories] = useState<ClientStory[]>([])
   const [loading, setLoading] = useState(true)
   const [videoReady, setVideoReady] = useState(false)
   const { toast } = useToast()
@@ -82,15 +48,16 @@ export function Stories() {
       const data = await response.json()
       
       // Add the new story to the list
-      const newStory: Story = {
+      const type = file.type.startsWith('video/') ? 'video' as const : 'image' as const
+      const newStory: ClientStory = {
         id: Date.now(),
         username: "You",
         userImage: "/placeholder-user.jpg",
         storyImage: data.url,
         isViewed: false,
         isPremium: false,
-        duration: file.type.startsWith('video/') ? 10 : 5,
-        type: file.type.startsWith('video/') ? 'video' : 'image'
+        duration: type === 'video' ? 10 : 5,
+        type
       }
 
       setStories(prev => [newStory, ...prev])
@@ -113,6 +80,7 @@ export function Stories() {
       }
     }
   }
+
   const progressTimer = useRef<NodeJS.Timeout>()
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -122,19 +90,37 @@ export function Stories() {
         const response = await fetch('/api/stories')
         if (!response.ok) throw new Error('Failed to fetch stories')
     
-        const data = await response.json()
-        const apiStories: APIStory[] = Object.values(data.stories).flat() as APIStory[]
+        const data = await response.json() as APIResponse
+        const apiStories = Object.values(data.stories).flat()
     
-        const transformedStories = apiStories.map((story) => ({
-          id: Number(story.id),
-          username: story.username,
-          userImage: story.userImage || '/placeholder-user.jpg',
-          storyImage: story.items[0]?.url || '/placeholder.jpg',
-          isViewed: false,
-          isPremium: story.tokens > 0,
-          duration: story.items[0]?.duration || 5,
-          type: story.items[0]?.type || 'image'
-        }))
+        const transformedStories: ClientStory[] = apiStories
+          .map((story: Story) => {
+            try {
+              const items: StoryItem[] = JSON.parse(story.items)
+              const firstItem = items[0]
+              if (!firstItem) return null
+
+              const type = firstItem.type === 'video' || firstItem.type === 'image' 
+                ? firstItem.type 
+                : 'image'
+
+              const clientStory: ClientStory = {
+                id: Number(story.id),
+                username: storage.users.get(story.userId)?.username || "Unknown User",
+                userImage: '/placeholder-user.jpg',
+                storyImage: firstItem.url,
+                isViewed: false,
+                isPremium: false,
+                duration: firstItem.duration ?? 5,
+                type
+              }
+              return clientStory
+            } catch (error) {
+              console.error('Error parsing story:', error)
+              return null
+            }
+          })
+          .filter((story): story is ClientStory => story !== null)
     
         setStories(transformedStories)
       } catch (error) {
@@ -152,7 +138,7 @@ export function Stories() {
     fetchStories()
   }, [toast, translate])
 
-  const [selectedStory, setSelectedStory] = useState<Story | null>(null)
+  const [selectedStory, setSelectedStory] = useState<ClientStory | null>(null)
   const [progress, setProgress] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
   const [isMuted, setIsMuted] = useState(false)
@@ -174,7 +160,7 @@ export function Stories() {
 
   useEffect(() => {
     if (selectedStory && isPlaying) {
-      const duration = selectedStory.duration || 5
+      const duration = selectedStory.duration
       const increment = (100 / (duration * 1000)) * 100 // For 100ms intervals
       
       progressTimer.current = setInterval(() => {
@@ -195,7 +181,7 @@ export function Stories() {
     }
   }, [selectedStory, isPlaying])
 
-  const handleStoryClick = (story: Story) => {
+  const handleStoryClick = (story: ClientStory) => {
     setProgress(0)
     setIsPlaying(true)
     setIsMuted(false)

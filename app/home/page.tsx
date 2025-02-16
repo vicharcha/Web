@@ -2,7 +2,7 @@
 
 import { useResponsive } from "@/hooks/use-responsive"
 import { cn } from "@/lib/utils"
-import { MainContent } from "@/components/main-content"
+import { MainContent } from "@/app/home/main-content"
 import { PostCategories } from "@/lib/types"
 
 export default function HomePage() {

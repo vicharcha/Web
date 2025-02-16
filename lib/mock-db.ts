@@ -1,5 +1,5 @@
 import { types } from 'cassandra-driver';
-import { DBUser, DatabaseResult, DigiLockerAuth } from './types';
+import { DBUser, DatabaseResult, DigiLockerAuth, Story, StoryItem } from './types';
 
 export interface MockOTPVerification {
   user_id: string;
@@ -36,7 +36,8 @@ const storage = {
   pending_users: new Map<string, MockPendingUser>(),
   otp_verification: new Map<string, MockOTPVerification>(),
   posts: new Map<string, MockPost>(),
-  digilocker_auth: new Map<string, DigiLockerAuth>()
+  digilocker_auth: new Map<string, DigiLockerAuth>(),
+  stories: new Map<string, Story>()
 };
 
 // Initialize demo users
@@ -46,7 +47,7 @@ const demoUsers: DBUser[] = [
     username: 'demo_user1',
     phone_number: '+911234567890',
     email: 'demo1@example.com',
-    password_hash: 'demo123', // In a real app, this would be properly hashed
+    password_hash: 'demo123',
     is_verified: true,
     phone_verified: true,
     digilocker_verified: false,
@@ -69,8 +70,43 @@ const demoUsers: DBUser[] = [
   }
 ];
 
-// Add demo users to storage
+// Initialize demo stories
+const demoStories: Story[] = [
+  {
+    id: '1',
+    userId: demoUsers[0].id,
+    items: '[{"id":"1","url":"/videos/DO IT yourself.mp4","type":"video","duration":15}]',
+    createdAt: new Date(),
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+    category: 'general',
+    downloadable: true,
+    isAdult: false
+  },
+  {
+    id: '2',
+    userId: demoUsers[1].id,
+    items: '[{"id":"1","url":"/placeholder.jpg","type":"image","duration":5}]',
+    createdAt: new Date(),
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    category: 'general',
+    downloadable: true,
+    isAdult: false
+  },
+  {
+    id: '3',
+    userId: demoUsers[0].id,
+    items: '[{"id":"1","url":"/placeholder.svg","type":"image","duration":5}]',
+    createdAt: new Date(),
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    category: 'general',
+    downloadable: true,
+    isAdult: false
+  }
+];
+
+// Add demo users and stories to storage
 demoUsers.forEach(user => storage.users.set(user.id, user));
+demoStories.forEach(story => storage.stories.set(story.id, story));
 
 // Helper function to create a standardized database response
 function createDbResult<T>(data: T[]): DatabaseResult {
@@ -251,6 +287,19 @@ export const mockDB = {
       
       // Return all posts for general select
       return createDbResult(Array.from(storage.posts.values()));
+    }
+
+    // Handle stories queries
+    if (query.toLowerCase().includes('stories')) {
+      const currentTime = new Date();
+      
+      // Filter stories that haven't expired
+      const activeStories = Array.from(storage.stories.values()).filter(story => 
+        new Date(story.expiresAt) > currentTime
+      );
+      
+      // Return stories without parsing items since the Story interface expects a string
+      return createDbResult(activeStories);
     }
 
     // Default response for unhandled queries

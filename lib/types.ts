@@ -57,18 +57,35 @@ export type Post = {
   ageRestricted?: boolean;
 };
 
+// Database Story Model
 export interface Story {
   id: string;
   userId: string;
-  username: string;
-  userImage: string;
-  mediaUrl: string;
-  isViewed: boolean;
-  isPremium: boolean;
-  createdAt: string;
-  expiresAt: string;
+  items: string; // JSON string of StoryItems
+  createdAt: Date;
+  expiresAt: Date;
+  category: string;
+  downloadable: boolean;
+  isAdult: boolean;
+}
+
+export interface StoryItem {
+  id: string;
+  url: string;
   type: 'image' | 'video';
   duration?: number;
+}
+
+// Client Story Model
+export interface ClientStory {
+  id: number;
+  username: string;
+  userImage: string;
+  storyImage: string;
+  isViewed: boolean;
+  isPremium: boolean; // Required since we default it to false
+  duration: number; // Required since we default it to 5
+  type: 'video' | 'image'; // Required since we always set it
 }
 
 export interface User {
@@ -77,7 +94,7 @@ export interface User {
   username?: string;
   name?: string;
   email?: string;
-  image?: string; // Add image property
+  image?: string;
   verificationStatus: "unverified" | "verified";
   isPremium: boolean;
   digiLockerVerified: boolean;
