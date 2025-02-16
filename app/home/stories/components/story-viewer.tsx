@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Pause, Play } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 
 interface StoryItem {
   id: string;
@@ -18,6 +20,7 @@ interface Story {
   userImage: string;
   username: string;
   items: StoryItem[];
+  downloadable: boolean;
 }
 
 interface StoryViewerProps {
@@ -32,6 +35,8 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
   const [progress, setProgress] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const { toast } = useToast();
 
   const currentStory = stories[currentStoryIndex];
   const currentItem = currentStory?.items[currentItemIndex];
@@ -185,17 +190,81 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
               <ChevronLeft className="h-8 w-8" />
             </Button>
             <Button
+            variant="ghost"
+            size="icon"
+            className="text-white hover:bg-black/20"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNext();
+            }}
+          >
+            <ChevronRight className="h-8 w-8" />
+          </Button>
+        </div>
+
+        {/* Play/Pause and Download buttons */}
+        <div className="absolute bottom-4 right-4 flex gap-2 z-10">
+          {currentItem.type === 'video' && (
+            <Button
               variant="ghost"
               size="icon"
               className="text-white hover:bg-black/20"
               onClick={(e) => {
                 e.stopPropagation();
-                handleNext();
+                togglePlayPause();
               }}
             >
-              <ChevronRight className="h-8 w-8" />
+              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
             </Button>
-          </div>
+          )}
+          {currentStory.downloadable && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-black/20"
+              onClick={async (e) => {
+                e.stopPropagation();
+                if (isDownloading) return;
+                
+                setIsDownloading(true);
+                try {
+                  const response = await fetch(`/api/stories/download?storyId=${currentStory.id}`);
+                  if (!response.ok) throw new Error('Failed to get download URLs');
+                  
+                  const data = await response.json();
+                  if (!data.success) throw new Error(data.error);
+                  
+                  // Create a hidden link for each file and click it
+                  for (const download of data.downloads) {
+                    const link = document.createElement('a');
+                    link.href = download.url;
+                    link.download = download.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }
+                  
+                  toast({
+                    title: "Success",
+                    description: "Downloads started successfully"
+                  });
+                } catch (error) {
+                  console.error('Download error:', error);
+                  toast({
+                    variant: "destructive",
+                    title: "Error",
+                    description: "Failed to download story"
+                  });
+                } finally {
+                  setIsDownloading(false);
+                }
+              }}
+              disabled={isDownloading}
+            >
+              <Download className={cn("h-6 w-6", isDownloading && "animate-pulse")} />
+            </Button>
+          )}
+        </div>
         </div>
       </DialogContent>
     </Dialog>

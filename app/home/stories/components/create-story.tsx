@@ -5,7 +5,7 @@ import { useAuth } from "@/components/auth-provider";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Image, Film, Plus } from "lucide-react";
+import { Image, Film, Plus, Star } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,7 @@ export function CreateStory({ onStoryCreated }: { onStoryCreated: () => void }) 
   const [isOpen, setIsOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -62,6 +63,7 @@ export function CreateStory({ onStoryCreated }: { onStoryCreated: () => void }) 
         formData.append('files', file);
       });
       formData.append('userId', user.phoneNumber);
+      formData.append('isPremium', isPremium.toString());
 
       const response = await fetch('/api/stories/create', {
         method: 'POST',
@@ -78,6 +80,7 @@ export function CreateStory({ onStoryCreated }: { onStoryCreated: () => void }) 
       });
       setIsOpen(false);
       setFiles([]);
+      setIsPremium(false);
       onStoryCreated(); // Refresh stories list after creating a new story
     } catch (error) {
       console.error('Error creating story:', error);
@@ -158,6 +161,19 @@ export function CreateStory({ onStoryCreated }: { onStoryCreated: () => void }) 
                 <Plus className="h-6 w-6" />
               </label>
             )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="premium"
+              checked={isPremium}
+              onChange={() => setIsPremium(!isPremium)}
+              className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+            />
+            <label htmlFor="premium" className="text-sm font-medium text-gray-700">
+              Mark as Premium
+            </label>
+            <Star className="h-4 w-4 text-yellow-500" />
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsOpen(false)}>
