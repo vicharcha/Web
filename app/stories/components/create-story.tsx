@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 export function CreateStory() {
   const { user } = useAuth();
@@ -92,7 +93,11 @@ export function CreateStory() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="flex flex-col items-center gap-1 focus:outline-none">
+        <motion.button
+          className="flex flex-col items-center gap-1 focus:outline-none"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
           <div className="p-[2px] rounded-full bg-primary">
             <div className="p-[2px] bg-background rounded-full">
               <div className="h-14 w-14 rounded-full border-2 border-background bg-muted flex items-center justify-center">
@@ -101,7 +106,7 @@ export function CreateStory() {
             </div>
           </div>
           <span className="text-xs truncate w-16 text-center">Add Story</span>
-        </button>
+        </motion.button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -110,7 +115,14 @@ export function CreateStory() {
         <div className="space-y-4">
           <div className="grid grid-cols-4 gap-2">
             {files.map((file, index) => (
-              <div key={index} className="relative aspect-square">
+              <motion.div
+                key={index}
+                className="relative aspect-square"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3 }}
+              >
                 {file.type.startsWith('image/') ? (
                   <img
                     src={URL.createObjectURL(file)}
@@ -128,7 +140,7 @@ export function CreateStory() {
                 >
                   ×
                 </button>
-              </div>
+              </motion.div>
             ))}
             {files.length < 10 && (
               <label className={cn(
