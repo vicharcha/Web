@@ -4,6 +4,7 @@ import { useResponsive } from "@/hooks/use-responsive"
 import { cn } from "@/lib/utils"
 import { MainContent } from "@/app/home/main-content"
 import { PostCategories } from "@/lib/types"
+import { Stories } from "@/app/home/stories/components/stories"
 
 export default function HomePage() {
   const { isMobile } = useResponsive()
@@ -15,6 +16,7 @@ export default function HomePage() {
           "w-full mx-auto",
           isMobile ? "px-2" : "px-6 max-w-3xl"
         )}>
+          <Stories />
           <MainContent category={PostCategories.GENERAL} showStories={true} />
         </div>
       </div>
