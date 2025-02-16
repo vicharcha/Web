@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Home, Newspaper, Film, Trophy, Cpu, Gavel } from "lucide-react"
 import { PostCategories } from "@/lib/types"
+import { motion } from "framer-motion"
 
 export default function HomePage() {
   const { isMobile } = useResponsive()
@@ -48,7 +49,14 @@ export default function HomePage() {
             {Object.values(PostCategories).map((category) => (
               category !== PostCategories.ADULT && (
                 <TabsContent key={category} value={category}>
-                  <MainContent category={category} showStories={category === PostCategories.GENERAL} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <MainContent category={category} showStories={category === PostCategories.GENERAL} />
+                  </motion.div>
                 </TabsContent>
               )
             ))}

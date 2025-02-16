@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { motion } from "framer-motion";
 
 interface StoryCircleProps {
   story: {
@@ -20,11 +21,13 @@ export function StoryCircle({ story, onPress }: StoryCircleProps) {
   const [isHovering, setIsHovering] = useState(false);
 
   return (
-    <button
+    <motion.button
       className="flex flex-col items-center gap-1 focus:outline-none"
       onClick={onPress}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
     >
       <div 
         className={cn(
@@ -44,7 +47,7 @@ export function StoryCircle({ story, onPress }: StoryCircleProps) {
         </div>
       </div>
       <span className="text-xs truncate w-16 text-center">{story.username}</span>
-    </button>
+    </motion.button>
   );
 }
 

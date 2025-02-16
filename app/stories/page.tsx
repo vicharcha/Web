@@ -7,6 +7,7 @@ import { StoryCircle, StoryCircleSkeleton } from "./components/story-circle";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { StoryViewer } from "@/components/story-viewer";
 import { CreateStory } from "./components/create-story";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface StoryItem {
   id: string;
@@ -88,7 +89,12 @@ export default function StoriesPage() {
     <>
       <div className="w-full p-4">
         <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex gap-4 p-1">
+          <motion.div
+            className="flex gap-4 p-1"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
             <CreateStory />
             {stories.map((story, index) => (
               <StoryCircle
@@ -97,17 +103,19 @@ export default function StoriesPage() {
                 onPress={() => handleStoryPress(index)}
               />
             ))}
-          </div>
+          </motion.div>
         </ScrollArea>
       </div>
 
-      {selectedStoryIndex !== null && (
-        <StoryViewer
-          stories={stories}
-          initialStoryIndex={selectedStoryIndex}
-          onClose={() => setSelectedStoryIndex(null)}
-        />
-      )}
+      <AnimatePresence>
+        {selectedStoryIndex !== null && (
+          <StoryViewer
+            stories={stories}
+            initialStoryIndex={selectedStoryIndex}
+            onClose={() => setSelectedStoryIndex(null)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
