@@ -8,6 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { motion } from "framer-motion";
 
 interface CreateStoryProps {
   onStoryCreated: () => void;
@@ -73,21 +75,26 @@ export function CreateStory({ onStoryCreated }: CreateStoryProps) {
 
   return (
     <>
-      <Button
-        variant="ghost"
-        className="w-[72px] h-[100px] p-0 overflow-hidden relative group rounded-xl cursor-pointer border-2 border-dashed border-muted-foreground/50 hover:border-muted-foreground/80"
+      <motion.button
+        className="flex flex-col items-center space-y-1 relative group text-gray-900"
         onClick={() => setIsOpen(true)}
+        aria-label="Add your story"
       >
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-          <Plus className="h-6 w-6 text-muted-foreground" />
-          <span className="text-xs text-muted-foreground text-center px-2">
-            Add Story
-          </span>
+        <div className="rounded-full p-1 bg-gradient-to-r from-rose-500 via-purple-500 to-blue-500">
+          <div className="rounded-full p-0.5 bg-white">
+            <Avatar className="w-16 h-16 group-hover:scale-105 transition-transform">
+              <AvatarImage src="/placeholder-user.jpg" alt="Create Story" />
+              <AvatarFallback>
+                <Plus className="h-6 w-6" />
+              </AvatarFallback>
+            </Avatar>
+          </div>
         </div>
-      </Button>
+        <span className="text-xs font-medium text-gray-900">Your Story</span>
+      </motion.button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] bg-white">
           <DialogHeader>
             <DialogTitle>Create New Story</DialogTitle>
           </DialogHeader>
@@ -142,7 +149,10 @@ export function CreateStory({ onStoryCreated }: CreateStoryProps) {
             <Button
               onClick={handleUpload}
               disabled={!selectedFile || isUploading}
-              className={cn(isUploading && "animate-pulse")}
+              className={cn(
+                "bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:opacity-90",
+                isUploading && "animate-pulse"
+              )}
             >
               {isUploading ? "Uploading..." : "Share Story"}
             </Button>

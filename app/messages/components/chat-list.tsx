@@ -22,10 +22,10 @@ import type { ChatWithDetails } from "@/lib/types"
 import { useState } from "react"
 
 interface ChatListProps {
-  chats: ChatWithDetails[]
-  selectedChat: string | null
-  onSelectChat: (chatId: string) => void
-  loading?: boolean
+  chats: ChatWithDetails[];
+  selectedChat: string | null;
+  onSelectChat: (chatId: string) => void;
+  loading?: boolean;
 }
 
 export function ChatList({ chats, selectedChat, onSelectChat, loading = false }: ChatListProps) {

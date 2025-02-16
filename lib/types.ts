@@ -69,20 +69,20 @@ export interface ClientStory {
 }
 
 export interface Story {
-  id: string;
-  userId: string;
-  createdAt: string;
-  expiresAt: string;
-  type: 'image' | 'video';
-  mediaUrl: string;
-  duration?: number;
+  id: string | number;
   username?: string;
   userImage?: string;
-  isViewed?: boolean;
+  mediaUrl: string;
+  type: 'image' | 'video';
   isPremium?: boolean;
+  isViewed?: boolean;
+  downloadable?: boolean;
+  createdAt: string | Date;
+  expiresAt: string;
+  duration?: number;
+  userId?: string;
   items?: StoryItem[];
   category?: string;
-  downloadable?: boolean;
   isAdult?: boolean;
 }
 
@@ -122,6 +122,7 @@ export type ParticipantDetail = {
   name: string;
   role?: string;
   department?: string;
+  isPremium?: boolean; // Add this
 };
 
 export type UserStatus = 'online' | 'offline' | 'away';
@@ -130,6 +131,7 @@ export type Message = {
   id: string;
   content: string;
   senderId: string;
+  chatId: string; // Add this
   createdAt: string;
   status: 'sent' | 'delivered' | 'read';
 };
@@ -141,6 +143,13 @@ export type ChatWithDetails = {
   status: 'online' | 'offline';
   participantDetails: ParticipantDetail[];
   isGroup?: boolean;
+  unreadCount: number; // Add this
+  updatedAt: string; // Add this
+  isTyping?: boolean; // Add this
+  lastMessage?: {
+    content: string;
+    createdAt: string;
+  }; // Add this
 };
 
 export type ApiResponse<T = any> = {

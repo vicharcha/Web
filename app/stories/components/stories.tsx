@@ -81,9 +81,7 @@ export function Stories() {
     }
   }
 
-  const progressTimer = useRef<NodeJS.Timeout>()
-  const videoRef = useRef<HTMLVideoElement>(null)
-
+  // Fetch stories effect and handlers...
   useEffect(() => {
     const fetchStories = async () => {
       try {
@@ -123,54 +121,19 @@ export function Stories() {
     fetchStories()
   }, [toast, translate])
 
+  // Story playback state
   const [selectedStory, setSelectedStory] = useState<ClientStory | null>(null)
   const [progress, setProgress] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
   const [isMuted, setIsMuted] = useState(false)
-  const [soundLevel, setSoundLevel] = useState(0)
+  const progressTimer = useRef<NodeJS.Timeout>()
+  const videoRef = useRef<HTMLVideoElement>(null)
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout
-
-    if (selectedStory && isPlaying && !isMuted) {
-      interval = setInterval(() => {
-        setSoundLevel(Math.random() * 100)
-      }, 100)
-    } else {
-      setSoundLevel(0)
-    }
-
-    return () => clearInterval(interval)
-  }, [selectedStory, isPlaying, isMuted])
-
-  useEffect(() => {
-    if (selectedStory && isPlaying) {
-      const duration = selectedStory.duration
-      const increment = (100 / (duration * 1000)) * 100 // For 100ms intervals
-      
-      progressTimer.current = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 100) {
-            handleNext()
-            return 0
-          }
-          return prev + increment
-        })
-      }, 100)
-
-      return () => {
-        if (progressTimer.current) {
-          clearInterval(progressTimer.current)
-        }
-      }
-    }
-  }, [selectedStory, isPlaying])
-
+  // Story handlers...
   const handleStoryClick = (story: ClientStory) => {
     setProgress(0)
     setIsPlaying(true)
     setIsMuted(false)
-    setSoundLevel(0)
     setSelectedStory(story)
 
     setStories(prev =>
@@ -207,6 +170,7 @@ export function Stories() {
     }
   }
 
+  // Media controls
   const togglePlayback = () => {
     if (selectedStory?.type === 'video' && videoRef.current) {
       if (isPlaying) {
@@ -307,17 +271,25 @@ export function Stories() {
                     <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
                   </div>
                   <div className="absolute inset-x-0 top-2 flex justify-center">
+                    {/* Story ring with improved gradient */}
                     <div className={cn(
-                      "w-16 h-16 rounded-full p-[3px]",
-                      story.isViewed ? "bg-muted"
-                        : story.isPremium ? "bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500"
-                          : "bg-gradient-to-br from-pink-500 via-rose-500 to-purple-500",
-                      "transition-all duration-300 ease-in-out"
+                      "w-16 h-16 rounded-full",
+                      "bg-gradient-to-br from-yellow-500 via-rose-500 to-fuchsia-500",
+                      "p-[2px]", // Creates the ring effect
+                      story.isViewed ? "from-gray-300 via-gray-300 to-gray-300" :
+                      story.isPremium ? "from-amber-500 via-yellow-500 to-orange-500" :
+                      "from-yellow-500 via-rose-500 to-fuchsia-500"
                     )}>
-                      <Avatar className="w-full h-full border-2 border-background">
-                        <AvatarImage src={story.userImage} alt={story.username} />
-                        <AvatarFallback>{story.username[0]}</AvatarFallback>
-                      </Avatar>
+                      {/* Inner white ring */}
+                      <div className="w-full h-full rounded-full p-[2px] bg-background">
+                        {/* Avatar container */}
+                        <div className="w-full h-full rounded-full overflow-hidden ring-1 ring-black/5 dark:ring-white/5">
+                          <Avatar className="w-full h-full">
+                            <AvatarImage src={story.userImage} alt={story.username} />
+                            <AvatarFallback>{story.username[0]}</AvatarFallback>
+                          </Avatar>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <span className="absolute bottom-1 text-xs text-center w-full text-white font-medium line-clamp-1">
@@ -330,6 +302,7 @@ export function Stories() {
         </Card>
       )}
 
+      {/* Story viewer dialog */}
       <AnimatePresence>
         {selectedStory && (
           <Dialog open={!!selectedStory} onOpenChange={() => handleClose()}>
@@ -369,10 +342,20 @@ export function Stories() {
                 {/* Controls */}
                 <div className="absolute top-4 left-4 right-4 flex items-center justify-between text-white">
                   <div className="flex items-center space-x-3">
-                    <Avatar className="w-10 h-10 border-2 border-white">
-                      <AvatarImage src={selectedStory.userImage} alt={selectedStory.username} />
-                      <AvatarFallback>{selectedStory.username[0]}</AvatarFallback>
-                    </Avatar>
+                    {/* Story author ring */}
+                    <div className={cn(
+                      "rounded-full",
+                      "bg-gradient-to-br from-yellow-500 via-rose-500 to-fuchsia-500",
+                      "p-[2px]",
+                      selectedStory.isPremium && "from-amber-500 via-yellow-500 to-orange-500"
+                    )}>
+                      <div className="rounded-full p-[2px] bg-black">
+                        <Avatar className="w-10 h-10">
+                          <AvatarImage src={selectedStory.userImage} alt={selectedStory.username} />
+                          <AvatarFallback>{selectedStory.username[0]}</AvatarFallback>
+                        </Avatar>
+                      </div>
+                    </div>
                     <span className="font-semibold">{selectedStory.username}</span>
                   </div>
                   <div className="flex items-center space-x-4">

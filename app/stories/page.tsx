@@ -5,7 +5,7 @@ import { useAuth } from "@/components/auth-provider";
 import { useToast } from "@/components/ui/use-toast";
 import { StoryCircle, StoryCircleSkeleton } from "./components/story-circle";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { StoryViewer } from "@/app/stories/components/story-viewer";
+import { StoryViewer } from "./components/story-viewer";
 import { CreateStory } from "./components/create-story";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ export default function StoriesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [canScroll, setCanScroll] = useState({ left: false, right: false });
 
   useEffect(() => {
     fetchStories();
@@ -59,7 +60,7 @@ export default function StoriesPage() {
     if (!scrollContainerRef.current) return;
     
     const container = scrollContainerRef.current;
-    const scrollAmount = 300; // Adjust scroll amount as needed
+    const scrollAmount = container.clientWidth * 0.8; // Scroll 80% of container width
     
     container.scrollBy({
       left: direction === 'left' ? -scrollAmount : scrollAmount,
@@ -67,98 +68,66 @@ export default function StoriesPage() {
     });
   };
 
-  const [canScroll, setCanScroll] = useState({ left: false, right: false });
-
-  const checkScrollable = () => {
-    const container = scrollContainerRef.current;
-    if (container) {
-      setCanScroll({
-        left: container.scrollLeft > 0,
-        right: container.scrollLeft < container.scrollWidth - container.clientWidth
-      });
-    }
-  };
-
-  // Update scroll state when stories change or container changes
+  // Check scrollable state
   useEffect(() => {
     const handleUpdate = () => {
-      requestAnimationFrame(checkScrollable);
+      const container = scrollContainerRef.current;
+      if (container) {
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        setCanScroll({
+          left: container.scrollLeft > 0,
+          right: container.scrollLeft < maxScroll - 1 // -1 for rounding errors
+        });
+      }
     };
 
     const container = scrollContainerRef.current;
     if (container) {
+      // Initial check
+      handleUpdate();
+
+      // Set up observers
       const observer = new ResizeObserver(handleUpdate);
       observer.observe(container);
 
+      // Listen for scroll events
       container.addEventListener('scroll', handleUpdate);
-      handleUpdate();
 
       return () => {
         observer.disconnect();
         container.removeEventListener('scroll', handleUpdate);
       };
     }
-  }, [stories.length]); // Only re-run when stories change
+  }, [stories.length]);
 
   return (
-    <div className="w-full min-h-screen bg-background">
-      <div className="container mx-auto py-4">
-        <div className="relative">
-          {/* Scroll buttons */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm",
-              !canScroll.left && "opacity-0 pointer-events-none"
+    <div className="max-w-xl mx-auto space-y-6 py-6 bg-white text-black">
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-rose-500/5 via-purple-500/5 to-blue-500/5 rounded-xl blur-xl" />
+        <ScrollArea className="w-full whitespace-nowrap rounded-xl border border-gray-100 bg-white/50 backdrop-blur-sm">
+          <div className="flex w-max space-x-4 p-4">
+            <CreateStory onStoryCreated={fetchStories} />
+            
+            {loading ? (
+              <>
+                {[1, 2, 3, 4].map((i) => (
+                  <StoryCircleSkeleton key={i} />
+                ))}
+              </>
+            ) : (
+              <>
+                {stories.map((story, index) => (
+                  <StoryCircle
+                    key={story.id}
+                    story={story}
+                    onPress={() => handleStoryPress(index)}
+                  />
+                ))}
+              </>
             )}
-            onClick={() => handleScroll('left')}
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm",
-              !canScroll.right && "opacity-0 pointer-events-none"
-            )}
-            onClick={() => handleScroll('right')}
-          >
-            <ChevronRight className="h-6 w-6" />
-          </Button>
-
-          {/* Stories container */}
-          <ScrollArea className="w-full whitespace-nowrap pb-4 -mx-2 px-2">
-            <div 
-              ref={scrollContainerRef}
-              className="flex gap-4 items-start min-h-[120px] px-4"
-            >
-              {loading ? (
-                <>
-                  <CreateStory onStoryCreated={fetchStories} />
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <StoryCircleSkeleton key={n} />
-                  ))}
-                </>
-              ) : (
-                <>
-                  <CreateStory onStoryCreated={fetchStories} />
-                  {stories.map((story, index) => (
-                    <StoryCircle
-                      key={story.id}
-                      story={story}
-                      onPress={() => handleStoryPress(index)}
-                      animate
-                    />
-                  ))}
-                </>
-              )}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </div>
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       </div>
 
       <AnimatePresence mode="wait">

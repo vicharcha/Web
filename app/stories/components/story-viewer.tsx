@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Download, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Pause, Play, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { Story } from "@/lib/types";
+import { motion } from "framer-motion";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface StoryViewerProps {
   stories: Story[];
@@ -110,148 +112,176 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-[400px] h-[calc(100vh-64px)] p-0 aspect-[9/16] mx-auto">
-        <div className="relative w-full h-full flex items-center justify-center bg-black overflow-hidden">
-          {/* Progress bar */}
-          <div className="absolute top-4 left-4 right-4 flex gap-1 z-10">
+      <DialogContent className="max-w-[450px] h-[90vh] p-0 overflow-hidden bg-white">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="relative w-full h-full bg-black overflow-hidden rounded-lg"
+        >
+          {/* Progress bars */}
+          <div className="absolute top-0 left-0 right-0 z-20 p-2 flex gap-1">
             {stories.map((story, index) => (
-              <div key={story.id} className="h-0.5 flex-1 bg-gray-600">
-                <div 
-                  className="h-full bg-white transition-all duration-100"
-                  style={{ 
-                    width: index === currentIndex ? `${progress}%` : 
-                           index < currentIndex ? '100%' : '0%' 
+              <div key={story.id} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-white rounded-full"
+                  initial={{ width: "0%" }}
+                  animate={{
+                    width: index < currentIndex ? "100%" :
+                           index === currentIndex ? `${progress}%` : "0%"
                   }}
+                  transition={{ duration: 0.1 }}
                 />
               </div>
             ))}
           </div>
 
-          {/* User info with timestamp */}
-          <div className="absolute top-8 left-4 right-4 flex items-center justify-between z-10">
-            <div className="flex items-center gap-2">
-              <img
-                src={currentStory.userImage || '/placeholder-user.jpg'}
-                alt={currentStory.username || 'User'}
-                className="w-8 h-8 rounded-full object-cover border border-white/20"
-              />
-              <div className="flex flex-col">
-                <span className="text-white text-sm font-semibold">{currentStory.username || 'User'}</span>
-                <span className="text-white/70 text-xs">{new Date(currentStory.createdAt).toLocaleTimeString()}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Media content */}
-          <div className="w-full h-full flex items-center justify-center" onClick={togglePlayPause}>
+          {/* Story content with fade transitions */}
+          <motion.div
+            key={currentStory.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative w-full h-full"
+          >
             {currentStory.type === 'video' ? (
               <video
                 ref={videoRef}
                 src={currentStory.mediaUrl}
-                className="max-h-full w-full object-contain"
+                className="w-full h-full object-contain"
                 playsInline
                 onTimeUpdate={handleVideoTimeUpdate}
                 onError={handleVideoError}
                 muted
+                onClick={togglePlayPause}
               />
             ) : (
               <img
                 src={currentStory.mediaUrl}
                 alt=""
-                className="max-h-full w-full object-contain"
+                className="w-full h-full object-contain"
+                onClick={togglePlayPause}
               />
             )}
-          </div>
 
-          {/* Navigation buttons */}
-          <div className="absolute inset-0 flex items-center justify-between px-4 z-10">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-black/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePrevious();
-              }}
-              disabled={currentIndex === 0}
-            >
-              <ChevronLeft className="h-8 w-8" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-black/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleNext();
-              }}
-              disabled={currentIndex === stories.length - 1}
-            >
-              <ChevronRight className="h-8 w-8" />
-            </Button>
-          </div>
+            {/* Overlay controls */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/50">
+              {/* Header */}
+              <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10 border-2 border-white/20">
+                    <AvatarImage src={currentStory.userImage} />
+                    <AvatarFallback>{currentStory.username?.[0] ?? '?'}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="text-white font-medium">{currentStory.username}</span>
+                    <span className="text-white/70 text-sm">
+                      {new Date(currentStory.createdAt).toLocaleTimeString()}
+                    </span>
+                  </div>
+                </div>
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-white/20"
+                  onClick={onClose}
+                >
+                  <X className="h-6 w-6" />
+                </Button>
+              </div>
 
-          {/* Play/Pause and Download buttons */}
-          <div className="absolute bottom-4 right-4 flex gap-2 z-10">
-            {currentStory.type === 'video' && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white hover:bg-black/20"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  togglePlayPause();
-                }}
-              >
-                {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
-              </Button>
-            )}
-            {currentStory.downloadable && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white hover:bg-black/20"
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  if (isDownloading) return;
-                  
-                  setIsDownloading(true);
-                  try {
-                    const response = await fetch(`/api/stories/download?storyId=${currentStory.id}`);
-                    if (!response.ok) throw new Error('Failed to get download URL');
-                    
-                    const data = await response.json();
-                    if (!data.success) throw new Error(data.error);
-                    
-                    const link = document.createElement('a');
-                    link.href = currentStory.mediaUrl;
-                    link.download = `story-${currentStory.id}.${currentStory.type === 'video' ? 'mp4' : 'jpg'}`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    
-                    toast({
-                      title: "Success",
-                      description: "Download started successfully"
-                    });
-                  } catch (error) {
-                    console.error('Download error:', error);
-                    toast({
-                      variant: "destructive",
-                      title: "Error",
-                      description: "Failed to download story"
-                    });
-                  } finally {
-                    setIsDownloading(false);
-                  }
-                }}
-                disabled={isDownloading}
-              >
-                <Download className={cn("h-6 w-6", isDownloading && "animate-pulse")} />
-              </Button>
-            )}
-          </div>
-        </div>
+              {/* Navigation and controls */}
+              <div className="absolute inset-0 flex items-center justify-between px-4 z-10">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-black/20"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePrevious();
+                  }}
+                  disabled={currentIndex === 0}
+                >
+                  <ChevronLeft className="h-8 w-8" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-black/20"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNext();
+                  }}
+                  disabled={currentIndex === stories.length - 1}
+                >
+                  <ChevronRight className="h-8 w-8" />
+                </Button>
+              </div>
+
+              {/* Play/Pause and Download buttons */}
+              <div className="absolute bottom-4 right-4 flex gap-2 z-10">
+                {currentStory.type === 'video' && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-black/20"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      togglePlayPause();
+                    }}
+                  >
+                    {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+                  </Button>
+                )}
+                {currentStory.downloadable && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-black/20"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (isDownloading) return;
+                      
+                      setIsDownloading(true);
+                      try {
+                        const response = await fetch(`/api/stories/download?storyId=${currentStory.id}`);
+                        if (!response.ok) throw new Error('Failed to get download URL');
+                        
+                        const data = await response.json();
+                        if (!data.success) throw new Error(data.error);
+                        
+                        const link = document.createElement('a');
+                        link.href = currentStory.mediaUrl;
+                        link.download = `story-${currentStory.id}.${currentStory.type === 'video' ? 'mp4' : 'jpg'}`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        toast({
+                          title: "Success",
+                          description: "Download started successfully"
+                        });
+                      } catch (error) {
+                        console.error('Download error:', error);
+                        toast({
+                          variant: "destructive",
+                          title: "Error",
+                          description: "Failed to download story"
+                        });
+                      } finally {
+                        setIsDownloading(false);
+                      }
+                    }}
+                    disabled={isDownloading}
+                  >
+                    <Download className={cn("h-6 w-6", isDownloading && "animate-pulse")} />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );
