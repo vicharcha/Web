@@ -39,7 +39,8 @@ interface APIStory {
 
 export function Stories() {
   const [stories, setStories] = useState<Story[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
+  const [videoReady, setVideoReady] = useState(false);
   const { toast } = useToast()
 
   useEffect(() => {
@@ -50,25 +51,35 @@ export function Stories() {
         
         const apiStories: APIStory[] = await response.json()
         
-        // Transform API stories to component format
-        const transformedStories: Story[] = [{
-          id: 0,
-          username: "You",
-          userImage: "/placeholder-user.jpg",
-          storyImage: "/placeholder.jpg",
-          isViewed: false,
-          duration: 15
-        }, ...apiStories.map((story, index) => ({
-          id: index + 1,
-          username: story.username,
-          userImage: story.userImage,
-          storyImage: story.items[0]?.url || "/placeholder.jpg",
-          isViewed: false,
-          isPremium: story.tokens > 0,
-          duration: story.items[0]?.duration || 10
-        }))];
+        console.log('Fetched stories:', apiStories);
         
-        setStories(transformedStories)
+        if (!Array.isArray(apiStories) || apiStories.length === 0) {
+          throw new Error('No stories available');
+        }
+
+        const story = apiStories[0];
+        console.log('Processing story URL:', story.items[0]?.url);
+
+        // Use the direct path to video
+        const videoUrl = `/videos/DO IT yourself.mp4`;
+        console.log('Video URL:', videoUrl);
+        
+        console.log('Final video URL:', videoUrl);
+
+        // Transform into stories array
+        const testStory = {
+          id: 1,
+          username: story.username || 'Test User',
+          userImage: story.userImage || '/placeholder-user.jpg',
+          storyImage: videoUrl,
+          isViewed: false,
+          isPremium: false,
+          duration: 15
+        };
+
+        console.log('Created story:', testStory);
+        setStories([testStory]);
+        
       } catch (error) {
         console.error("Error fetching stories:", error)
         toast({
@@ -110,23 +121,21 @@ export function Stories() {
   }, [selectedStory, isPlaying, isMuted])
 
   const handleStoryClick = (story: Story) => {
-    if (!story) return;
+    console.log('Story clicked:', story);
     
-    // Reset all states
-    setProgress(0)
-    setIsPlaying(true)
-    setIsMuted(false)
-    setSoundLevel(0)
+    // Reset states
+    setProgress(0);
+    setIsPlaying(true);
+    setIsMuted(false);
+    setSoundLevel(0);
     
-    // Set selected story
-    setSelectedStory(story)
+    // Set the story immediately
+    setSelectedStory(story);
     
-    // Mark story as viewed after a slight delay
-    setTimeout(() => {
-      setStories(prev => prev.map(s => 
-        s.id === story.id ? { ...s, isViewed: true } : s
-      ))
-    }, 100)
+    // Mark as viewed
+    setStories(prev => 
+      prev.map(s => s.id === story.id ? { ...s, isViewed: true } : s)
+    );
   }
 
   const handleClose = () => {
@@ -168,33 +177,9 @@ export function Stories() {
       {!loading && (
         <Card className="p-4 mb-4 relative">
           <div className="flex gap-3 overflow-x-auto scrollbar-none pb-2 px-1">
-            {/* Create Story Button */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex-shrink-0"
-            >
-              <Button
-                variant="outline"
-                className="w-[72px] h-[100px] flex flex-col items-center justify-center gap-2 border-dashed hover:bg-accent/50 relative"
-              >
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-full p-[3px] bg-gradient-to-br from-primary to-primary/50">
-                    <Avatar className="w-full h-full border-2 border-background">
-                      <AvatarImage src="/placeholder-user.jpg" />
-                      <AvatarFallback>YOU</AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-0.5">
-                    <Plus className="h-3 w-3" />
-                  </div>
-                </div>
-                <span className="text-xs">Add Story</span>
-              </Button>
-            </motion.div>
 
             {/* Story Items */}
-            {stories.slice(1).map((story) => (
+            {stories.map((story) => (
               <motion.div
                 key={story.id}
                 whileHover={{ scale: 1.05 }}
@@ -210,10 +195,17 @@ export function Stories() {
                   handleStoryClick(story);
                 }}
               >
-                  <div 
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
-                    style={{ backgroundImage: `url(${story.storyImage})` }}
-                  >
+                  <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-105">
+                    {story.storyImage.endsWith('.mp4') ? (
+                      <div className="w-full h-full bg-gray-900 flex items-center justify-center">
+                        <Play className="h-6 w-6 text-white/70" />
+                      </div>
+                    ) : (
+                      <div 
+                        className="w-full h-full bg-cover bg-center"
+                        style={{ backgroundImage: `url(${story.storyImage})` }}
+                      />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
                   </div>
                   <div className="absolute inset-x-0 top-2 flex justify-center">
@@ -273,11 +265,8 @@ export function Stories() {
                           key={selectedStory.id}
                           className="h-full bg-white"
                           initial={{ width: "0%" }}
-                          animate={isPlaying ? { width: "100%" } : {}}
-                          transition={{
-                            duration: selectedStory.duration ? selectedStory.duration / 1000 : 10,
-                            ease: "linear"
-                          }}
+                          animate={{ width: `${progress}%` }}
+                          transition={{ duration: 0.1 }}
                           onAnimationComplete={handleNext}
                         />
                       )}
@@ -292,11 +281,90 @@ export function Stories() {
                   animate={{ scale: 1 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
                 >
-                  <img
-                    src={selectedStory.storyImage}
-                    alt={`${selectedStory.username}'s story`}
-                    className="w-full h-full object-cover"
-                  />
+                  {selectedStory.storyImage.endsWith('.mp4') ? (
+                    <>
+                      <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+                        <div className="text-white text-sm">Loading video...</div>
+                      </div>
+                      {!videoReady && (
+                        <div className="absolute inset-0 z-10 bg-black/80 flex items-center justify-center">
+                          <div className="text-white text-sm">Loading video...</div>
+                        </div>
+                      )}
+                      <video
+                        key={`video-${selectedStory.id}`}
+                        src={selectedStory.storyImage}
+                        preload="auto"
+                        style={{ opacity: isPlaying ? 1 : 0.7 }}
+                        className="w-full h-full object-cover"
+                        autoPlay={false}
+                        playsInline
+                        loop={false}
+                        onCanPlay={() => {
+                          console.log('Video can play now');
+                          setVideoReady(true);
+                          if (isPlaying) {
+                            const video = document.querySelector('video');
+                            if (video) video.play().catch(console.error);
+                          }
+                        }}
+                        muted={isMuted}
+                        controls={false}
+                        onEnded={handleNext}
+                        onError={(e) => {
+                          console.error('Video loading error:', e);
+                          toast({
+                            variant: "destructive",
+                            title: "Error",
+                            description: "Could not load video. Please try again.",
+                          });
+                        }}
+                        onTimeUpdate={(e) => {
+                          const video = e.currentTarget;
+                          const progress = (video.currentTime / video.duration) * 100;
+                          setProgress(progress);
+                        }}
+                      ref={(videoElement) => {
+                        if (!videoElement) return;
+                        console.log('Video loaded:', videoElement.src);
+                        videoElement.currentTime = 0;
+                        
+                        if (isPlaying) {
+                          console.log('Attempting to play video...');
+                          const playPromise = videoElement.play();
+                          if (playPromise) {
+                            playPromise.catch(error => {
+                              console.error('Video playback error:', error);
+                              setIsPlaying(false);
+                              toast({
+                                title: "Playback failed",
+                                description: "Please click to play the video",
+                                variant: "destructive"
+                              });
+                            });
+                          }
+                        } else {
+                          videoElement.pause();
+                        }
+                      }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsPlaying(!isPlaying);
+                        }}
+                      />
+                      {!isPlaying && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                          <Play className="h-12 w-12 text-white" />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <img
+                      src={selectedStory.storyImage}
+                      alt={`${selectedStory.username}'s story`}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </motion.div>
 
                 {/* Header */}

@@ -2,85 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-// Mock data - replace with actual database queries
+// Mock data - single test user with video
 const mockStories = [
   {
-    id: "1",
-    userId: "user1",
-    username: "Tech News",
+    id: "test1",
+    userId: "testuser",
+    username: "Test User",
     userImage: "/placeholder-user.jpg",
     items: [
       {
         id: "1-1",
-        url: "/placeholder.jpg",
-        type: "image",
-      },
-      {
-        id: "1-2",
-        url: "/videos/tech-demo.mp4",
+        url: "DO IT yourself.mp4", // Using exact filename from public/videos/
         type: "video",
-        duration: 15
+        duration: 15,
+        mimeType: "video/mp4"
       }
     ],
-    category: "technology",
-    tokens: 350,
-    downloadable: true,
-    isAdult: false
-  },
-  {
-    id: "2",
-    userId: "user2",
-    username: "Sports Central",
-    userImage: "/placeholder-user.jpg",
-    items: [
-      {
-        id: "2-1",
-        url: "/placeholder.jpg",
-        type: "image"
-      },
-      {
-        id: "2-2",
-        url: "/placeholder.jpg",
-        type: "image"
-      }
-    ],
-    category: "sports",
-    tokens: 350,
-    downloadable: true,
-    isAdult: false
-  },
-  {
-    id: "3",
-    userId: "user3",
-    username: "Entertainment Now",
-    userImage: "/placeholder-user.jpg",
-    items: [
-      {
-        id: "3-1",
-        url: "/videos/entertainment.mp4",
-        type: "video",
-        duration: 10
-      }
-    ],
-    category: "entertainment",
-    tokens: 350,
-    downloadable: true,
-    isAdult: false
-  },
-  {
-    id: "4",
-    userId: "user4",
-    username: "News Flash",
-    userImage: "/placeholder-user.jpg",
-    items: [
-      {
-        id: "4-1",
-        url: "/placeholder.jpg",
-        type: "image"
-      }
-    ],
-    category: "news",
-    tokens: 350,
+    category: "tutorial",
+    tokens: 0,
     downloadable: true,
     isAdult: false
   }
@@ -110,7 +49,13 @@ export async function GET(request: NextRequest) {
       filteredStories = filteredStories.filter(story => !story.isAdult);
     }
 
-    return NextResponse.json(filteredStories);
+    console.log('Returning stories:', filteredStories);
+    return new NextResponse(JSON.stringify(filteredStories), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store, max-age=0'
+      }
+    });
   } catch (error) {
     console.error('Error fetching stories:', error);
     return NextResponse.json(

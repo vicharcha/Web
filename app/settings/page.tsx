@@ -4,6 +4,7 @@ import { useState, useEffect, type ReactNode } from "react"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { PrivacySettings } from "./components/privacy-settings"
+import { ThemeSettings } from "./components/theme-settings"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -227,29 +228,8 @@ export default function SettingsPage() {
               </Card>
             </TabsContent>
 
-            {/* Other tabs remain unchanged... */}
-            <TabsContent value="appearance">
-              <Card className="mt-4">
-                <CardHeader>
-                  <CardTitle>Appearance</CardTitle>
-                  <CardDescription>Customize the appearance of the app.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Theme</Label>
-                    <Select value={theme} onValueChange={setTheme}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select theme" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="light">Light</SelectItem>
-                        <SelectItem value="dark">Dark</SelectItem>
-                        <SelectItem value="system">System</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
+            <TabsContent value="appearance" className="mt-4 space-y-6">
+              <ThemeSettings />
             </TabsContent>
 
             {/* Privacy Tab */}
