@@ -117,6 +117,7 @@ export type ParticipantDetail = {
   name: string;
   role?: string;
   department?: string;
+  isPremium?: boolean;
 };
 
 export type UserStatus = 'online' | 'offline' | 'away';
@@ -125,7 +126,8 @@ export type Message = {
   id: string;
   content: string;
   senderId: string;
-  createdAt: string;
+  chatId: string;
+  createdAt: string;  // ISO string format
   status: 'sent' | 'delivered' | 'read';
 };
 
@@ -136,6 +138,15 @@ export type ChatWithDetails = {
   status: 'online' | 'offline';
   participantDetails: ParticipantDetail[];
   isGroup?: boolean;
+  unreadCount: number;
+  isTyping: boolean;
+  lastMessage?: Message;
+  updatedAt: string;
+};
+
+export type IndividualChat = ChatWithDetails & {
+  isGroup: false;
+  participantDetails: [ParticipantDetail];
 };
 
 export type ApiResponse<T = any> = {

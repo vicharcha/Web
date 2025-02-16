@@ -48,7 +48,7 @@ import {
 import type { Post } from "@/lib/types"
 import { useSettings } from "@/hooks/use-settings"
 import { PostCategories } from '@/lib/types'
-import { Stories } from "@/app/home/stories/components/stories"
+import { Stories } from "@/app/stories/components/stories"
 import { TranslatedText, useTranslation } from "@/contexts/translation-context"
 
 interface MainContentProps {

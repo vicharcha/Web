@@ -105,8 +105,8 @@ export function Stories() {
               const clientStory: ClientStory = {
                 id: Number(story.id),
                 username: story.username,
-                userImage: '/placeholder-user.jpg',
-                storyImage: firstItem.url,
+                userImage: story.userImage || '/placeholder-user.jpg',
+                storyImage: firstItem.url.startsWith('http') ? firstItem.url : firstItem.url,
                 isViewed: false,
                 isPremium: false,
                 duration: firstItem.duration ?? 5,

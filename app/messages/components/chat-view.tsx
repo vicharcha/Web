@@ -1,26 +1,28 @@
 "use client"
 
+import React from "react"
+
 import { useState, useRef, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Phone, Video, MoreVertical, ImageIcon, Send, Smile, Users, ArrowLeft, Gift } from "lucide-react"
 import {
-  Phone, Video, Search, MoreVertical, ImageIcon, Send, Smile, 
-  ImagePlus, FilePlus, Camera, CheckCircle2, Users, ArrowLeft 
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
-  DropdownMenuSeparator, DropdownMenuTrigger
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { MessageAttachments } from "./message-attachments"
 import { MessageBubble } from "./message-bubble"
 import { EmojiPickerDialog } from "./emoji-picker"
+import { GiphyPicker } from "./giphy-picker"
 import { CallDialog } from "./call-dialog"
 import { ProfileInfo } from "./profile-info"
 import { MediaGallery } from "./media-gallery"
+import { BotMessage } from "./bot-message"
 import type { ChatWithDetails, Message, UserStatus } from "@/lib/types"
 import { isGroupChat } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
@@ -33,17 +35,26 @@ interface ChatViewProps {
   currentUserId: string
   onBack?: () => void
   userStatuses?: Record<string, UserStatus>
+  selectedChat: ChatWithDetails | null
 }
 
-export function ChatView({ 
-  chat, messages, onSendMessage, onMediaSelect, currentUserId, onBack 
+export function ChatView({
+  chat,
+  messages,
+  onSendMessage,
+  onMediaSelect,
+  currentUserId,
+  onBack,
+  selectedChat,
 }: ChatViewProps) {
   const [messageText, setMessageText] = useState("")
   const [isCallDialogOpen, setIsCallDialogOpen] = useState(false)
   const [isProfileInfoOpen, setIsProfileInfoOpen] = useState(false)
   const [isMediaGalleryOpen, setIsMediaGalleryOpen] = useState(false)
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false)
+  const [isGiphyPickerOpen, setIsGiphyPickerOpen] = useState(false)
   const [showAttachments, setShowAttachments] = useState(false)
+  const [botMessages, setBotMessages] = useState<Message[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
 
   // Scroll to bottom when messages change
@@ -53,17 +64,29 @@ export function ChatView({
     }
   }, [messages])
 
-  const handleSend = () => {
-    if (messageText.trim()) {
-      onSendMessage(messageText)
-      setMessageText("")
+  const handleSendMessage = async (message: string) => {
+    if (!selectedChat) return
+
+    const newMessage: Message = {
+      id: `msg-${Date.now()}`,
+      content: message,
+      senderId: currentUserId,
+      chatId: selectedChat.id,
+      createdAt: new Date().toISOString(),
+      status: "sent",
+    }
+      onSendMessage(message)
+
+    // Trigger bot reply if the chat is with a bot
+    if (selectedChat.participantDetails.some((p) => p.role === "bot")) {
+      setBotMessages((prev) => [...prev, newMessage])
     }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      handleSend()
+      handleSendMessage(messageText)
     }
   }
 
@@ -73,9 +96,9 @@ export function ChatView({
     }
   }
 
-  const chatDisplayName = isGroupChat(chat) 
+  const chatDisplayName = isGroupChat(chat)
     ? chat.name
-    : chat.participantDetails.find(p => p.id !== currentUserId)?.name || chat.name
+    : chat.participantDetails.find((p) => p.id !== currentUserId)?.name || chat.name
 
   return (
     <div className="flex flex-col h-screen md:h-[100dvh] bg-background relative">
@@ -83,12 +106,7 @@ export function ChatView({
       <div className="h-16 md:h-20 border-b flex items-center justify-between px-4 md:px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
         <div className="flex items-center space-x-4">
           {/* Back Button for Mobile */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="md:hidden" 
-            onClick={onBack}
-          >
+          <Button variant="ghost" size="icon" className="md:hidden" onClick={onBack}>
             <ArrowLeft className="h-6 w-6" />
           </Button>
 
@@ -104,20 +122,25 @@ export function ChatView({
           <div className="flex flex-col cursor-pointer" onClick={() => setIsProfileInfoOpen(true)}>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-semibold tracking-tight">{chatDisplayName}</h2>
-              {!isGroupChat(chat) && chat.participantDetails.find(p => p.id !== currentUserId)?.role === 'developer' && (
-                <Badge variant="outline" className="bg-blue-100 text-blue-800">Developer</Badge>
-              )}
+              {!isGroupChat(chat) &&
+                chat.participantDetails.find((p) => p.id !== currentUserId)?.role === "developer" && (
+                  <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                    Developer
+                  </Badge>
+                )}
             </div>
             <span className="text-xs text-muted-foreground flex items-center gap-2">
-              {chat.status === 'online' ? (
+              {chat.status === "online" ? (
                 <span className="flex items-center gap-1">
                   <span className="h-2 w-2 rounded-full bg-green-500 inline-block"></span>
                   Online
                 </span>
-              ) : "Last seen recently"}
+              ) : (
+                "Last seen recently"
+              )}
               {!isGroupChat(chat) && (
                 <span className="text-xs text-muted-foreground">
-                  {chat.participantDetails.find(p => p.id !== currentUserId)?.department || ''}
+                  {chat.participantDetails.find((p) => p.id !== currentUserId)?.department || ""}
                 </span>
               )}
             </span>
@@ -153,16 +176,38 @@ export function ChatView({
       <ScrollArea className="flex-1 px-4 py-6 md:px-6 overflow-y-auto" ref={scrollRef}>
         <div className="space-y-6">
           {messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              content={message.content}
-              sender={message.senderId === currentUserId ? "you" : "them"}
-              time={new Date(message.createdAt).toLocaleTimeString()}
-              status={message.status}
-              senderName={message.senderId === currentUserId ? "You" : 
-                isGroupChat(chat) ? chat.participantDetails.find(p => p.id === message.senderId)?.name || "Unknown" : chatDisplayName}
-              isDeveloper={chat.participantDetails.find(p => p.id === message.senderId)?.role === 'developer'}
-            />
+            <React.Fragment key={message.id}>
+              <MessageBubble
+                content={message.content}
+                sender={message.senderId === currentUserId ? "you" : "them"}
+                time={new Date(message.createdAt).toLocaleTimeString()}
+                status={message.status}
+                senderName={
+                  message.senderId === currentUserId
+                    ? "You"
+                    : isGroupChat(chat)
+                      ? chat.participantDetails.find((p) => p.id === message.senderId)?.name || "Unknown"
+                      : chatDisplayName
+                }
+                isDeveloper={chat.participantDetails.find((p) => p.id === message.senderId)?.role === "developer"}
+              />
+              {selectedChat?.participantDetails.some((p) => p.role === "bot") && message.senderId === currentUserId && (
+                <BotMessage
+                  message={message.content}
+                  onReply={(reply: string) => {
+                    const botReply: Message = {
+                      id: `bot-msg-${Date.now()}`,
+                      content: reply,
+                      senderId: selectedChat.participantDetails.find((p) => p.role === "bot")?.id || "",
+                      chatId: selectedChat.id,
+                      createdAt: new Date().toISOString(),
+                      status: "delivered",
+                    }
+                    onSendMessage(reply)
+                  }}
+                />
+              )}
+            </React.Fragment>
           ))}
         </div>
       </ScrollArea>
@@ -170,9 +215,14 @@ export function ChatView({
       {/* Input Area */}
       <div className="sticky bottom-0 left-0 right-0 p-2 md:p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center gap-2 max-w-3xl mx-auto">
-          <Button variant="ghost" size="icon" onClick={() => setIsEmojiPickerOpen(true)}>
-            <Smile className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={() => setIsEmojiPickerOpen(true)}>
+              <Smile className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => setIsGiphyPickerOpen(true)}>
+              <Gift className="h-5 w-5" />
+            </Button>
+          </div>
           {onMediaSelect && <MessageAttachments onFileSelect={handleMediaSelect} />}
           <Input
             placeholder="Type a message..."
@@ -181,7 +231,7 @@ export function ChatView({
             onChange={(e) => setMessageText(e.target.value)}
             onKeyPress={handleKeyPress}
           />
-          <Button size="icon" onClick={handleSend} disabled={!messageText.trim()}>
+          <Button size="icon" onClick={() => handleSendMessage(messageText)} disabled={!messageText.trim()}>
             <Send className="h-5 w-5" />
           </Button>
         </div>
@@ -190,8 +240,25 @@ export function ChatView({
       {/* Dialogs */}
       <CallDialog isOpen={isCallDialogOpen} onClose={() => setIsCallDialogOpen(false)} />
       <ProfileInfo isOpen={isProfileInfoOpen} onClose={() => setIsProfileInfoOpen(false)} chat={chat} />
-      <MediaGallery isOpen={isMediaGalleryOpen} onClose={() => setIsMediaGalleryOpen(false)} messages={messages} chatName={chatDisplayName} />
-      <EmojiPickerDialog isOpen={isEmojiPickerOpen} onClose={() => setIsEmojiPickerOpen(false)} onEmojiSelect={(emoji) => setMessageText((prev) => prev + emoji)} />
+      <MediaGallery
+        isOpen={isMediaGalleryOpen}
+        onClose={() => setIsMediaGalleryOpen(false)}
+        messages={messages}
+        chatName={chatDisplayName}
+      />
+      <EmojiPickerDialog
+        isOpen={isEmojiPickerOpen}
+        onClose={() => setIsEmojiPickerOpen(false)}
+        onEmojiSelect={(emoji) => setMessageText((prev) => prev + emoji)}
+      />
+      <GiphyPicker 
+        isOpen={isGiphyPickerOpen}
+        onClose={() => setIsGiphyPickerOpen(false)}
+        onSelect={(gif) => {
+          handleSendMessage(gif.url);
+          setIsGiphyPickerOpen(false);
+        }}
+      />
     </div>
   )
 }

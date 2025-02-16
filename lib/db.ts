@@ -82,6 +82,21 @@ export async function executeQuery(query: string, params: any[]): Promise<Databa
 
 // Helper functions for common operations
 export async function findUserByPhone(userId: string): Promise<DBUser | undefined> {
+  if (userId.startsWith('demo_user_')) {
+    // For demo users, return the username in a friendly format
+    return {
+      id: userId,
+      username: userId.split('_').join(' ').replace(/^\w/, c => c.toUpperCase()),
+      phone_number: '',
+      email: '',
+      is_verified: true,
+      phone_verified: true,
+      digilocker_verified: false,
+      country_code: '+91',
+      created_at: new Date(),
+      last_active: new Date()
+    } as DBUser;
+  }
   const query = 'SELECT * FROM social_network.users WHERE id = ?';
   const result = await executeQuery(query, [userId]);
   return result.rows?.[0] as DBUser | undefined;

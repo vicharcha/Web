@@ -19,6 +19,7 @@ interface MessageBubbleProps {
   isPremium?: boolean
   senderName?: string
   isDeveloper?: boolean
+  isGif?: boolean
 }
 
 export function MessageBubble({
@@ -32,15 +33,13 @@ export function MessageBubble({
   isPremium,
   senderName,
   isDeveloper,
+  isGif,
 }: MessageBubbleProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={cn(
-        "flex group relative",
-        sender === "you" ? "justify-end" : "justify-start"
-      )}
+      className={cn("flex group relative", sender === "you" ? "justify-end" : "justify-start")}
     >
       <div
         className={cn(
@@ -50,8 +49,8 @@ export function MessageBubble({
           sender === "you"
             ? cn(
                 "bg-gradient-to-br",
-                isPremium 
-                  ? "from-amber-500 to-orange-600 text-white shadow-amber-500/20" 
+                isPremium
+                  ? "from-amber-500 to-orange-600 text-white shadow-amber-500/20"
                   : "from-blue-600 to-blue-700 text-white shadow-blue-500/10",
                 "shadow-md hover:shadow-xl",
               )
@@ -67,7 +66,7 @@ export function MessageBubble({
               layoutId={`media-${media.url}`}
             >
               <img
-                src={media.url}
+                src={media.url || "/placeholder.svg"}
                 alt={media.caption}
                 className="rounded-lg max-h-[300px] w-auto object-cover transition-all duration-200 group-hover/media:brightness-90"
               />
@@ -75,9 +74,7 @@ export function MessageBubble({
                 <span className="text-white text-sm font-medium">View</span>
               </div>
             </motion.button>
-            {media.caption && (
-              <p className="text-sm opacity-70 px-2 py-1 line-clamp-2">{media.caption}</p>
-            )}
+            {media.caption && <p className="text-sm opacity-70 px-2 py-1 line-clamp-2">{media.caption}</p>}
           </div>
         )}
 
@@ -91,20 +88,21 @@ export function MessageBubble({
               )}
             </div>
           )}
-          <p className="whitespace-pre-wrap break-words text-[0.925rem] leading-relaxed">{content}</p>
+          {isGif ? (
+            <img
+              src={content.replace("[GIF] ", "") || "/placeholder.svg"}
+              alt="GIF"
+              className="max-w-full h-auto rounded-lg"
+            />
+          ) : (
+            <p className="whitespace-pre-wrap break-words text-[0.925rem] leading-relaxed">{content}</p>
+          )}
           <div className="flex items-center justify-end gap-1.5">
             <p className="text-[0.65rem] opacity-70">{time}</p>
             {sender === "you" && (
-              <div className={cn(
-                "flex text-[0.65rem]", 
-                status === "read" 
-                  ? "text-blue-300" 
-                  : "opacity-70"
-              )}>
+              <div className={cn("flex text-[0.65rem]", status === "read" ? "text-blue-300" : "opacity-70")}>
                 <Check className="h-2.5 w-2.5" />
-                {(status === "delivered" || status === "read") && (
-                  <Check className="h-2.5 w-2.5 -ml-1" />
-                )}
+                {(status === "delivered" || status === "read") && <Check className="h-2.5 w-2.5 -ml-1" />}
               </div>
             )}
           </div>
@@ -115,7 +113,7 @@ export function MessageBubble({
           initial={false}
           className={cn(
             "absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity",
-            sender === "you" ? "-left-12" : "-right-12"
+            sender === "you" ? "-left-12" : "-right-12",
           )}
         >
           <Button
@@ -130,3 +128,4 @@ export function MessageBubble({
     </motion.div>
   )
 }
+

@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Filter, Users, Star, PlusCircle, ImageIcon, Clock, MoreHorizontal, CheckCircle2 } from 'lucide-react'
+import { Search, Filter, Users, Star, PlusCircle, ImageIcon, Clock, MoreHorizontal, CheckCircle2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -19,6 +19,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { format } from "date-fns"
 import type { ChatWithDetails } from "@/lib/types"
+import { useState } from "react"
 
 interface ChatListProps {
   chats: ChatWithDetails[]
@@ -28,17 +29,14 @@ interface ChatListProps {
 }
 
 export function ChatList({ chats, selectedChat, onSelectChat, loading = false }: ChatListProps) {
+  const [filteredChats, setFilteredChats] = useState<ChatWithDetails[]>(chats)
   return (
     <div className="h-full flex flex-col bg-background">
       {/* List Header */}
       <div className="p-4 md:p-6 border-b">
         <div className="flex items-center gap-4 mb-4 md:mb-6">
           <h2 className="text-xl md:text-2xl font-bold tracking-tight">Messages</h2>
-          <Button 
-            variant="secondary" 
-            size="icon" 
-            className="ml-auto rounded-full hover:scale-105 transition-transform"
-          >
+          <Button variant="secondary" size="icon" className="ml-auto rounded-full hover:scale-105 transition-transform">
             <PlusCircle className="h-5 w-5" />
           </Button>
         </div>
@@ -50,6 +48,16 @@ export function ChatList({ chats, selectedChat, onSelectChat, loading = false }:
             <Input
               placeholder="Search messages..."
               className="pl-9 w-full bg-muted/50 border-none focus-visible:ring-1 rounded-full"
+              onChange={(e) => {
+                const searchTerm = e.target.value.toLowerCase()
+                setFilteredChats(
+                  chats.filter(
+                    (chat) =>
+                      chat.name.toLowerCase().includes(searchTerm) ||
+                      chat.participantDetails.some((p) => p.name.toLowerCase().includes(searchTerm)),
+                  ),
+                )
+              }}
             />
           </div>
           <DropdownMenu>
@@ -77,11 +85,13 @@ export function ChatList({ chats, selectedChat, onSelectChat, loading = false }:
         {/* Tabs */}
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="grid w-full grid-cols-4 p-1 bg-muted/50">
-            <TabsTrigger value="all" className="text-xs md:text-sm">All</TabsTrigger>
+            <TabsTrigger value="all" className="text-xs md:text-sm">
+              All
+            </TabsTrigger>
             <TabsTrigger value="unread" className="relative text-xs md:text-sm">
               Unread
-              <Badge 
-                variant="secondary" 
+              <Badge
+                variant="secondary"
                 className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs"
               >
                 {chats.reduce((acc, chat) => acc + chat.unreadCount, 0)}
@@ -113,7 +123,7 @@ export function ChatList({ chats, selectedChat, onSelectChat, loading = false }:
           </div>
         ) : (
           <AnimatePresence>
-            {chats.map((chat) => (
+            {filteredChats.map((chat) => (
               <motion.button
                 key={chat.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -124,14 +134,14 @@ export function ChatList({ chats, selectedChat, onSelectChat, loading = false }:
                   "w-full flex items-center space-x-3 md:space-x-4 p-2 md:p-3 rounded-xl transition-all",
                   "hover:bg-accent/50 active:scale-[0.98]",
                   selectedChat === chat.id && "bg-accent/50 shadow-sm ring-1 ring-accent",
-                  "my-1 relative group"
+                  "my-1 relative group",
                 )}
               >
                 <div className="relative shrink-0">
                   <Avatar
                     className={cn(
                       "h-10 w-10 md:h-12 md:w-12 border-2 border-background transition-transform hover:scale-105",
-                      chat.participantDetails.some(p => p.isPremium) && "ring-2 ring-amber-500"
+                      chat.participantDetails.some((p) => p.isPremium) && "ring-2 ring-amber-500",
                     )}
                   >
                     <AvatarImage src={chat.avatar} alt={chat.name} />
@@ -146,7 +156,7 @@ export function ChatList({ chats, selectedChat, onSelectChat, loading = false }:
                   <div className="flex justify-between items-start mb-0.5 md:mb-1">
                     <div className="flex items-center gap-1">
                       <p className="font-medium text-sm truncate">{chat.name}</p>
-                      {chat.participantDetails.some(p => p.isPremium) && (
+                      {chat.participantDetails.some((p) => p.isPremium) && (
                         <CheckCircle2 className="h-3.5 w-3.5 md:h-4 md:w-4 text-amber-500 shrink-0" />
                       )}
                     </div>
@@ -174,10 +184,7 @@ export function ChatList({ chats, selectedChat, onSelectChat, loading = false }:
                 </div>
 
                 {chat.unreadCount > 0 && (
-                  <Badge 
-                    variant="secondary" 
-                    className="ml-2 bg-primary text-primary-foreground text-xs shrink-0"
-                  >
+                  <Badge variant="secondary" className="ml-2 bg-primary text-primary-foreground text-xs shrink-0">
                     {chat.unreadCount}
                   </Badge>
                 )}
@@ -191,9 +198,9 @@ export function ChatList({ chats, selectedChat, onSelectChat, loading = false }:
                       exit={{ opacity: 0, x: 20 }}
                       className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-7 w-7 md:h-8 md:w-8 rounded-full hover:bg-background shrink-0"
                       >
                         <MoreHorizontal className="h-4 w-4" />
@@ -209,3 +216,4 @@ export function ChatList({ chats, selectedChat, onSelectChat, loading = false }:
     </div>
   )
 }
+

@@ -81,7 +81,7 @@ const demoStories: Story[] = [
   {
     id: '1',
     userId: demoUserIds.user1,
-    items: '[{"id":"1","url":"/videos/DO IT yourself.mp4","type":"video","duration":15}]',
+    items: JSON.stringify([{"id":"1","url":"/videos/DO IT yourself.mp4","type":"video","duration":15}]),
     createdAt: new Date(),
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
     category: 'general',
@@ -91,7 +91,7 @@ const demoStories: Story[] = [
   {
     id: '2',
     userId: demoUserIds.user2,
-    items: '[{"id":"1","url":"/placeholder.jpg","type":"image","duration":5}]',
+    items: JSON.stringify([{"id":"1","url":"/placeholder.jpg","type":"image","duration":5}]),
     createdAt: new Date(),
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     category: 'general',
@@ -101,7 +101,7 @@ const demoStories: Story[] = [
   {
     id: '3',
     userId: demoUserIds.user1,
-    items: '[{"id":"1","url":"/placeholder.svg","type":"image","duration":5}]',
+    items: JSON.stringify([{"id":"1","url":"/placeholder.svg","type":"image","duration":5}]),
     createdAt: new Date(),
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     category: 'general',

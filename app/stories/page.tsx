@@ -5,7 +5,7 @@ import { useAuth } from "@/components/auth-provider";
 import { useToast } from "@/components/ui/use-toast";
 import { StoryCircle, StoryCircleSkeleton } from "./components/story-circle";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { StoryViewer } from "@/app/home/stories/components/story-viewer";
+import { StoryViewer } from "@/app/stories/components/story-viewer";
 import { CreateStory } from "./components/create-story";
 import { motion, AnimatePresence } from "framer-motion";
 

@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Configure route segment config
+export const dynamic = 'force-dynamic';
 import { getStories, Story, findUserByPhone } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
@@ -18,10 +21,21 @@ export async function GET(request: NextRequest) {
     
     // Get stories with user details
     const storiesWithUserDetails = await Promise.all(sortedStories.map(async (story) => {
-      const user = await findUserByPhone(story.userId);
+      let username, userImage;
+      
+      if (story.userId.startsWith('demo_user_')) {
+        username = story.userId.split('_').slice(1).join(' ').replace(/^\w/, c => c.toUpperCase());
+        userImage = '/placeholder-user.jpg';
+      } else {
+        const user = await findUserByPhone(story.userId);
+        username = user?.username || 'User';
+        userImage = '/placeholder-user.jpg';
+      }
+
       return {
         ...story,
-        username: user?.username || "Unknown User"
+        username,
+        userImage
       };
     }));
     

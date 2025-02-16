@@ -14,7 +14,7 @@ import { CreatePost } from "@/components/create-post";
 import { useAuth } from "@/components/auth-provider";
 import { useSettings } from "@/hooks/use-settings";
 import { PostCategories, Post } from "@/lib/types";
-import { Stories } from "@/app/home/stories/components/stories";
+import { Stories } from "@/app/stories/components/stories";
 
 const categoryFilters: string[] = ["all", "general", "news", "entertainment", "sports", "technology", "politics"];
 

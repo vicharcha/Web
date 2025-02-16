@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import StoriesPage from "@/app/home/stories/page";
+import StoriesPage from "@/app/stories/page";
 import { CreatePost } from "@/components/create-post";
 import { Post as PostComponent } from "@/components/feed-post";
 import { useToast } from "@/components/ui/use-toast";
