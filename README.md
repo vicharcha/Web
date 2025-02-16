@@ -85,6 +85,16 @@ In development mode (`NODE_ENV=development`):
 - Debug phone number: +911234567890
 - Debug OTP: 123456
 
+## Using the Mock Database
+
+The mock database is used by default in development mode. To enable or disable the mock database, set the `USE_MOCK_DB` environment variable in your `.env` file:
+
+```env
+USE_MOCK_DB=true
+```
+
+When `USE_MOCK_DB` is set to `true`, the application will use the mock database for all operations. This is useful for development and testing purposes.
+
 ## Testing
 
 Run the test suite:
