@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getStories, Story } from '@/lib/db';
+import { getStories, Story, findUserByPhone } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,19 +16,18 @@ export async function GET(request: NextRequest) {
       return dateB.getTime() - dateA.getTime();
     });
     
-    // Group stories by user
-    const storiesByUser = sortedStories.reduce((acc, story) => {
-      const userId = story.userId;
-      if (!acc[userId]) {
-        acc[userId] = [];
-      }
-      acc[userId].push(story);
-      return acc;
-    }, {} as Record<string, Story[]>);
+    // Get stories with user details
+    const storiesWithUserDetails = await Promise.all(sortedStories.map(async (story) => {
+      const user = await findUserByPhone(story.userId);
+      return {
+        ...story,
+        username: user?.username || "Unknown User"
+      };
+    }));
     
     return NextResponse.json({
       success: true,
-      stories: storiesByUser
+      stories: storiesWithUserDetails
     });
   } catch (error) {
     console.error('Error fetching stories:', error);

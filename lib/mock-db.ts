@@ -41,9 +41,15 @@ const storage = {
 };
 
 // Initialize demo users
+// Create consistent user IDs for demo data
+const demoUserIds = {
+  user1: 'demo_user_1',
+  user2: 'demo_user_2'
+};
+
 const demoUsers: DBUser[] = [
   {
-    id: types.Uuid.random().toString(),
+    id: demoUserIds.user1,
     username: 'demo_user1',
     phone_number: '+911234567890',
     email: 'demo1@example.com',
@@ -56,7 +62,7 @@ const demoUsers: DBUser[] = [
     last_active: new Date()
   },
   {
-    id: types.Uuid.random().toString(),
+    id: demoUserIds.user2,
     username: 'demo_user2',
     phone_number: '+911234567891',
     email: 'demo2@example.com',
@@ -74,7 +80,7 @@ const demoUsers: DBUser[] = [
 const demoStories: Story[] = [
   {
     id: '1',
-    userId: demoUsers[0].id,
+    userId: demoUserIds.user1,
     items: '[{"id":"1","url":"/videos/DO IT yourself.mp4","type":"video","duration":15}]',
     createdAt: new Date(),
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
@@ -84,7 +90,7 @@ const demoStories: Story[] = [
   },
   {
     id: '2',
-    userId: demoUsers[1].id,
+    userId: demoUserIds.user2,
     items: '[{"id":"1","url":"/placeholder.jpg","type":"image","duration":5}]',
     createdAt: new Date(),
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
@@ -94,7 +100,7 @@ const demoStories: Story[] = [
   },
   {
     id: '3',
-    userId: demoUsers[0].id,
+    userId: demoUserIds.user1,
     items: '[{"id":"1","url":"/placeholder.svg","type":"image","duration":5}]',
     createdAt: new Date(),
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),

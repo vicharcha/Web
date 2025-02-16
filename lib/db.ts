@@ -81,9 +81,9 @@ export async function executeQuery(query: string, params: any[]): Promise<Databa
 }
 
 // Helper functions for common operations
-export async function findUserByPhone(phone: string): Promise<DBUser | undefined> {
-  const query = 'SELECT * FROM social_network.users WHERE phone_number = ?';
-  const result = await executeQuery(query, [phone]);
+export async function findUserByPhone(userId: string): Promise<DBUser | undefined> {
+  const query = 'SELECT * FROM social_network.users WHERE id = ?';
+  const result = await executeQuery(query, [userId]);
   return result.rows?.[0] as DBUser | undefined;
 }
 

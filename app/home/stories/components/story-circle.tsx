@@ -55,19 +55,20 @@ export function StoryCircle({ story, onPress, loading }: StoryCircleProps) {
             isHovering && "scale-105 transition-transform"
           )}
         >
-        <div className="p-[2px] bg-background rounded-full">
-          <Avatar className="h-14 w-14 border-2 border-background relative">
-            <AvatarImage 
-              src={story.userImage} 
-              alt={story.username}
-              className="object-cover"
-            />
-          </Avatar>
-          {story.items.length > 1 && (
-            <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium">
-              {story.items.length}
-            </div>
-          )}
+          <div className="p-[2px] bg-background rounded-full">
+            <Avatar className="h-14 w-14 border-2 border-background relative">
+              <AvatarImage 
+                src={story.userImage} 
+                alt={story.username}
+                className="object-cover"
+              />
+            </Avatar>
+            {story.items.length > 1 && (
+              <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium">
+                {story.items.length}
+              </div>
+            )}
+          </div>
         </div>
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center">

@@ -15,7 +15,7 @@ import { Story, ClientStory, StoryItem } from '@/lib/types'
 
 interface APIResponse {
   success: boolean
-  stories: Record<string, Story[]>
+  stories: (Story & { username: string })[]
 }
 
 export function Stories() {
@@ -91,10 +91,8 @@ export function Stories() {
         if (!response.ok) throw new Error('Failed to fetch stories')
     
         const data = await response.json() as APIResponse
-        const apiStories = Object.values(data.stories).flat()
-    
-        const transformedStories: ClientStory[] = apiStories
-          .map((story: Story) => {
+        const transformedStories: ClientStory[] = data.stories
+          .map((story) => {
             try {
               const items: StoryItem[] = JSON.parse(story.items)
               const firstItem = items[0]
@@ -106,7 +104,7 @@ export function Stories() {
 
               const clientStory: ClientStory = {
                 id: Number(story.id),
-                username: storage.users.get(story.userId)?.username || "Unknown User",
+                username: story.username,
                 userImage: '/placeholder-user.jpg',
                 storyImage: firstItem.url,
                 isViewed: false,
