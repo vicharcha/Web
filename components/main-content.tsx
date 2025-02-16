@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useResponsive } from "@/hooks/use-responsive"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
@@ -18,6 +18,11 @@ import {
   Sparkles, 
   Share2, 
   Verified,
+  TrendingUp,
+  Clock,
+  Star,
+  Users,
+  Filter
 } from "lucide-react"
 import Image from "next/image"
 import { CreatePost } from "@/components/create-post"
@@ -25,7 +30,15 @@ import { useAuth } from "@/components/auth-provider"
 import { ShareDialog } from "./share-dialog"
 import { CommentDialog } from "./comment-dialog"
 import { LikeButton } from "./like-button"
-import { ContentSections } from "./content-sections"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import type { Post } from "@/lib/types"
 import { useSettings } from "@/hooks/use-settings"
 import { PostCategories } from '@/lib/types'
@@ -33,12 +46,18 @@ import { Stories } from "@/components/stories"
 
 type FeedPost = Post & {
   categories: string[];
+  interests?: string[];
+  engagementScore?: number;
+  trending?: boolean;
 };
 
 interface MainContentProps {
   category: string;
   showStories?: boolean;
 }
+
+type SortOption = 'latest' | 'trending' | 'top' | 'following';
+type FilterOption = 'all' | 'verified' | 'premium' | 'following' | 'interests';
 
 export function MainContent({ category, showStories = false }: MainContentProps) {
   const { user } = useAuth()
@@ -48,8 +67,42 @@ export function MainContent({ category, showStories = false }: MainContentProps)
   const [newComments, setNewComments] = useState<Record<string, string>>({})
   const { toast } = useToast()
   const [shareDialogPost, setShareDialogPost] = useState<FeedPost | null>(null)
+
+  const handleComment = useCallback((postId: string, comment: string) => {
+    setPosts(posts => posts.map(post =>
+      post.id === postId
+        ? { ...post, comments: post.comments + 1 }
+        : post
+    ))
+    setNewComments(comments => ({ ...comments, [postId]: '' }))
+    toast({
+      title: "Comment added",
+      description: "Your comment has been posted successfully.",
+    })
+  }, [toast])
   const [commentDialogPost, setCommentDialogPost] = useState<FeedPost | null>(null)
   const { isMobile } = useResponsive()
+  const [sortBy, setSortBy] = useState<SortOption>('latest')
+  const [filterBy, setFilterBy] = useState<FilterOption>('all')
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([])
+  const [followedUsers, setFollowedUsers] = useState<string[]>([])
+
+  const handleLike = useCallback((postId: string) => {
+    setPosts(posts => posts.map(post =>
+      post.id === postId
+        ? { ...post, likes: post.isLiked ? post.likes - 1 : post.likes + 1, isLiked: !post.isLiked }
+        : post
+    ))
+  }, [])
+
+  // Fetch user's interests and followed users
+  useEffect(() => {
+    if (user) {
+      // Mock data - replace with actual API calls
+      setSelectedInterests(['technology', 'sports', 'music'])
+      setFollowedUsers(['user1', 'user2', 'user3'])
+    }
+  }, [user])
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -61,15 +114,18 @@ export function MainContent({ category, showStories = false }: MainContentProps)
         ...post,
         username: post.userId,
         userImage: `/placeholder.svg?${post.userId}`,
-        likes: 0,
-        comments: 0,
-        shares: 0,
+        likes: Math.floor(Math.random() * 100),
+        comments: Math.floor(Math.random() * 50),
+        shares: Math.floor(Math.random() * 20),
         isLiked: false,
         isBookmarked: false,
         categories: [post.category],
+        interests: ['technology', 'sports', 'music'].slice(0, Math.floor(Math.random() * 3) + 1),
         timestamp: new Date(post.createdAt).toLocaleString(),
         isVerified: Math.random() > 0.5,
-        isPremium: Math.random() > 0.7
+        isPremium: Math.random() > 0.7,
+        engagementScore: Math.random() * 100,
+        trending: Math.random() > 0.8
       }))
       
       setPosts(feedPosts)
@@ -89,81 +145,62 @@ export function MainContent({ category, showStories = false }: MainContentProps)
     fetchPosts()
   }, [fetchPosts])
 
-  const handleLike = async (postId: string) => {
-    if (!user) return;
+  const getFilteredPosts = useCallback(() => {
+    let filtered = [...posts];
 
-    try {
-      await fetch('/api/social', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contentId: postId,
-          userId: user.phoneNumber,
-          type: 'like'
-        }),
-      })
-
-      setPosts(posts.map(post => 
-        post.id === postId 
-          ? { ...post, likes: post.likes + 1, isLiked: true }
-          : post
-      ))
-
-      toast({
-        description: (
-          <div className="flex items-center gap-2">
-            <Heart className="h-4 w-4 text-red-500" />
-            Post liked!
-          </div>
-        ),
-      })
-    } catch (error) {
-      console.error('Error liking post:', error)
-      toast({
-        variant: "destructive",
-        description: "Failed to like post",
-      })
+    // Category filter
+    if (category !== 'all') {
+      filtered = filtered.filter(post => post.category === category);
     }
-  }
 
-  const handleComment = async (postId: string, comment: string) => {
-    if (!user || !comment.trim()) return;
+    // Adult content filter
+    filtered = filtered.filter(post => {
+      if (post.category === PostCategories.ADULT) {
+        return settings?.isAdultContentEnabled;
+      }
+      return true;
+    });
 
-    try {
-      await fetch('/api/social', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contentId: postId,
-          userId: user.phoneNumber,
-          type: 'comment',
-          content: comment
-        }),
-      })
-
-      setPosts(posts.map(post => 
-        post.id === postId 
-          ? { ...post, comments: post.comments + 1 }
-          : post
-      ))
-
-      setNewComments({ ...newComments, [postId]: '' })
-      toast({
-        description: (
-          <div className="flex items-center gap-2">
-            <MessageCircle className="h-4 w-4" />
-            Comment posted!
-          </div>
-        ),
-      })
-    } catch (error) {
-      console.error('Error posting comment:', error)
-      toast({
-        variant: "destructive",
-        description: "Failed to post comment",
-      })
+    // Additional filters
+    switch (filterBy) {
+      case 'verified':
+        filtered = filtered.filter(post => post.isVerified);
+        break;
+      case 'premium':
+        filtered = filtered.filter(post => post.isPremium);
+        break;
+      case 'following':
+        filtered = filtered.filter(post => followedUsers.includes(post.userId));
+        break;
+      case 'interests':
+        filtered = filtered.filter(post => 
+          post.interests?.some(interest => selectedInterests.includes(interest))
+        );
+        break;
     }
-  }
+
+    // Sorting
+    switch (sortBy) {
+      case 'trending':
+        filtered.sort((a, b) => (b.trending ? 1 : 0) - (a.trending ? 1 : 0));
+        break;
+      case 'top':
+        filtered.sort((a, b) => (b.engagementScore || 0) - (a.engagementScore || 0));
+        break;
+      case 'following':
+        filtered.sort((a, b) => 
+          (followedUsers.includes(b.userId) ? 1 : 0) - 
+          (followedUsers.includes(a.userId) ? 1 : 0)
+        );
+        break;
+      default: // 'latest'
+        filtered.sort((a, b) => 
+          new Date(b.timestamp || '').getTime() - new Date(a.timestamp || '').getTime()
+        );
+    }
+
+    return filtered;
+  }, [posts, category, settings?.isAdultContentEnabled, filterBy, sortBy, followedUsers, selectedInterests]);
 
   if (loading) {
     return (
@@ -174,16 +211,7 @@ export function MainContent({ category, showStories = false }: MainContentProps)
     )
   }
 
-  const filteredPosts = posts.filter(post => {
-    // Filter by selected category
-    if (post.category !== category) return false;
-    
-    // Filter adult content
-    if (post.category === PostCategories.ADULT) {
-      return settings?.isAdultContentEnabled;
-    }
-    return true;
-  });
+  const filteredPosts = getFilteredPosts();
 
   return (
     <div className="w-full">
@@ -191,6 +219,67 @@ export function MainContent({ category, showStories = false }: MainContentProps)
         {showStories && <Stories />}
         <CreatePost onPostCreated={fetchPosts} initialCategory={category} />
         
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <Tabs value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+            <TabsList>
+              <TabsTrigger value="latest" className="gap-2">
+                <Clock className="h-4 w-4" />
+                Latest
+              </TabsTrigger>
+              <TabsTrigger value="trending" className="gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Trending
+              </TabsTrigger>
+              <TabsTrigger value="top" className="gap-2">
+                <Star className="h-4 w-4" />
+                Top
+              </TabsTrigger>
+              <TabsTrigger value="following" className="gap-2">
+                <Users className="h-4 w-4" />
+                Following
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Filter
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => setFilterBy('all')}>
+                  All Posts
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy('verified')}>
+                  Verified Users
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy('premium')}>
+                  Premium Content
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy('following')}>
+                  Following
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterBy('interests')}>
+                  My Interests
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {selectedInterests.length > 0 && filterBy === 'interests' && (
+          <div className="flex flex-wrap gap-2">
+            {selectedInterests.map(interest => (
+              <Badge key={interest} variant="secondary">
+                {interest}
+              </Badge>
+            ))}
+          </div>
+        )}
+
         <AnimatePresence>
           {filteredPosts.map((post) => (
             <motion.article

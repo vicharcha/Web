@@ -4,7 +4,7 @@ import { MainContent } from "@/components/main-content"
 import { useResponsive } from "@/hooks/use-responsive"
 import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Home, Newspaper, Film, Trophy, Cpu } from "lucide-react"
+import { Home, Newspaper, Film, Trophy, Cpu, Gavel } from "lucide-react"
 import { PostCategories } from "@/lib/types"
 
 export default function HomePage() {
@@ -38,6 +38,10 @@ export default function HomePage() {
               <TabsTrigger value={PostCategories.TECHNOLOGY} className="flex items-center gap-2">
                 <Cpu className="h-4 w-4" />
                 Technology
+              </TabsTrigger>
+              <TabsTrigger value={PostCategories.POLITICS} className="flex items-center gap-2">
+                <Gavel className="h-4 w-4" />
+                Politics
               </TabsTrigger>
             </TabsList>
 

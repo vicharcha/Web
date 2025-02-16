@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useCallback } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -10,8 +10,12 @@ import { useAuth } from "@/components/auth-provider"
 import { FileUpload } from "@/components/file-upload"
 import { useToast } from "@/components/ui/use-toast"
 import { motion, AnimatePresence } from "framer-motion"
-import { Image, X, Sparkles, Loader2 } from "lucide-react"
+import { Image, X, Sparkles, Loader2, Music, Hash, AtSign } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { PostCategories } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { useSettings } from "@/hooks/use-settings"
@@ -23,6 +27,18 @@ interface CreatePostProps {
   initialCategory?: string;
 }
 
+interface Tag {
+  id: string;
+  name: string;
+}
+
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  albumArt?: string;
+}
+
 export function CreatePost({ onPostCreated, initialCategory }: CreatePostProps) {
   const { user } = useAuth()
   const { settings } = useSettings()
@@ -32,7 +48,25 @@ export function CreatePost({ onPostCreated, initialCategory }: CreatePostProps) 
   const [mediaUrls, setMediaUrls] = useState<string[]>([])
   const [isExpanded, setIsExpanded] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [tags, setTags] = useState<Tag[]>([])
+  const [mentionedUsers, setMentionedUsers] = useState<string[]>([])
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Mock data for demonstration
+  const suggestedTags: Tag[] = [
+    { id: "1", name: "trending" },
+    { id: "2", name: "music" },
+    { id: "3", name: "lifestyle" },
+    // Add more tags as needed
+  ]
+
+  const suggestedSongs: Song[] = [
+    { id: "1", title: "Shape of You", artist: "Ed Sheeran", albumArt: "/placeholder-album.jpg" },
+    { id: "2", title: "Blinding Lights", artist: "The Weeknd", albumArt: "/placeholder-album.jpg" },
+    // Add more songs as needed
+  ]
 
   const handleExpandClick = () => {
     if (!user) {
@@ -47,6 +81,41 @@ export function CreatePost({ onPostCreated, initialCategory }: CreatePostProps) 
     setTimeout(() => {
       textareaRef.current?.focus()
     }, 100)
+  }
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    setContent(newContent);
+
+    // Extract mentions
+    const mentionRegex = /@(\w+)/g;
+    const mentions = [...newContent.matchAll(mentionRegex)].map(match => match[1]);
+    setMentionedUsers(mentions);
+
+    // Extract hashtags
+    const hashtagRegex = /#(\w+)/g;
+    const hashtags = [...newContent.matchAll(hashtagRegex)].map(match => ({
+      id: match[1],
+      name: match[1]
+    }));
+    setTags(hashtags);
+  }
+
+  const handleAddTag = (tag: Tag) => {
+    if (!tags.find(t => t.id === tag.id)) {
+      setTags([...tags, tag]);
+      setContent(prev => `${prev} #${tag.name}`);
+    }
+  }
+
+  const handleRemoveTag = (tagId: string) => {
+    setTags(tags.filter(tag => tag.id !== tagId));
+    setContent(prev => prev.replace(`#${tags.find(t => t.id === tagId)?.name}`, ''));
+  }
+
+  const handleSelectSong = (song: Song) => {
+    setSelectedSong(song);
+    setContent(prev => `${prev}\n🎵 Listening to: ${song.title} by ${song.artist}`);
   }
 
   const handleFileSelect = (file: File) => {
@@ -107,6 +176,9 @@ export function CreatePost({ onPostCreated, initialCategory }: CreatePostProps) 
           username: user.name || "User",
           userImage: user.image || "/placeholder-user.jpg",
           tokens: content.length,
+          tags: tags.map(tag => tag.name),
+          mentionedUsers,
+          song: selectedSong,
         }),
       })
 
@@ -123,6 +195,9 @@ export function CreatePost({ onPostCreated, initialCategory }: CreatePostProps) 
       setContent("")
       setCategory(PostCategories.GENERAL)
       setMediaUrls([])
+      setTags([])
+      setMentionedUsers([])
+      setSelectedSong(null)
       setIsExpanded(false)
       await onPostCreated()
     } catch (error) {
@@ -155,7 +230,7 @@ export function CreatePost({ onPostCreated, initialCategory }: CreatePostProps) 
                 ref={textareaRef}
                 placeholder="What's on your mind?"
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={handleContentChange}
                 onClick={handleExpandClick}
                 className={cn(
                   "min-h-[60px] bg-background/50 resize-none border-none focus-visible:ring-1",
@@ -189,16 +264,60 @@ export function CreatePost({ onPostCreated, initialCategory }: CreatePostProps) 
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value={PostCategories.GENERAL}>General</SelectItem>
                         <SelectItem value={PostCategories.NEWS}>News</SelectItem>
                         <SelectItem value={PostCategories.ENTERTAINMENT}>Entertainment</SelectItem>
                         <SelectItem value={PostCategories.SPORTS}>Sports</SelectItem>
                         <SelectItem value={PostCategories.TECHNOLOGY}>Technology</SelectItem>
+                        <SelectItem value={PostCategories.POLITICS}>Politics</SelectItem>
                         {settings?.isAdultContentEnabled && (
                           <SelectItem value={PostCategories.ADULT}>Adult Content (18+)</SelectItem>
                         )}
                       </SelectContent>
                     </Select>
 
+                    {/* Tags Section */}
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map((tag) => (
+                        <Badge 
+                          key={tag.id}
+                          variant="secondary"
+                          className="flex items-center gap-1"
+                        >
+                          <Hash className="h-3 w-3" />
+                          {tag.name}
+                          <button
+                            onClick={() => handleRemoveTag(tag.id)}
+                            className="ml-1 hover:text-destructive"
+                            disabled={isLoading}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+
+                    {/* Song Selection */}
+                    {selectedSong && (
+                      <div className="flex items-center gap-2 p-2 bg-background/50 rounded-lg">
+                        <Music className="h-4 w-4" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{selectedSong.title}</p>
+                          <p className="text-xs text-muted-foreground">{selectedSong.artist}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => setSelectedSong(null)}
+                          disabled={isLoading}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Media Preview */}
                     {mediaUrls.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {mediaUrls.map((url, index) => (
@@ -222,28 +341,112 @@ export function CreatePost({ onPostCreated, initialCategory }: CreatePostProps) 
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-9 w-9 rounded-full"
-                          disabled={isLoading || mediaUrls.length >= 5}
-                        >
-                          <Image className="h-5 w-5" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Upload Media (Max 5 files)</DialogTitle>
-                        </DialogHeader>
-                        <FileUpload 
-                          onFileSelect={handleFileSelect}
-                          maxSize={100}
-                          allowedTypes={{ image: true, video: true }}
-                        />
-                      </DialogContent>
-                    </Dialog>
+                    <div className="flex gap-2">
+                      {/* Media Upload */}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-9 w-9 rounded-full"
+                            disabled={isLoading || mediaUrls.length >= 5}
+                          >
+                            <Image className="h-5 w-5" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Upload Media (Max 5 files)</DialogTitle>
+                          </DialogHeader>
+                          <FileUpload 
+                            onFileSelect={handleFileSelect}
+                            maxSize={100}
+                            allowedTypes={{ image: true, video: true }}
+                          />
+                        </DialogContent>
+                      </Dialog>
+
+                      {/* Tag Selector */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 rounded-full"
+                            disabled={isLoading}
+                          >
+                            <Hash className="h-5 w-5" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64 p-0">
+                          <Command>
+                            <CommandInput placeholder="Search tags..." />
+                            <CommandEmpty>No tags found.</CommandEmpty>
+                            <CommandGroup>
+                              {suggestedTags.map((tag) => (
+                                <CommandItem
+                                  key={tag.id}
+                                  onSelect={() => handleAddTag(tag)}
+                                >
+                                  <Hash className="h-4 w-4 mr-2" />
+                                  {tag.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+
+                      {/* Song Selector */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9rounded-full"
+                            disabled={isLoading}
+                          >
+                            <Music className="h-5 w-5" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-64 p-0">
+                          <Command>
+                            <CommandInput 
+                              placeholder="Search songs..." 
+                              value={searchTerm}
+                              onValueChange={setSearchTerm}
+                            />
+                            <CommandEmpty>No songs found.</CommandEmpty>
+                            <CommandGroup>
+                              {suggestedSongs
+                                .filter(song => 
+                                  song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                  song.artist.toLowerCase().includes(searchTerm.toLowerCase())
+                                )
+                                .map((song) => (
+                                  <CommandItem
+                                    key={song.id}
+                                    onSelect={() => handleSelectSong(song)}
+                                    className="flex items-center gap-2"
+                                  >
+                                    {song.albumArt && (
+                                      <img 
+                                        src={song.albumArt} 
+                                        alt={song.title}
+                                        className="w-8 h-8 rounded object-cover"
+                                      />
+                                    )}
+                                    <div className="flex flex-col">
+                                      <span className="text-sm font-medium">{song.title}</span>
+                                      <span className="text-xs text-muted-foreground">{song.artist}</span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
 
                     <div className="flex items-center gap-2">
                       <Button 

@@ -4,6 +4,7 @@ export enum PostCategories {
   ENTERTAINMENT = "entertainment",
   SPORTS = "sports",
   TECHNOLOGY = "technology",
+  POLITICS = "politics",
   ADULT = "adult" // Only shown in settings
 }
 

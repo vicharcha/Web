@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useToast } from "@/components/ui/use-toast"
 import { Plus, ChevronLeft, ChevronRight, X, Pause, Play, Volume2, VolumeX } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
@@ -18,36 +20,70 @@ interface Story {
   duration?: number
 }
 
-const sampleStories: Story[] = [
-  {
-    id: 1,
-    username: "You",
-    userImage: "/placeholder-user.jpg",
-    storyImage: "/placeholder.jpg",
-    isViewed: false,
-    duration: 15
-  },
-  {
-    id: 2,
-    username: "johndoe",
-    userImage: "/placeholder-user.jpg",
-    storyImage: "/placeholder.jpg",
-    isViewed: false,
-    isPremium: true,
-    duration: 10
-  },
-  {
-    id: 3,
-    username: "sarahsmith",
-    userImage: "/placeholder-user.jpg",
-    storyImage: "/placeholder.jpg",
-    isViewed: true,
-    duration: 20
-  },
-  // Add more sample stories...
-]
+interface APIStory {
+  id: string
+  userId: string
+  username: string
+  userImage: string
+  items: {
+    id: string
+    url: string
+    type: string
+    duration?: number
+  }[]
+  category: string
+  tokens: number
+  downloadable: boolean
+  isAdult: boolean
+}
 
 export function Stories() {
+  const [stories, setStories] = useState<Story[]>([])
+  const [loading, setLoading] = useState(true)
+  const { toast } = useToast()
+
+  useEffect(() => {
+    const fetchStories = async () => {
+      try {
+        const response = await fetch('/api/stories')
+        if (!response.ok) throw new Error('Failed to fetch stories')
+        
+        const apiStories: APIStory[] = await response.json()
+        
+        // Transform API stories to component format
+        const transformedStories: Story[] = [{
+          id: 0,
+          username: "You",
+          userImage: "/placeholder-user.jpg",
+          storyImage: "/placeholder.jpg",
+          isViewed: false,
+          duration: 15
+        }, ...apiStories.map((story, index) => ({
+          id: index + 1,
+          username: story.username,
+          userImage: story.userImage,
+          storyImage: story.items[0]?.url || "/placeholder.jpg",
+          isViewed: false,
+          isPremium: story.tokens > 0,
+          duration: story.items[0]?.duration || 10
+        }))];
+        
+        setStories(transformedStories)
+      } catch (error) {
+        console.error("Error fetching stories:", error)
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not load stories. Please try again.",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchStories()
+  }, [toast])
+
   const [selectedStory, setSelectedStory] = useState<Story | null>(null)
   const [progress, setProgress] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
@@ -74,9 +110,23 @@ export function Stories() {
   }, [selectedStory, isPlaying, isMuted])
 
   const handleStoryClick = (story: Story) => {
-    setSelectedStory(story)
+    if (!story) return;
+    
+    // Reset all states
     setProgress(0)
     setIsPlaying(true)
+    setIsMuted(false)
+    setSoundLevel(0)
+    
+    // Set selected story
+    setSelectedStory(story)
+    
+    // Mark story as viewed after a slight delay
+    setTimeout(() => {
+      setStories(prev => prev.map(s => 
+        s.id === story.id ? { ...s, isViewed: true } : s
+      ))
+    }, 100)
   }
 
   const handleClose = () => {
@@ -86,105 +136,134 @@ export function Stories() {
   }
 
   const handleNext = () => {
-    const currentIndex = sampleStories.findIndex(s => s.id === selectedStory?.id)
-    if (currentIndex < sampleStories.length - 1) {
-      handleStoryClick(sampleStories[currentIndex + 1])
+    const currentIndex = stories.findIndex(s => s.id === selectedStory?.id)
+    if (currentIndex < stories.length - 1) {
+      handleStoryClick(stories[currentIndex + 1])
     } else {
       handleClose()
     }
   }
 
   const handlePrevious = () => {
-    const currentIndex = sampleStories.findIndex(s => s.id === selectedStory?.id)
+    const currentIndex = stories.findIndex(s => s.id === selectedStory?.id)
     if (currentIndex > 0) {
-      handleStoryClick(sampleStories[currentIndex - 1])
+      handleStoryClick(stories[currentIndex - 1])
     }
   }
 
   return (
     <>
-      {/* Stories List */}
-      <Card className="p-4 mb-4">
-        <div className="flex gap-4 overflow-x-auto scrollbar-none pb-2">
-          {/* Create Story Button */}
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex-shrink-0"
-          >
-            <Button
-              variant="outline"
-              className="w-20 h-32 flex flex-col items-center justify-center gap-2 border-dashed hover:bg-accent/50"
-            >
-              <div className="relative">
-                <Avatar className="w-12 h-12 border-2 border-primary">
-                  <AvatarImage src="/placeholder-user.jpg" />
-                  <AvatarFallback>YOU</AvatarFallback>
-                </Avatar>
-                <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-0.5">
-                  <Plus className="h-3 w-3" />
-                </div>
+      {loading && (
+        <Card className="p-4 mb-4 relative">
+          <div className="flex gap-3 overflow-x-auto scrollbar-none pb-2 px-1">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex-shrink-0">
+                <Skeleton className="w-[72px] h-[100px] rounded-xl" />
               </div>
-              <span className="text-xs">Add Story</span>
-            </Button>
-          </motion.div>
-
-          {/* Story Items */}
-          {sampleStories.slice(1).map((story) => (
+            ))}
+          </div>
+        </Card>
+      )}
+      
+      {!loading && (
+        <Card className="p-4 mb-4 relative">
+          <div className="flex gap-3 overflow-x-auto scrollbar-none pb-2 px-1">
+            {/* Create Story Button */}
             <motion.div
-              key={story.id}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="flex-shrink-0"
             >
               <Button
-                variant="ghost"
-                className="w-20 h-32 p-0 overflow-hidden relative group"
-                onClick={() => handleStoryClick(story)}
+                variant="outline"
+                className="w-[72px] h-[100px] flex flex-col items-center justify-center gap-2 border-dashed hover:bg-accent/50 relative"
               >
-                <div 
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
-                  style={{ backgroundImage: `url(${story.storyImage})` }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
-                </div>
-                <div className="absolute inset-x-0 top-2 flex justify-center">
-                  <div className={cn(
-                    "p-0.5 rounded-full",
-                    story.isPremium ? "bg-gradient-to-r from-amber-500 to-orange-500" : "bg-transparent",
-                    story.isViewed ? "ring-2 ring-muted" : "ring-2 ring-primary"
-                  )}>
-                    <Avatar className="w-10 h-10 border-2 border-background">
-                      <AvatarImage src={story.userImage} />
-                      <AvatarFallback>{story.username[0]}</AvatarFallback>
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full p-[3px] bg-gradient-to-br from-primary to-primary/50">
+                    <Avatar className="w-full h-full border-2 border-background">
+                      <AvatarImage src="/placeholder-user.jpg" />
+                      <AvatarFallback>YOU</AvatarFallback>
                     </Avatar>
                   </div>
+                  <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-0.5">
+                    <Plus className="h-3 w-3" />
+                  </div>
                 </div>
-                <div className="absolute inset-x-0 bottom-2 text-center">
-                  <p className="text-xs text-white font-medium truncate px-1 drop-shadow-md">
-                    {story.username}
-                  </p>
-                </div>
+                <span className="text-xs">Add Story</span>
               </Button>
             </motion.div>
-          ))}
-        </div>
-      </Card>
+
+            {/* Story Items */}
+            {stories.slice(1).map((story) => (
+              <motion.div
+                key={story.id}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex-shrink-0"
+              >
+              <Button
+                variant="ghost"
+                className="w-[72px] h-[100px] p-0 overflow-hidden relative group rounded-xl cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleStoryClick(story);
+                }}
+              >
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+                    style={{ backgroundImage: `url(${story.storyImage})` }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
+                  </div>
+                  <div className="absolute inset-x-0 top-2 flex justify-center">
+                    <div className={cn(
+                      "w-16 h-16 rounded-full p-[3px]",
+                      story.isViewed 
+                        ? "bg-muted" 
+                        : story.isPremium 
+                          ? "bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500" 
+                          : "bg-gradient-to-br from-pink-500 via-rose-500 to-purple-500",
+                      "transition-all duration-300 ease-in-out"
+                    )}>
+                      <Avatar className="w-full h-full border-2 border-background">
+                        <AvatarImage src={story.userImage} />
+                        <AvatarFallback>{story.username[0]}</AvatarFallback>
+                      </Avatar>
+                    </div>
+                  </div>
+                  <div className="absolute inset-x-0 bottom-2 text-center">
+                    <p className="text-xs text-white font-medium truncate px-1 drop-shadow-md">
+                      {story.username}
+                    </p>
+                  </div>
+                </Button>
+              </motion.div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Story Viewer */}
       <AnimatePresence>
         {selectedStory && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            className="fixed inset-0 z-50 bg-black/95"
           >
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative w-full h-full max-w-2xl max-h-[90vh] aspect-[9/16]">
+              <motion.div 
+                initial={{ translateY: "10%" }}
+                animate={{ translateY: 0 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="relative w-full h-full max-w-md max-h-[90vh] aspect-[9/16] mx-auto"
+              >
                 {/* Progress Bar */}
                 <div className="absolute top-4 left-4 right-4 z-10 flex gap-1">
-                  {sampleStories.map((story) => (
+                  {stories.map((story) => (
                     <div 
                       key={story.id}
                       className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden"
@@ -207,22 +286,29 @@ export function Stories() {
                 </div>
 
                 {/* Story Content */}
-                <div className="relative w-full h-full overflow-hidden rounded-xl">
+                <motion.div 
+                  className="relative w-full h-full overflow-hidden rounded-xl"
+                  initial={{ scale: 1.1 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
                   <img
                     src={selectedStory.storyImage}
                     alt={`${selectedStory.username}'s story`}
                     className="w-full h-full object-cover"
                   />
-                </div>
+                </motion.div>
 
                 {/* Header */}
-                <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
+                <div className="absolute top-8 left-4 right-4 z-10 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className={cn(
-                      "p-0.5 rounded-full",
-                      selectedStory.isPremium ? "bg-gradient-to-r from-amber-500 to-orange-500" : "ring-2 ring-white"
+                      "w-10 h-10 rounded-full p-[2px]",
+                      selectedStory.isPremium 
+                        ? "bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500" 
+                        : "ring-2 ring-white"
                     )}>
-                      <Avatar className="w-8 h-8 border-2 border-background">
+                      <Avatar className="w-full h-full border-2 border-background">
                         <AvatarImage src={selectedStory.userImage} />
                         <AvatarFallback>{selectedStory.username[0]}</AvatarFallback>
                       </Avatar>
@@ -296,7 +382,7 @@ export function Stories() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         )}
