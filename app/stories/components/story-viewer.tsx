@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -9,7 +9,7 @@ interface StoryItem {
   id: string;
   url: string;
   type: "image" | "video";
-  duration?: number; // in seconds, for videos
+  duration?: number;
 }
 
 interface Story {
@@ -30,64 +30,93 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
   const [currentStoryIndex, setCurrentStoryIndex] = useState(initialStoryIndex);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(true);
 
   const currentStory = stories[currentStoryIndex];
   const currentItem = currentStory?.items[currentItemIndex];
 
+  // Reset video and progress when item changes
+  useEffect(() => {
+    setProgress(0);
+    setIsPlaying(true);
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(console.error);
+    }
+  }, [currentItem]);
+
   useEffect(() => {
     if (!currentItem) return;
 
-    const duration = currentItem.type === 'video' ? 
-      (currentItem.duration || 10) * 1000 : 
-      5000; // 5 seconds for images
+    let timer: NodeJS.Timeout;
+    
+    if (currentItem.type === 'image') {
+      const duration = 5000; // 5 seconds for images
+      const interval = 100; // Update progress every 100ms
+      const steps = duration / interval;
+      let currentStep = 0;
 
-    const interval = 100; // Update progress every 100ms
-    const steps = duration / interval;
-    let currentStep = 0;
+      timer = setInterval(() => {
+        currentStep++;
+        setProgress((currentStep / steps) * 100);
 
-    const timer = setInterval(() => {
-      currentStep++;
-      setProgress((currentStep / steps) * 100);
-
-      if (currentStep >= steps) {
-        // Move to next item or story
-        if (currentItemIndex < currentStory.items.length - 1) {
-          setCurrentItemIndex(prev => prev + 1);
-          setProgress(0);
-        } else if (currentStoryIndex < stories.length - 1) {
-          setCurrentStoryIndex(prev => prev + 1);
-          setCurrentItemIndex(0);
-          setProgress(0);
-        } else {
-          onClose();
+        if (currentStep >= steps) {
+          handleNext();
         }
-      }
-    }, interval);
+      }, interval);
+    }
 
-    return () => clearInterval(timer);
-  }, [currentItem, currentItemIndex, currentStoryIndex, currentStory.items.length, stories.length, onClose]);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [currentItem, isPlaying]);
+
+  const handleVideoTimeUpdate = () => {
+    if (videoRef.current) {
+      const duration = videoRef.current.duration;
+      const currentTime = videoRef.current.currentTime;
+      setProgress((currentTime / duration) * 100);
+      
+      if (currentTime >= duration) {
+        handleNext();
+      }
+    }
+  };
+
+  const handleVideoError = (error: any) => {
+    console.error('Video error:', error);
+    // Optionally show an error message to the user
+  };
 
   const handlePrevious = () => {
     if (currentItemIndex > 0) {
       setCurrentItemIndex(prev => prev - 1);
-      setProgress(0);
     } else if (currentStoryIndex > 0) {
       setCurrentStoryIndex(prev => prev - 1);
       setCurrentItemIndex(stories[currentStoryIndex - 1].items.length - 1);
-      setProgress(0);
     }
   };
 
   const handleNext = () => {
     if (currentItemIndex < currentStory.items.length - 1) {
       setCurrentItemIndex(prev => prev + 1);
-      setProgress(0);
     } else if (currentStoryIndex < stories.length - 1) {
       setCurrentStoryIndex(prev => prev + 1);
       setCurrentItemIndex(0);
-      setProgress(0);
     } else {
       onClose();
+    }
+  };
+
+  const togglePlayPause = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play().catch(console.error);
+      }
+      setIsPlaying(!isPlaying);
     }
   };
 
@@ -96,7 +125,7 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
       <DialogContent className="max-w-md h-[80vh] p-0">
         <div className="relative h-full flex items-center justify-center bg-black">
           {/* Progress bars */}
-          <div className="absolute top-4 left-4 right-4 flex gap-1">
+          <div className="absolute top-4 left-4 right-4 flex gap-1 z-10">
             {currentStory.items.map((item, index) => (
               <div key={item.id} className="h-0.5 flex-1 bg-gray-600">
                 <div 
@@ -111,7 +140,7 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
           </div>
 
           {/* User info */}
-          <div className="absolute top-8 left-4 flex items-center gap-2">
+          <div className="absolute top-8 left-4 flex items-center gap-2 z-10">
             <img
               src={currentStory.userImage}
               alt={currentStory.username}
@@ -121,31 +150,36 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
           </div>
 
           {/* Media content */}
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center" onClick={togglePlayPause}>
             {currentItem.type === 'video' ? (
               <video
+                ref={videoRef}
                 src={currentItem.url}
-                className="max-h-full aspect-[9/16] object-contain"
-                autoPlay
+                className="max-h-full w-full object-contain"
                 playsInline
+                onTimeUpdate={handleVideoTimeUpdate}
+                onError={handleVideoError}
                 muted
               />
             ) : (
               <img
                 src={currentItem.url}
                 alt=""
-                className="max-h-full aspect-[9/16] object-contain"
+                className="max-h-full w-full object-contain"
               />
             )}
           </div>
 
           {/* Navigation buttons */}
-          <div className="absolute inset-0 flex items-center justify-between px-4">
+          <div className="absolute inset-0 flex items-center justify-between px-4 z-10">
             <Button
               variant="ghost"
               size="icon"
               className="text-white hover:bg-black/20"
-              onClick={handlePrevious}
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrevious();
+              }}
               disabled={currentStoryIndex === 0 && currentItemIndex === 0}
             >
               <ChevronLeft className="h-8 w-8" />
@@ -154,7 +188,10 @@ export function StoryViewer({ stories, initialStoryIndex, onClose }: StoryViewer
               variant="ghost"
               size="icon"
               className="text-white hover:bg-black/20"
-              onClick={handleNext}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNext();
+              }}
             >
               <ChevronRight className="h-8 w-8" />
             </Button>

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Post as PostComponent } from '@/components/post';  // Renamed to PostComponent
 import { Button } from "@/components/ui/button";
 import { RefreshCw, TrendingUp, Clock } from "lucide-react";
-import { Stories } from './stories';
+import { Stories } from '../app/stories/components/stories';
 import { PostCategories, type Post } from "@/lib/types";
 import { useAuth } from "@/components/auth-provider";
 import {

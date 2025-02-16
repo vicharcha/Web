@@ -27,9 +27,9 @@ import {
 import Image from "next/image"
 import { CreatePost } from "@/components/create-post"
 import { useAuth } from "@/components/auth-provider"
-import { ShareDialog } from "./share-dialog"
-import { CommentDialog } from "./comment-dialog"
-import { LikeButton } from "./like-button"
+import { ShareDialog } from "@/components/share-dialog"
+import { CommentDialog } from "@/components/comment-dialog"
+import { LikeButton } from "@/components/like-button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import {

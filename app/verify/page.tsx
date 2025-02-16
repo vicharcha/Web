@@ -36,7 +36,7 @@ export default function VerifyPage() {
         <p className="text-muted-foreground">Complete your verification to access all features.</p>
       </div>
       <DigiLockerVerification 
-        username={user.name} 
+        username={user.name || 'Guest'} 
         onVerificationComplete={() => router.push("/")}
       />
       <div className="mt-4">

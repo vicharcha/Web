@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { LanguageSettings } from "./components/language"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { 
   Bell,
@@ -235,6 +236,11 @@ export default function SettingsPage() {
             {/* Privacy Tab */}
             <TabsContent value="privacy" className="mt-4 space-y-6">
               <PrivacySettings />
+            </TabsContent>
+
+            {/* Language Tab */}
+            <TabsContent value="language" className="mt-4 space-y-6">
+              <LanguageSettings />
             </TabsContent>
 
             {/* Help Tab */}

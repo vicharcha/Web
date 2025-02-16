@@ -1,66 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { useAuth } from '@/components/auth-provider';
+import { getStories } from '@/lib/db';
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const { storyId, userId } = await request.json();
-
-    // Check if user has permission to download
-    const hasPermission = await checkUserPermission(userId, storyId);
-    if (!hasPermission) {
+    const url = new URL(request.url);
+    const storyId = url.searchParams.get('storyId');
+    
+    if (!storyId) {
       return NextResponse.json(
-        { error: 'You do not have permission to download this story' },
+        { error: 'Story ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Get all stories to find the requested one
+    const stories = await getStories();
+    const story = stories.find(s => s.id === storyId);
+
+    if (!story) {
+      return NextResponse.json(
+        { error: 'Story not found' },
+        { status: 404 }
+      );
+    }
+
+    if (!story.downloadable) {
+      return NextResponse.json(
+        { error: 'Story is not downloadable' },
         { status: 403 }
       );
     }
 
-    // Check token count
-    const user = await getUserDetails(userId);
-    if (user.tokens < 350) {
-      return NextResponse.json(
-        { error: 'Insufficient tokens to download this story' },
-        { status: 403 }
-      );
-    }
-
-    // Process download
-    const storyContent = await getStoryContent(storyId);
-
-    // Deduct tokens
-    await updateUserTokens(userId, user.tokens - 350);
-
-    return NextResponse.json({ 
+    // Return URLs for all media items in the story
+    return NextResponse.json({
       success: true,
-      content: storyContent,
-      remainingTokens: user.tokens - 350
+      downloads: story.items.map(item => ({
+        id: item.id,
+        url: item.url,
+        type: item.type,
+        filename: new URL(item.url).pathname.split('/').pop() || `story-${item.id}`
+      }))
     });
 
   } catch (error) {
-    console.error('Error downloading story:', error);
+    console.error('Error processing download request:', error);
     return NextResponse.json(
-      { error: 'Failed to process download' },
+      { error: 'Failed to process download request' },
       { status: 500 }
     );
   }
-}
-
-// Mock functions - replace with actual database calls
-async function checkUserPermission(userId: string, storyId: string): Promise<boolean> {
-  // TODO: Implement actual permission check
-  return true;
-}
-
-async function getUserDetails(userId: string) {
-  // TODO: Implement actual user details fetch
-  return { tokens: 1000 };
-}
-
-async function getStoryContent(storyId: string) {
-  // TODO: Implement actual story content fetch
-  return { title: 'Story Title', content: 'Story content...' };
-}
-
-async function updateUserTokens(userId: string, newTokens: number) {
-  // TODO: Implement actual token update
-  return true;
 }

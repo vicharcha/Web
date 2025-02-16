@@ -219,6 +219,74 @@ export interface Post {
   updatedAt: Date;
 }
 
+export interface Story {
+  id: string;
+  userId: string;
+  items: StoryItem[];
+  createdAt: Date;
+  expiresAt: Date;
+  category: string;
+  downloadable: boolean;
+  isAdult: boolean;
+}
+
+export interface StoryItem {
+  id: string;
+  url: string;
+  type: 'image' | 'video';
+  duration?: number;
+}
+
+export async function createStory(data: Omit<Story, 'id' | 'createdAt'>): Promise<Story> {
+  const id = types.Uuid.random().toString();
+  const now = new Date();
+  
+  const query = `
+    INSERT INTO social_network.stories 
+    (id, user_id, items, category, downloadable, is_adult, created_at, expires_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  
+  await executeQuery(query, [
+    id,
+    data.userId,
+    JSON.stringify(data.items),
+    data.category,
+    data.downloadable,
+    data.isAdult,
+    now,
+    data.expiresAt
+  ]);
+  
+  return {
+    id,
+    userId: data.userId,
+    items: data.items,
+    category: data.category,
+    downloadable: data.downloadable,
+    isAdult: data.isAdult,
+    createdAt: now,
+    expiresAt: data.expiresAt
+  };
+}
+
+export async function getStories(userId?: string): Promise<Story[]> {
+  const now = new Date();
+  let query = 'SELECT * FROM social_network.stories WHERE expires_at > ?';
+  const params: any[] = [now];
+
+  if (userId) {
+    query += ' AND user_id = ? ALLOW FILTERING';
+    params.push(userId);
+  }
+
+  const result = await executeQuery(query, params);
+  return (result.rows || []).map(row => ({
+    ...row,
+    items: JSON.parse(row.items)
+  }));
+}
+
 export interface Reel {
   id: string;
   userId: string;

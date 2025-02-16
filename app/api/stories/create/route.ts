@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createStory } from '@/lib/db';
+import { uploadFile } from '@/lib/storage';
 
-// Mock storage - replace with actual file storage service
-const mockSaveFile = async (file: File): Promise<string> => {
-  // In a real implementation, this would upload to a storage service
-  // and return the URL
-  return `/placeholder.jpg`;
+const saveStoryFile = async (file: File): Promise<string> => {
+  const filename = `stories/${crypto.randomUUID()}-${file.name}`;
+  const url = await uploadFile(file, filename);
+  return url;
 };
 
 export async function POST(request: NextRequest) {
@@ -37,29 +38,30 @@ export async function POST(request: NextRequest) {
     // Process files and create story items
     const storyItems = await Promise.all(
       files.map(async (file) => {
-        const url = await mockSaveFile(file);
+        const url = await saveStoryFile(file);
+        const type = file.type.startsWith('video/') ? 'video' as const : 'image' as const;
         return {
           id: crypto.randomUUID(),
           url,
-          type: file.type.startsWith('video/') ? 'video' : 'image',
-          duration: file.type.startsWith('video/') ? 10 : undefined // Default video duration
+          type,
+          duration: type === 'video' ? 10 : undefined
         };
       })
     );
 
-    // Create story
-    const story = {
-      id: crypto.randomUUID(),
+    // Set expiration time to 24 hours from now
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+    
+    // Create story in database
+    const story = await createStory({
       userId,
       items: storyItems,
-      createdAt: new Date().toISOString(),
-      category: 'general', // Default category
+      category: 'general',
       downloadable: true,
-      isAdult: false // Default to non-adult content
-    };
-
-    // TODO: Save story to database
-    console.log('Created story:', story);
+      isAdult: false,
+      expiresAt
+    });
 
     return NextResponse.json({
       success: true,
