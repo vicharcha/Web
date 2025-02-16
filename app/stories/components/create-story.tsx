@@ -1,190 +1,154 @@
 "use client";
 
-import { useState } from "react";
-import { useAuth } from "@/components/auth-provider";
-import { useToast } from "@/components/ui/use-toast";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Image, Film, Plus, Star } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Plus, Upload } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 
-export function CreateStory({ onStoryCreated }: { onStoryCreated: () => void }) {
-  const { user } = useAuth();
-  const { toast } = useToast();
+interface CreateStoryProps {
+  onStoryCreated: () => void;
+}
+
+export function CreateStory({ onStoryCreated }: CreateStoryProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [files, setFiles] = useState<File[]>([]);
+  const [preview, setPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
+  const [allowDownload, setAllowDownload] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { toast } = useToast();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []);
-    if (selectedFiles.length + files.length > 10) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Maximum 10 files allowed",
-      });
-      return;
-    }
-    setFiles(prev => [...prev, ...selectedFiles]);
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+    const url = URL.createObjectURL(file);
+    setPreview(url);
   };
 
-  const handleSubmit = async () => {
-    if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please login to create a story",
-      });
-      return;
-    }
-
-    if (files.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please select at least one file",
-      });
-      return;
-    }
+  const handleUpload = async () => {
+    if (!selectedFile) return;
 
     setIsUploading(true);
     try {
       const formData = new FormData();
-      files.forEach((file) => {
-        formData.append('files', file);
-      });
-      formData.append('userId', user.phoneNumber);
-      formData.append('isPremium', isPremium.toString());
+      formData.append('file', selectedFile);
+      formData.append('downloadable', String(allowDownload));
 
-      const response = await fetch('/api/stories/create', {
+      const response = await fetch('/api/stories/upload', {
         method: 'POST',
         body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create story');
-      }
+      if (!response.ok) throw new Error('Failed to upload story');
 
       toast({
         title: "Success",
-        description: "Story created successfully",
+        description: "Story uploaded successfully",
       });
+
+      onStoryCreated();
       setIsOpen(false);
-      setFiles([]);
-      setIsPremium(false);
-      onStoryCreated(); // Refresh stories list after creating a new story
     } catch (error) {
-      console.error('Error creating story:', error);
+      console.error('Upload error:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create story",
+        description: "Failed to upload story",
       });
     } finally {
       setIsUploading(false);
+      setPreview(null);
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <motion.button
-          className="flex flex-col items-center gap-1 focus:outline-none"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <div className="p-[2px] rounded-full bg-primary">
-            <div className="p-[2px] bg-background rounded-full">
-              <div className="h-14 w-14 rounded-full border-2 border-background bg-muted flex items-center justify-center">
-                <Plus className="h-6 w-6" />
-              </div>
-            </div>
-          </div>
-          <span className="text-xs truncate w-16 text-center">Add Story</span>
-        </motion.button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create Story</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="grid grid-cols-4 gap-2">
-            {files.map((file, index) => (
-              <motion.div
-                key={index}
-                className="relative aspect-square"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.3 }}
-              >
-                {file.type.startsWith('image/') ? (
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt=""
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-muted rounded-lg">
-                    <Film className="h-6 w-6" />
-                  </div>
-                )}
-                <button
-                  className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-4 h-4 flex items-center justify-center text-xs"
-                  onClick={() => setFiles(prev => prev.filter((_, i) => i !== index))}
-                >
-                  ×
-                </button>
-              </motion.div>
-            ))}
-            {files.length < 10 && (
-              <label className={cn(
-                "cursor-pointer flex items-center justify-center bg-muted rounded-lg aspect-square",
-                "hover:bg-muted/80 transition-colors"
-              )}>
-                <Input
-                  type="file"
-                  accept="image/*, video/*"
-                  multiple
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-                <Plus className="h-6 w-6" />
-              </label>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="premium"
-              checked={isPremium}
-              onChange={() => setIsPremium(!isPremium)}
-              className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
-            />
-            <label htmlFor="premium" className="text-sm font-medium text-gray-700">
-              Mark as Premium
-            </label>
-            <Star className="h-4 w-4 text-yellow-500" />
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={isUploading}>
-              {isUploading ? "Creating..." : "Create Story"}
-            </Button>
-          </div>
+    <>
+      <Button
+        variant="ghost"
+        className="w-[72px] h-[100px] p-0 overflow-hidden relative group rounded-xl cursor-pointer border-2 border-dashed border-muted-foreground/50 hover:border-muted-foreground/80"
+        onClick={() => setIsOpen(true)}
+      >
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+          <Plus className="h-6 w-6 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground text-center px-2">
+            Add Story
+          </span>
         </div>
-      </DialogContent>
-    </Dialog>
+      </Button>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create New Story</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex flex-col items-center gap-4">
+              {preview ? (
+                <div className="relative w-full aspect-[9/16] rounded-lg overflow-hidden bg-black">
+                  {selectedFile?.type.startsWith('video/') ? (
+                    <video
+                      src={preview}
+                      className="w-full h-full object-contain"
+                      controls
+                    />
+                  ) : (
+                    <img
+                      src={preview}
+                      alt="Preview"
+                      className="w-full h-full object-contain"
+                    />
+                  )}
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full h-[200px] border-dashed"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-6 w-6 mr-2" />
+                  Select Media
+                </Button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="allow-download" className="text-sm">
+                Allow Download
+              </Label>
+              <Switch
+                id="allow-download"
+                checked={allowDownload}
+                onCheckedChange={setAllowDownload}
+              />
+            </div>
+
+            <Button
+              onClick={handleUpload}
+              disabled={!selectedFile || isUploading}
+              className={cn(isUploading && "animate-pulse")}
+            >
+              {isUploading ? "Uploading..." : "Share Story"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
