@@ -55,6 +55,7 @@ export type Post = {
   isVerified?: boolean;
   isPremium?: boolean;
   ageRestricted?: boolean;
+  content_rating?: 'G' | 'PG' | 'PG-13' | 'R' | 'NC-17';  // ML-based content rating
 };
 
 export interface ClientStory {
@@ -99,13 +100,38 @@ export interface User {
   username?: string;
   name?: string;
   email?: string;
-  image?: string; // Add image property
+  image?: string;
   verificationStatus: "unverified" | "verified";
   isPremium: boolean;
   digiLockerVerified: boolean;
   joinedDate: string;
   lastActive: string;
   documents?: DigiLockerDocument[];
+  age?: number;
+  isAgeVerified: boolean;
+}
+
+export interface MLPostAnalysis {
+  top_topics: Record<string, number>;
+  avg_post_length: number;
+  total_posts: number;
+  categories: string[];
+}
+
+export interface MLStoriesAnalysis {
+  total_stories: number;
+  media_type_distribution: Record<string, number>;
+  premium_stories_percent: number;
+  viewed_stories_percent: number;
+  avg_duration: number;
+  categories: string[];
+}
+
+export interface MLRecommendations {
+  suggested_topics: string[];
+  optimal_posting_times: number[];
+  content_type_distribution: Record<string, number>;
+  recommended_categories: string[];
 }
 
 export interface DigiLockerDocument {

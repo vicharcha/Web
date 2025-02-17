@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
 
     // Use the query method with the appropriate SQL-like query
     const queryStr = category 
-      ? 'SELECT * FROM posts WHERE category = ?'
-      : 'SELECT * FROM posts';
+      ? 'SELECT * FROM posts WHERE category = ? ORDER BY createdAt DESC'
+      : 'SELECT * FROM posts ORDER BY createdAt DESC';
     const params = category ? [category] : [];
     
     const result = await mockDB.query(queryStr, params);

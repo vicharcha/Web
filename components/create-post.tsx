@@ -16,14 +16,14 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { PostCategories } from "@/lib/types"
+import { PostCategories, Post } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { useSettings } from "@/hooks/use-settings"
 
 const TOKEN_LIMIT = 500;
 
 interface CreatePostProps {
-  onPostCreated: () => Promise<void>;
+  onPostCreated: (post: Post) => Promise<void>;
   initialCategory?: string;
 }
 
@@ -199,7 +199,8 @@ export function CreatePost({ onPostCreated, initialCategory }: CreatePostProps) 
       setMentionedUsers([])
       setSelectedSong(null)
       setIsExpanded(false)
-      await onPostCreated()
+      const newPost = await response.json()
+      await onPostCreated(newPost)
     } catch (error) {
       console.error('Error creating post:', error)
       toast({

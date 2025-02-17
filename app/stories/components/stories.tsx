@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { MLStoriesAnalysis } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/components/ui/use-toast"
@@ -18,7 +19,11 @@ interface APIResponse {
   stories: (Story & { username: string })[]
 }
 
-export function Stories() {
+interface StoriesProps {
+  mlAnalysis?: MLStoriesAnalysis;
+}
+
+export function Stories({ mlAnalysis }: StoriesProps) {
   const [stories, setStories] = useState<ClientStory[]>([])
   const [loading, setLoading] = useState(true)
   const [videoReady, setVideoReady] = useState(false)
