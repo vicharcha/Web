@@ -19,10 +19,15 @@ if (typeof window === 'undefined') {
 
 let cassandraModule: any = null;
 
+// New function to return the value of useMockDB
+export function useMockDatabase(): boolean {
+  return useMockDB;
+}
+
 // Basic database operations
 export async function executeQuery(query: string, params: any[]): Promise<DatabaseResult> {
   // Always use mock DB in development when configured
-  if (useMockDB) {
+  if (useMockDatabase()) {
     console.log('Using mock database');
     return mockDB.query(query, params);
   }
