@@ -1,138 +1,104 @@
-# Vicharcha Social Network
+# Next.js Project - Vicharcha
 
-A modern social network platform with features like international phone number support and DigiLocker verification.
-
-## Features
-
-- 📱 International phone number support
-- 🔒 DigiLocker integration for age verification
-- 🌐 Multi-language support
-- 📸 Stories and posts
-- 💬 Real-time chat
-- 🔐 Privacy settings
-- 🎯 Age-restricted content control
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/vicharcha.git
-cd vicharcha
-```
+First, run the development server:
 
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Set up environment variables:
-```bash
-cp .env.example .env
-```
-
-4. Configure your environment variables in `.env`:
-   - Database settings
-   - SMS service credentials
-   - DigiLocker integration details
-
-5. Start the development server:
 ```bash
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## Development Setup
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### Database Setup
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-The project uses Apache Cassandra as the database. For development, you can:
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-1. Use the mock database (default in development):
-```env
-USE_MOCK_DB=true
+## Project Structure
+
+```mermaid
+graph TD
+    A[Project Root] --> B[app/]
+    A --> C[public/]
+    A --> D[components/]
+    A --> E[api/]
+    B --> F[page.tsx]
+    B --> G[layout.tsx]
+    D --> H[UI Components]
+    D --> I[Layout Components]
+    E --> J[Authentication]
+    E --> K[Social Features]
+    E --> L[Machine Learning]
 ```
 
-2. Run Cassandra locally:
-```bash
-docker run -p 9042:9042 cassandra:latest
+## Application Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant C as Client
+    participant S as Server
+    participant DB as Database
+    participant DGL as DigiLocker
+
+    U->>C: Access Website
+    C->>S: Request Page
+    S->>DB: Fetch Data
+    DB-->>S: Return Data
+    S-->>C: Send Page
+    C-->>U: Display Page
+    U->>DGL: Verify Identity
+    DGL-->>U: Identity Verified
 ```
 
-### DigiLocker Integration
+## Component Hierarchy
 
-1. Get DigiLocker API credentials from [https://digilocker.gov.in/](https://digilocker.gov.in/)
-2. Configure in `.env`:
-```env
-DIGILOCKER_CLIENT_ID=your_client_id
-DIGILOCKER_CLIENT_SECRET=your_client_secret
-DIGILOCKER_REDIRECT_URI=http://localhost:3000/api/auth/digilocker/callback
+```mermaid
+flowchart TB
+    Root[Layout Root]
+    Nav[Navigation]
+    Main[Main Content]
+    Footer[Footer]
+
+    Root --> Nav
+    Root --> Main
+    Root --> Footer
+
+    Main --> Content[Dynamic Content]
+    Main --> Sidebar[Sidebar]
+    Main --> Auth[Authentication]
+    Auth --> DigiLocker[ID Verification]
 ```
 
-### SMS Service
+## Child Safety & Security Measures
 
-The project uses MSG91 for SMS OTP. Configure your credentials:
-```env
-SMS_API_KEY=your_msg91_api_key
-SMS_SENDER_ID=VCHCHA
-SMS_TEMPLATE_ID=your_template_id
-```
+This platform prioritizes user safety and security. Key features include:
 
-## Development Mode Features
+- **DigiLocker Integration**: Ensures verified user identities, preventing fake profiles and scams.
+- **One-Account Policy**: Users can register only once, eliminating alternative accounts and identity fraud.
+- **No Bots or Unverified Users**: Strict verification methods ensure that bots and scammers are kept out of the platform.
+- **Child Safety Protections**: Restricted access to adult content, ensuring a secure online environment for younger users.
 
-In development mode (`NODE_ENV=development`):
+## Learn More
 
-- Mock database is used by default
-- OTP verification is simplified (shown in console)
-- DigiLocker verification uses mock data
-- Debug phone number: +911234567890
-- Debug OTP: 123456
+To learn more about Next.js, take a look at the following resources:
 
-## Using the Mock Database
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-The mock database is used by default in development mode. To enable or disable the mock database, set the `USE_MOCK_DB` environment variable in your `.env` file:
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-```env
-USE_MOCK_DB=true
-```
+## Deploy on Vercel
 
-When `USE_MOCK_DB` is set to `true`, the application will use the mock database for all operations. This is useful for development and testing purposes.
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-## Testing
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-Run the test suite:
-```bash
-npm test
-```
-
-## Production Deployment
-
-1. Set up Cassandra database
-2. Configure production environment variables
-3. Deploy using Vercel:
-```bash
-vercel --prod
-```
-
-## Environment Variables
-
-Key environment variables:
-
-```env
-# Environment
-NODE_ENV=development|production
-VERCEL_ENV=development|preview|production
-
-# Database
-USE_MOCK_DB=true|false
-CASSANDRA_USERNAME=username
-CASSANDRA_PASSWORD=password
-CASSANDRA_KEYSPACE=social_network
-CASSANDRA_CONTACT_POINTS=["host1", "host2"]
-
-# Features
-ENABLE_SMS_NOTIFICATIONS=true|false
-ENABLE_DIGILOCKER=true|false
-ENABLE_AGE_VERIFICATION=true|false
-```
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
